@@ -1,7 +1,7 @@
 # TemplateApp
 
 CRUD app template
-- React frontend. Tailwind + which react libraries? Primereact? Router? Astro?
+- React frontend. Tailwind + which react libraries? Primereact? Router? React framework?: Astro, next.js, others?
 - .NET Web Api backend. Swagger, Moq. MSTest vs xUnit?
 - Split up API into BFF and REST?
 - PostgreSQL
@@ -13,3 +13,5 @@ Next steps to add:
 Things to try:
 - gRCP
 - GraphQL
+- Redis cache
+- todo look in job openings what technologies asked
