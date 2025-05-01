@@ -1,7 +1,9 @@
 # TemplateApp
 
 CRUD app template
-- React frontend. Tailwind + which react libraries? Primereact? Router? React framework?: Astro, next.js, others?
+- React frontend.
+    - Next.js? create-t3-app to create with tailwind
+    - Vite + React Router (+ tailwind + primereact)
 - .NET Web Api backend. Swagger, Moq. MSTest vs xUnit?
 - Split up API into BFF and REST?
 - PostgreSQL
