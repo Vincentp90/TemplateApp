@@ -7,11 +7,14 @@ This is a template for a typical business CRUD app. The goal is to have a templa
 
 Installation steps:
 - Install Node.js v22
+- cd wishlist
+- npm run dev
+- http://localhost:3000
 
 CRUD app template
 - React frontend.
-    - Next.js? create-t3-app to create with tailwind
-    - Vite + React Router (+ tailwind + primereact)
+    - Next.js create-next-app with TypeScript, ESLind, Tailwind CSS, App Router, Webpack
+    - Prettier? ts formating tool
 - .NET Web Api backend. Swagger, Moq. MSTest vs xUnit?
 - Split up API into BFF and REST?
 - PostgreSQL
@@ -23,8 +26,10 @@ CRUD app template
 Next steps to add:
 - Authentication (OAuth?)
 
-Things to try:
+Things to try/add later:
 - gRCP
 - GraphQL
-- Redis cache
+- Redis cache (or redis fork)
 - steam openID integration
+- Add jenkinsfile for CI/CD
+- Separate frontend made with Vite + React Router (+ tailwind + primereact)
