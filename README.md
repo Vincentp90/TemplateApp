@@ -11,6 +11,14 @@ Installation steps:
 - npm run dev
 - http://localhost:3000
 
+TODO
+- BIOS
+    - hardware assisted virtualization
+    - data execution protection
+- docker
+    - run postgres (image?)
+- put steam app list in postgres
+
 CRUD app template
 - React frontend.
     - Next.js create-next-app with TypeScript, ESLind, Tailwind CSS, App Router, Webpack
