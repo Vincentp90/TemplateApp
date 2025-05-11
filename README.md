@@ -7,16 +7,16 @@ This is a template for a typical business CRUD app. The goal is to have a templa
 
 Installation steps:
 - Install Node.js v22
-- cd wishlist
-- npm run dev
-- http://localhost:3000
+    - cd wishlist
+    - npm run dev
+    - http://localhost:3000
+- docker compose up (postgres)
+    - http://localhost:8080/
+    - username postgres
+    - password example
 
 TODO
-- BIOS
-    - hardware assisted virtualization
-    - data execution protection
-- docker
-    - run postgres (image?)
+- Backend with EF and swagger
 - put steam app list in postgres
 
 CRUD app template
