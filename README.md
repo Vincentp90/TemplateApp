@@ -41,3 +41,4 @@ Things to try/add later:
 - steam openID integration
 - Add jenkinsfile for CI/CD
 - Separate frontend made with Vite + React Router (+ tailwind + primereact)
+- upgrade from .NET 9 to 10
