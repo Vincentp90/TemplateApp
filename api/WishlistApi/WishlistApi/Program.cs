@@ -1,3 +1,7 @@
+using DataAccess;
+using Microsoft.EntityFrameworkCore;
+using System;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -18,6 +22,9 @@ builder.Services.AddCors(options =>
               .AllowCredentials(); // Only if needed
     });
 });
+
+builder.Services.AddDbContext<WishlistDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 app.UseCors("RestrictedCORS");

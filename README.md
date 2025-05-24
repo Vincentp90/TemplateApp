@@ -10,13 +10,17 @@ Installation steps:
     - cd wishlist
     - npm run dev
     - http://localhost:3000
-- docker compose up (postgres)
-    - http://localhost:8080/
+- docker-compose up -d (postgres)
+    - Adminer: http://localhost:8080/
     - username postgres
     - password example
+- dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
+- dotnet ef database update --project DataAccess --startup-project WishlistApi
+- Run backend API in VS (debug, any cpu, https)
+    - http://localhost:5186/swagger/index.html
+
 
 TODO
-- Backend with EF and swagger
 - put steam app list in postgres
 
 CRUD app template
