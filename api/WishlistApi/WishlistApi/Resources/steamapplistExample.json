@@ -1,0 +1,18 @@
+{
+    "applist": {
+        "apps": [
+            {
+                "appid": 660010,
+                "name": "test2"
+            },
+            {
+                "appid": 660130,
+                "name": "test3"
+            },
+            {
+                "appid": 1118314,
+                "name": ""
+            }
+        ]
+    }
+}

@@ -21,7 +21,9 @@ Installation steps:
 
 
 TODO
-- put steam app list in postgres
+- persistent volume for postgres
+- Check if there is detail app get call on steam api
+- todo rename GameListing to AppListing
 
 CRUD app template
 - React frontend.
