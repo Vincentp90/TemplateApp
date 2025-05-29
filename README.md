@@ -14,20 +14,20 @@ Installation steps:
     - Adminer: http://localhost:8080/
     - username postgres
     - password example
-- dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
-- dotnet ef database update --project DataAccess --startup-project WishlistApi
+- cd api/WishlistApi
+    - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
+    - dotnet ef database update --project DataAccess --startup-project WishlistApi
 - Run backend API in VS (debug, any cpu, https)
     - http://localhost:5186/swagger/index.html
 
 
 TODO
-- persistent volume for postgres
 - Check if there is detail app get call on steam api
 - todo rename GameListing to AppListing
 
 CRUD app template
 - React frontend.
-    - Next.js create-next-app with TypeScript, ESLind, Tailwind CSS, App Router, Webpack
+    - Next.js create-next-app with TypeScript, ESLint, Tailwind CSS, App Router, Webpack
     - Prettier? ts formating tool
 - .NET Web Api backend. Swagger, Moq. MSTest vs xUnit?
 - Split up API into BFF and REST?
@@ -41,10 +41,11 @@ Next steps to add:
 - Authentication (OAuth?)
 
 Things to try/add later:
+- fuzzy search steam game with postgres
 - gRCP
 - GraphQL
 - Redis cache (or redis fork)
 - steam openID integration
 - Add jenkinsfile for CI/CD
 - Separate frontend made with Vite + React Router (+ tailwind + primereact)
-- upgrade from .NET 9 to 10
+- upgrade from .NET 9 to 10 (november)
