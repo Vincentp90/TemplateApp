@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccess
+namespace DataAccess.AppListings
 {
-    public class GameListing
+    public class AppListing
     {
         [Key]
         public int appid { get; set; }

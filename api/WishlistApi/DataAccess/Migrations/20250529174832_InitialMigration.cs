@@ -12,7 +12,7 @@ namespace DataAccess.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "GameListings",
+                name: "app_listings",
                 columns: table => new
                 {
                     appid = table.Column<int>(type: "integer", nullable: false)
@@ -21,15 +21,23 @@ namespace DataAccess.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GameListings", x => x.appid);
+                    table.PrimaryKey("pk_app_listings", x => x.appid);
                 });
+
+            // To allow fuzzy search on AppListings name column
+            migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
+            migrationBuilder.Sql(@"
+                CREATE INDEX IF NOT EXISTS idx_trgm_applistings_name
+                ON app_listings
+                USING gin (name gin_trgm_ops);"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "GameListings");
+                name: "app_listings");
         }
     }
 }

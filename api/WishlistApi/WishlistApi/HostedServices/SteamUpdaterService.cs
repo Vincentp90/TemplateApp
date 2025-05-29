@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System;
 using WishlistApi.Steam;
+using DataAccess.AppListings;
 
 namespace WishlistApi.HostedServices
 {
@@ -23,7 +24,7 @@ namespace WishlistApi.HostedServices
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await UpdateGameListingsIfEmpty(stoppingToken);
+                await UpdateAppListingsIfEmpty(stoppingToken);
 
                 // TODO add db table to keep track of last update
                 // update existing data if longer than X ago
@@ -33,35 +34,35 @@ namespace WishlistApi.HostedServices
         }
 
         //TODO move db specific code to DataAccess
-        private async Task UpdateGameListingsIfEmpty(CancellationToken stoppingToken)
+        private async Task UpdateAppListingsIfEmpty(CancellationToken stoppingToken)
         {
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<WishlistDbContext>();
 
-            if (!await dbContext.GameListings.AnyAsync(stoppingToken))
+            if (!await dbContext.AppListings.AnyAsync(stoppingToken))
             {
-                var gameListings = await GetGameListingsFromSteam();
-                if(gameListings == null)
+                var appListings = await GetAppListingsFromSteam();
+                if(appListings == null)
                     throw new Exception("Failed to get game list from steam");
-                gameListings.applist.apps = gameListings.applist.apps
+                appListings.applist.apps = appListings.applist.apps
                     .GroupBy(a => a.appid)
                     .Select(g => g.First())
                     .ToList();
-                dbContext.GameListings.AddRange(gameListings.applist.apps);
+                dbContext.AppListings.AddRange(appListings.applist.apps);
                 await dbContext.SaveChangesAsync(stoppingToken);
             }
         }
 
         //TODO move to separate class or project, specific for getting data from steam
-        private async Task<Root?> GetGameListingsFromSteam()
+        private async Task<Root?> GetAppListingsFromSteam()
         {
             //Prod
             HttpClient client = new HttpClient();
             var response = await client.GetStringAsync(_steamApiUrl);
-            var gameListings = JsonSerializer.Deserialize<Root>(response);
+            var appListings = JsonSerializer.Deserialize<Root>(response);
             //Dev
             //TODO read steamapplistExample.json
-            return gameListings;
+            return appListings;
         }
 
         private class Root
@@ -71,7 +72,7 @@ namespace WishlistApi.HostedServices
 
         private class AppList
         {
-            public List<GameListing> apps { get; set; }
+            public List<AppListing> apps { get; set; }
         }
     }
 }

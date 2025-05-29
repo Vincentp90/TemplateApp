@@ -21,21 +21,24 @@ namespace DataAccess.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("DataAccess.GameListing", b =>
+            modelBuilder.Entity("DataAccess.AppListings.AppListing", b =>
                 {
                     b.Property<int>("appid")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("appid");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("appid"));
 
                     b.Property<string>("name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.HasKey("appid");
+                    b.HasKey("appid")
+                        .HasName("pk_app_listings");
 
-                    b.ToTable("GameListings");
+                    b.ToTable("app_listings", (string)null);
                 });
 #pragma warning restore 612, 618
         }

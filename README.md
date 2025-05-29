@@ -22,8 +22,10 @@ Installation steps:
 
 
 TODO
-- Check if there is detail app get call on steam api
-- todo rename GameListing to AppListing
+- fuzzy search steam game with postgres
+    - create controller method
+    - Create frontend page
+- Test if fuzzy search setup work if you start from clean DB
 
 CRUD app template
 - React frontend.
@@ -41,7 +43,6 @@ Next steps to add:
 - Authentication (OAuth?)
 
 Things to try/add later:
-- fuzzy search steam game with postgres
 - gRCP
 - GraphQL
 - Redis cache (or redis fork)
