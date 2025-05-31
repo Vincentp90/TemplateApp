@@ -1,4 +1,5 @@
 using DataAccess;
+using DataAccess.AppListings;
 using Microsoft.EntityFrameworkCore;
 using System;
 using WishlistApi.HostedServices;
@@ -28,6 +29,8 @@ builder.Services.AddDbContext<WishlistDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseSnakeCaseNamingConvention());
 
 builder.Services.AddHostedService<SteamUpdaterService>();
+
+builder.Services.AddScoped<AppListingDA, AppListingDA>();//TODO interface and unit test
 
 var app = builder.Build();
 app.UseCors("RestrictedCORS");
