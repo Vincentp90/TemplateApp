@@ -18,7 +18,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("RestrictedCORS", policy =>
     {
-        policy.WithOrigins("http://localhost:5186")
+        policy.WithOrigins("http://localhost:5186", "http://localhost:3000")
               .WithMethods("GET", "POST", "PUT", "DELETE")
               .WithHeaders("Content-Type", "Authorization")
               .AllowCredentials(); // Only if needed

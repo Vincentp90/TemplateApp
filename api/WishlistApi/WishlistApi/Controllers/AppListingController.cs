@@ -16,7 +16,7 @@ namespace WishlistApi.Controllers
             _appListingDA = appListingDA;
         }
 
-        [HttpGet("applisting/search/{term}")]
+        [HttpGet("search/{term}")]
         public ActionResult Search(string term)
         {
             return Ok(_appListingDA.SearchAppListings(term).Select(a => a.name));
