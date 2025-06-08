@@ -17,7 +17,7 @@ Installation steps:
 - cd api/WishlistApi
     - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
     - dotnet ef database update --project DataAccess --startup-project WishlistApi
-- Run backend API in VS (debug, any cpu, https)
+- Run backend API in VS (debug, any cpu, http) not https!
     - http://localhost:5186/swagger/index.html
 
 
@@ -35,6 +35,7 @@ CRUD app template
 - Split up API into BFF and REST?
 - PostgreSQL
 - docker compose
+    - Reverse proxy nginx to fix CORS https://aistudio.google.com/prompts/18eIrTUYifiLP6D_tK_pOUzVrj9Gpkcly
 - Topic? Enhanced Steam Wishlist (integrate with steam api https://api.steampowered.com/ISteamApps/GetAppList/v2/)
     - In the app you can make wishlist
     - If you have an account it will remember your wishlist

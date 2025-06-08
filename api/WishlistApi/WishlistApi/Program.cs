@@ -14,14 +14,16 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
+var corsOrigins = builder.Configuration.GetValue<string>("CorsOrigins")?.Split(',') ?? new string[0];
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("RestrictedCORS", policy =>
     {
-        policy.WithOrigins("http://localhost:5186", "http://localhost:3000")
-              .WithMethods("GET", "POST", "PUT", "DELETE")
-              .WithHeaders("Content-Type", "Authorization")
-              .AllowCredentials(); // Only if needed
+        policy.WithOrigins(corsOrigins)//TODO read more what is recommended prod CORS config
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 

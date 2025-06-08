@@ -1,0 +1,50 @@
+# postres, web api, next.js, reverse proxy
+
+services:
+  db:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    ports:
+      - 5432:5432 # todo remove for final version
+    environment:
+      POSTGRES_PASSWORD: example
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+  backend:
+    build:
+      context: ./path-to-your-api #
+    container_name: my-api
+    # The port 8080 is internal to the Docker network
+    # We don't expose it to the host because Nginx will handle traffic
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+
+  frontend:
+    build:
+      context: ./path-to-your-nextjs-app #
+    container_name: my-frontend
+    # The port 3000 is internal to the Docker network
+    environment:
+      - NODE_ENV=production
+
+  proxy:
+    image: nginx:alpine
+    container_name: my-proxy
+    ports:
+      - "80:80" # Expose Nginx port 80 to the host's port 80
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  db_data:

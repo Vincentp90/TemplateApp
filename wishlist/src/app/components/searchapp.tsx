@@ -12,7 +12,7 @@ export default function SearchApp() {
   // does this work correctly?
   const fetchResults = useRef (
     debounce(async (q: string) => {
-      const res = await fetch(`http://localhost:5186/applisting/search/${encodeURIComponent(q)}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applisting/search/${encodeURIComponent(q)}`);
       const data = await res.json();
       setResults(data.slice(0, 10));
     }, 300)
