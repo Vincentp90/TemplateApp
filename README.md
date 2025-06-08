@@ -22,9 +22,7 @@ Installation steps:
 
 
 TODO
-- fuzzy search steam game with postgres
-    - create controller method
-    - Create frontend page
+- header, footer, sidebar in main layout
 - Test if fuzzy search setup work if you start from clean DB
 
 CRUD app template
