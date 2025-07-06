@@ -15,15 +15,10 @@ Installation steps:
     - username postgres
     - password example
 - cd api/WishlistApi
-    - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
     - dotnet ef database update --project DataAccess --startup-project WishlistApi
 - Run backend API in VS (debug, any cpu, http) not https!
     - http://localhost:5186/swagger/index.html
 
-
-TODO
-- header, footer, sidebar in main layout
-- Test if fuzzy search setup work if you start from clean DB
 
 CRUD app template
 - React frontend.
@@ -38,10 +33,19 @@ CRUD app template
     - In the app you can make wishlist
     - If you have an account it will remember your wishlist
 
+TODO
+- Add game to wishlist on search page
+- Page to view wishlist
+
+Adding new migration:
+    - dotnet ef migrations add MigrationName --project DataAccess --startup-project WishlistApi
+
 Next steps to add:
+- tailwind primary secondary color
 - Authentication (OAuth?)
 
 Things to try/add later:
+- concurrency for CRUD operations
 - gRCP
 - GraphQL
 - Redis cache (or redis fork)
@@ -49,3 +53,5 @@ Things to try/add later:
 - Add jenkinsfile for CI/CD
 - Separate frontend made with Vite + React Router (+ tailwind + primereact)
 - upgrade from .NET 9 to 10 (november)
+- scan container (Anchore ?)
+- scan code (SonarQube?)
