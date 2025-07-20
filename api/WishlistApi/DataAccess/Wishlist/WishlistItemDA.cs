@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,7 +18,7 @@ namespace DataAccess.Wishlist
 
         public List<WishlistItem> GetWishlistItems(string userid)
         {
-            return _context.WishlistItems.Where(i => i.userid == userid).ToList();
+            return _context.WishlistItems.Where(i => i.userid == userid).Include(i => i.AppListing).ToList();
         }
 
         public void AddWishlistItem(WishlistItem item)
@@ -26,7 +27,7 @@ namespace DataAccess.Wishlist
             _context.SaveChanges();
         }
 
-        public void DeleteWishlistItem(string userid, string appid)
+        public void DeleteWishlistItem(string userid, int appid)
         {
             var item = _context.WishlistItems.FirstOrDefault(i => i.userid == userid && i.appid == appid);
             if (item != null)

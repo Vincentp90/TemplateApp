@@ -2,12 +2,8 @@ import SearchApp from '../../components/searchapp';
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center p-8 pb-10 gap-16 sm:p-10 font-[family-name:var(--font-geist-sans)">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <SearchApp />
-        </div>
-      </main>
+    <div className="grid justify-items-start p-8 sm:p-10">
+      <SearchApp />
     </div>
   );
 }

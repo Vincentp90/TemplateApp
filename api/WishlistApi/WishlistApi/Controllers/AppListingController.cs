@@ -19,7 +19,7 @@ namespace WishlistApi.Controllers
         [HttpGet("search/{term}")]
         public ActionResult Search(string term)
         {
-            return Ok(_appListingDA.SearchAppListings(term).Select(a => a.name));
+            return Ok(_appListingDA.SearchAppListings(term));
         }
     }
 }

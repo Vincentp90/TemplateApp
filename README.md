@@ -33,9 +33,10 @@ CRUD app template
     - In the app you can make wishlist
     - If you have an account it will remember your wishlist
 
-TODO
-- Add game to wishlist on search page
-- Page to view wishlist
+TODO next
+- Delete game from wishlist on search page
+- Learn more how to clean up migration cs files (can wrong migration with wishlist appid string be removed)
+- Page to view wishlist, add more details (time added, etc)
 
 Adding new migration:
     - dotnet ef migrations add MigrationName --project DataAccess --startup-project WishlistApi

@@ -16,18 +16,18 @@ namespace WishlistApi.Controllers
             _wishlistItemDA = wishlistItemDA;
         }
 
-        [HttpGet("wishlist")]
-        public ActionResult GetWishlist()
+        [HttpGet()]
+        public ActionResult GetWishlist([FromHeader(Name = "x-user-id")] string userId)
         {
-            string? userId = Request.Headers["x-user-id"];
+            //string? userId = Request.Headers["x-user-id"];
             if (string.IsNullOrEmpty(userId))
                 return BadRequest("Missing x-user-id header");
 
-            return Ok(_wishlistItemDA.GetWishlistItems(userId));
+            return Ok(_wishlistItemDA.GetWishlistItems(userId).Select(x => new { appid = x.appid, name = x.AppListing?.name }));
         }
 
-        [HttpPost("wishlist/{appId}")]
-        public ActionResult AddWishlistItem(string appId)
+        [HttpPost("{appId}")]
+        public ActionResult AddWishlistItem(int appId)
         {
             //TODO get user id from x-user-id header, real auth later
             string? userId = Request.Headers["x-user-id"];
@@ -42,8 +42,8 @@ namespace WishlistApi.Controllers
             return Ok();
         }
 
-        [HttpDelete("wishlist/{appId}")]
-        public ActionResult DeleteAppFromWishlist(string appId)
+        [HttpDelete("{appId}")]
+        public ActionResult DeleteAppFromWishlist(int appId)
         {
             string? userId = Request.Headers["x-user-id"];
             if (string.IsNullOrEmpty(userId))

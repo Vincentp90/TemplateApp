@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataAccess.AppListings;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -16,8 +17,8 @@ namespace DataAccess.Wishlist
         public string userid { get; set; }
 
         [ForeignKey("AppListing")]
-        public string appid { get; set; }
-
+        public int appid { get; set; }
+        public AppListing? AppListing { get; set; }
 
     }
 }
