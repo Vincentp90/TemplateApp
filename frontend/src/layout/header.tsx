@@ -1,0 +1,14 @@
+import { Link } from "@tanstack/react-router";
+
+export default function Header() {
+  return (
+    <header className="bg-gray-900 text-white px-6 py-4 shadow-md flex justify-between items-center">
+      <div className="text-xl font-semibold">Top Bar</div>
+      <nav className="space-x-4">
+        <Link to="/" className="hover:text-gray-300">Home</Link>
+        <Link to="/about" className="hover:text-gray-300">About</Link>
+        <Link to="/form" className="hover:text-gray-300">React Hook Form example</Link>
+      </nav>
+    </header>
+  );
+}
