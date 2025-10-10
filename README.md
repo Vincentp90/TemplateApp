@@ -37,12 +37,19 @@ TODO next
 - Delete game from wishlist on search page
 - Learn more how to clean up migration cs files (can wrong migration with wishlist appid string be removed)
 - Page to view wishlist, add more details (time added, etc)
+- Different frontend instead of next.js, try:
+    Tanstack Query (previously react query)
+    Tanstack Router/React Router
+    React Hook Form +zod (or whatever validation library you want)
+    TypeScript, ESLint, Tailwind CSS
+    Zustand (optional)
 
 Adding new migration:
     - dotnet ef migrations add MigrationName --project DataAccess --startup-project WishlistApi
 
 Next steps to add:
 - tailwind primary secondary color
+- run as container for future deployment (make dockerfile, run with https)
 - Authentication (OAuth?)
 
 Things to try/add later:
@@ -52,7 +59,6 @@ Things to try/add later:
 - Redis cache (or redis fork)
 - steam openID integration
 - Add jenkinsfile for CI/CD
-- Separate frontend made with Vite + React Router (+ tailwind + primereact)
 - upgrade from .NET 9 to 10 (november)
 - scan container (Anchore ?)
 - scan code (SonarQube?)

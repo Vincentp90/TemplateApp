@@ -8,8 +8,8 @@ type AppListing = { appid: number; name: string };
 
 export default function SearchApp() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<AppListing[]>([]);
-  const [selected, setSelected] = useState<AppListing[]>([]);
+  const [searchResults, setSearchResults] = useState<AppListing[]>([]);
+  const [wishlistItems, setWishlistItems] = useState<AppListing[]>([]);
 
   // TODO learn what this does, why useref?
   // does this work correctly?
@@ -17,13 +17,13 @@ export default function SearchApp() {
     debounce(async (q: string) => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/applisting/search/${encodeURIComponent(q)}`);
       const data = await res.json();
-      setResults(data.slice(0, 10));
+      setSearchResults(data.slice(0, 10));
     }, 300)
   );
 
   useEffect(() => {
-    if (query.length > 3) fetchResults.current(query);
-    else setResults([]);
+    if (query.length > 2) fetchResults.current(query);
+    else setSearchResults([]);
   }, [query]);
 
   useEffect(() => {
@@ -33,13 +33,13 @@ export default function SearchApp() {
       },
     })
       .then(res => res.json())
-      .then(data => setSelected(data.map(
+      .then(data => setWishlistItems(data.map(
         (item: AppListing) => ({ appid: item.appid, name: item.name }))))
       .catch(err => console.error('Fetch error:', err));
   }, []);
 
-  const onClickApplisting = (appItem: AppListing) => {
-    setSelected([...selected, appItem]);
+  const addToWishlist = (appItem: AppListing) => {
+    setWishlistItems([...wishlistItems, appItem]);
     setQuery('');
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/wishlist/${appItem.appid}`, {
       method: 'POST',
@@ -47,6 +47,17 @@ export default function SearchApp() {
         'x-user-id': '1'
       },
     }).catch(err => console.error('Failed to add to wishlist:', err));
+  }
+
+  const removeFromWishlist = (appItem: AppListing) => {
+    setWishlistItems(list => list.filter(i => i.appid !== appItem.appid));
+    
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/wishlist/${appItem.appid}`, {
+      method: 'DELETE',
+      headers: {
+        'x-user-id': '1'
+      },
+    }).catch(err => console.error('Failed to remove from wishlist:', err));
   }
 
   return (
@@ -60,13 +71,13 @@ export default function SearchApp() {
           placeholder="Type to search..."
           className="p-2 border rounded shadow-sm"
         />
-        {results.length > 0 && (
+        {searchResults.length > 0 && (
           <ul className="border rounded p-2 bg-white shadow">
-            {results.map((item: AppListing, idx) => (
+            {searchResults.map((item: AppListing, idx) => (
               <li
                 key={idx}
                 value={item.appid}
-                onClick={() => onClickApplisting(item)}
+                onClick={() => addToWishlist(item)}
                 className="cursor-pointer hover:bg-gray-100 p-1"
               >
                 {item.name}
@@ -79,10 +90,16 @@ export default function SearchApp() {
       {/* Right Column: Wishlist */}
       <div className="flex flex-col gap-2">
         <h2 className="text-xl font-semibold">Wishlist</h2>
-        <ul className="border rounded p-2 bg-white shadow">
-          {selected.map((s, i) => (
-            <li key={i} className="p-1 border-b last:border-b-0">
-              {s.name}
+        <ul className="border rounded p-2 bg-white shadow divide-y">
+          {wishlistItems.map((s, i) => (
+            <li key={i} className="flex items-center justify-between py-2 px-1">
+              <span>{s.name}</span>
+              <button
+                onClick={() => removeFromWishlist(s)}
+                className="text-red-600 hover:text-white hover:bg-red-600 border border-red-600 px-2 py-1 rounded text-sm transition"
+              >
+                Delete
+              </button>
             </li>
           ))}
         </ul>
