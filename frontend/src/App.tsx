@@ -31,7 +31,10 @@ function App() {
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
-      <Link to="/about">About (TanStack router link)</Link>
+      <div className='flex flex-col'>
+        <Link to="/about">About (TanStack router link)</Link>
+        <Link to="/form">React Hook Form example</Link>
+      </div>
     </>
   )
 }

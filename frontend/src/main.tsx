@@ -10,6 +10,7 @@ import {
 import './index.css'
 import App from './App.tsx'
 import About from './About.tsx'
+import FormExample from './FormExample.tsx'
 
 
 const rootRoute = createRootRoute()
@@ -26,7 +27,13 @@ const aboutRoute = createRoute({
   component: About,
 })
 
-const routeTree = rootRoute.addChildren([indexRoute, aboutRoute])
+const formExampleRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/form',
+  component: FormExample,
+})
+
+const routeTree = rootRoute.addChildren([indexRoute, aboutRoute, formExampleRoute])
 
 const router = createRouter({ routeTree })
 
