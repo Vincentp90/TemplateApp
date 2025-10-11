@@ -1,8 +1,13 @@
 //import './App.css'
 
+import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+
+export const Route = createFileRoute('/formExample')({
+  component: FormExample,
+})
 
 const schema = z.object({
     email: z.string().email('Invalid email'),
