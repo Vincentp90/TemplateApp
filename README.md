@@ -26,9 +26,9 @@ Installation steps:
 
 
 CRUD app template
-- React frontend.
-    - Next.js create-next-app with TypeScript, ESLint, Tailwind CSS, App Router, Webpack
-    - Prettier? ts formating tool
+- React frontend, there are two frontend right now:
+    - /wishlist: Next.js create-next-app with TypeScript, ESLint, Tailwind CSS, App Router, Webpack
+    - /frontend: Tanstack Query, Router, React Hook Form, Zod, TypeScript, ESLint, Tailwind CSS, Vite
 - .NET Web Api backend. Swagger, Moq. MSTest vs xUnit?
 - Split up API into BFF and REST?
 - PostgreSQL
@@ -39,13 +39,7 @@ CRUD app template
     - If you have an account it will remember your wishlist
 
 TODO next
-- New frontend instead of next.js, try:
-    Tanstack Query (previously react query)
-    Tanstack Router/React Router
-    React Hook Form +zod (or whatever validation library you want)
-    TypeScript, ESLint, Tailwind CSS
-    Zustand (optional)
-    CONTINUE: fix layout and learn how tanstack router works (how to have same layout when navigating to about)
+- learn how tanstack query works (do apicalls with tanstack query)
 - Learn more how to clean up migration cs files (can wrong migration with wishlist appid string be removed)
 - Page to view wishlist, add more details (time added, etc)
 

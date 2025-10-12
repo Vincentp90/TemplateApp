@@ -63,7 +63,7 @@ export default function Search() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-2 gap-6 max-w-4xl">
       {/* Left Column: Search */}
       <div className="flex flex-col gap-4">
         <input
