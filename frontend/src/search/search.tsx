@@ -1,66 +1,113 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import debounce from 'lodash.debounce';
 
-//TODO move to serparate file?
+//TODO move to separate file?
 type AppListing = { appid: number; name: string };
 
 const APIURL = "http://localhost:5186";//TODO put in better spot
 
-export default function Search() {
-  const [query, setQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<AppListing[]>([]);
-  const [wishlistItems, setWishlistItems] = useState<AppListing[]>([]);
+const fetchSearchResults = async (query: string): Promise<AppListing[]> => {
+  const res = await fetch(`${APIURL}/applisting/search/${encodeURIComponent(query)}`);
+  const data = await res.json();
+  return data.slice(0, 10);
+};
 
-  // TODO learn what this does, why useref?
-  // does this work correctly?
-  const fetchResults = useRef(
+export default function Search() {
+  const [searchInputValue, setSearchInputValue] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const queryClient = useQueryClient();
+
+  const debounceQueryInput = useRef(
     debounce(async (q: string) => {
-      const res = await fetch(`${APIURL}/applisting/search/${encodeURIComponent(q)}`);
-      const data = await res.json();
-      setSearchResults(data.slice(0, 10));
+      setSearchQuery(q);
     }, 300)
   );
 
   useEffect(() => {
-    if (query.length > 2) fetchResults.current(query);
-    else setSearchResults([]);
-  }, [query]);
+    if (searchInputValue.length > 2) debounceQueryInput.current(searchInputValue);
+    else setSearchQuery('');
+  }, [searchInputValue]);
 
-  useEffect(() => {
-    fetch(`${APIURL}/wishlist`, {
-      headers: {
-        'x-user-id': '1'
-      },
-    })
-      .then(res => res.json())
-      .then(data => setWishlistItems(data.map(
-        (item: AppListing) => ({ appid: item.appid, name: item.name }))))
-      .catch(err => console.error('Fetch error:', err));
-  }, []);
+  const { data: searchResults = [] } = useQuery<AppListing[]>({
+    queryKey: ['search', searchQuery],
+    queryFn: async () => fetchSearchResults(searchQuery),
+    enabled: searchQuery.length > 2,
+  });
+
+  // Number 1 in ['wishlist', 1] to be replaced later with userId
+  const { data: wishlistItems = [] } = useQuery<AppListing[]>({
+    queryKey: ['wishlist', 1],
+    queryFn: async () => {
+      const res = await fetch(`${APIURL}/wishlist`, {
+        headers: { 'x-user-id': '1' },
+      });
+      const data = await res.json();
+      return data.map((item: AppListing) => ({
+        appid: item.appid,
+        name: item.name,
+      }));
+    },
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async (appItem: AppListing) => {
+      await fetch(`${APIURL}/wishlist/${appItem.appid}`, {
+        method: 'POST',
+        headers: { 'x-user-id': '1' },
+      });
+      return appItem;
+    },
+    onMutate: async (appItem) => {
+      await queryClient.cancelQueries({ queryKey: ['wishlist', 1] });
+      const previous = queryClient.getQueryData<AppListing[]>(['wishlist', 1]) || [];
+      queryClient.setQueryData(['wishlist', 1], [...previous, appItem]);
+      return { previous };
+    },
+    onError: (_err, _appItem, context) => {
+      if (context?.previous)
+        queryClient.setQueryData(['wishlist', 1], context.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['wishlist', 1] });
+    },
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: async (appItem: AppListing) => {
+      await fetch(`${APIURL}/wishlist/${appItem.appid}`, {
+        method: 'DELETE',
+        headers: { 'x-user-id': '1' },
+      });
+      return appItem;
+    },
+    onMutate: async (appItem) => {
+      await queryClient.cancelQueries({ queryKey: ['wishlist', 1] });
+      const previous = queryClient.getQueryData<AppListing[]>(['wishlist', 1]) || [];
+      queryClient.setQueryData(
+        ['wishlist', 1],
+        previous.filter(i => i.appid !== appItem.appid)
+      );
+      return { previous };
+    },
+    onError: (_err, _appItem, context) => {
+      if (context?.previous)
+        queryClient.setQueryData(['wishlist', 1], context.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['wishlist', 1] });
+    },
+  });
 
   const addToWishlist = (appItem: AppListing) => {
-    setWishlistItems([...wishlistItems, appItem]);
-    setQuery('');
-    fetch(`${APIURL}/wishlist/${appItem.appid}`, {
-      method: 'POST',
-      headers: {
-        'x-user-id': '1'
-      },
-    }).catch(err => console.error('Failed to add to wishlist:', err));
-  }
+    addMutation.mutate(appItem);
+  };
 
   const removeFromWishlist = (appItem: AppListing) => {
-    setWishlistItems(list => list.filter(i => i.appid !== appItem.appid));
-    
-    fetch(`${APIURL}/wishlist/${appItem.appid}`, {
-      method: 'DELETE',
-      headers: {
-        'x-user-id': '1'
-      },
-    }).catch(err => console.error('Failed to remove from wishlist:', err));
-  }
+    removeMutation.mutate(appItem);
+  };
 
   return (
     <div className="grid grid-cols-2 gap-6 max-w-4xl">
@@ -68,8 +115,8 @@ export default function Search() {
       <div className="flex flex-col gap-4">
         <input
           type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          value={searchInputValue}
+          onChange={(e) => setSearchInputValue(e.target.value)}
           placeholder="Type to search..."
           className="p-2 border rounded shadow-sm"
         />

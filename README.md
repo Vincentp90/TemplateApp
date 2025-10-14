@@ -3,7 +3,7 @@
 This is a template for a typical business CRUD app. The goal is to have a template using technologies that are modern, stable, popular and technologies I had good success with in my career. Reasons for focusing on those points:
 - Modern: To not fall behind with my experience 
 - Stable: An app made from this template should still be easy to run and maintain 10 years from now
-- Popular: Popular doesn't mean best in my opinion, but it greatly helps with development and diagnosing issues when you are googling/asking an LLM about a popular technology
+- Popular: Popular doesn't mean best in my opinion, but it greatly helps with development and diagnosing issues when you are googling/asking an LLM about a popular technology because there is a lot more information about it
 
 Installation steps:
 - Install Node.js v22
@@ -26,7 +26,7 @@ Installation steps:
 
 
 CRUD app template
-- React frontend, there are two frontend right now:
+- React frontend, there are two frontends right now:
     - /wishlist: Next.js create-next-app with TypeScript, ESLint, Tailwind CSS, App Router, Webpack
     - /frontend: Tanstack Query, Router, React Hook Form, Zod, TypeScript, ESLint, Tailwind CSS, Vite
 - .NET Web Api backend. Swagger, Moq. MSTest vs xUnit?
@@ -39,9 +39,9 @@ CRUD app template
     - If you have an account it will remember your wishlist
 
 TODO next
-- learn how tanstack query works (do apicalls with tanstack query)
-- Learn more how to clean up migration cs files (can wrong migration with wishlist appid string be removed)
 - Page to view wishlist, add more details (time added, etc)
+- Learn more how to clean up migration cs files (can wrong migration with wishlist appid string be removed)
+
 
 
 Adding new migration:
