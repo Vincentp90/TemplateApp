@@ -39,18 +39,17 @@ CRUD app template
     - If you have an account it will remember your wishlist
 
 TODO next
-- Page to view wishlist, add more details (time added, etc)
 - Learn more how to clean up migration cs files (can wrong migration with wishlist appid string be removed)
 
-
-
 Adding new migration:
-    - dotnet ef migrations add MigrationName --project DataAccess --startup-project WishlistApi
+    - dotnet ef migrations add WishlistItemDateAdded --project DataAccess --startup-project WishlistApi
 
 Later steps to add:
 - tailwind primary secondary color
+- tanstack query learn more about and implement
 - run as container for future deployment (make dockerfile, run with https)
 - Authentication (OAuth?)
+- TODOs in code
 
 Things to try/add later:
 - concurrency for CRUD operations

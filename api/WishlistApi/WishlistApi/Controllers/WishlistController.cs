@@ -1,6 +1,7 @@
 ﻿using DataAccess.AppListings;
 using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Mvc;
+using System.Dynamic;
 using WishlistApi.Steam;
 
 namespace WishlistApi.Controllers
@@ -17,13 +18,28 @@ namespace WishlistApi.Controllers
         }
 
         [HttpGet()]
-        public ActionResult GetWishlist([FromHeader(Name = "x-user-id")] string userId)
+        public ActionResult GetWishlist([FromHeader(Name = "x-user-id")] string userId, [FromQuery] string? fields = null)
         {
-            //string? userId = Request.Headers["x-user-id"];
             if (string.IsNullOrEmpty(userId))
                 return BadRequest("Missing x-user-id header");
 
-            return Ok(_wishlistItemDA.GetWishlistItems(userId).Select(x => new { appid = x.appid, name = x.AppListing?.name }));
+            var fieldList = (fields ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                                .Select(f => f.ToLower())
+                                .ToHashSet();
+            bool includeAll = fieldList.Count == 0;
+            var result = _wishlistItemDA.GetWishlistItems(userId).Select(x => 
+            {
+                var obj = new ExpandoObject();
+                var item = obj as IDictionary<string, object>;
+                if (includeAll || fieldList.Contains("appid"))
+                    item["appid"] = x.appid;
+                if(includeAll || fieldList.Contains("dateadded"))
+                    item["dateadded"] = x.dateadded;
+                if (x.AppListing != null && (includeAll || fieldList.Contains("name")))
+                    item["name"] = x.AppListing.name;
+                return obj;
+            });
+            return Ok(result);
         }
 
         [HttpPost("{appId}")]

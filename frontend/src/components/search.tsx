@@ -41,7 +41,7 @@ export default function Search() {
   const { data: wishlistItems = [] } = useQuery<AppListing[]>({
     queryKey: ['wishlist', 1],
     queryFn: async () => {
-      const res = await fetch(`${APIURL}/wishlist`, {
+      const res = await fetch(`${APIURL}/wishlist?fields=appid,name`, {
         headers: { 'x-user-id': '1' },
       });
       const data = await res.json();

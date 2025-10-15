@@ -23,6 +23,7 @@ namespace DataAccess.Wishlist
 
         public void AddWishlistItem(WishlistItem item)
         {
+            item.dateadded = DateTimeOffset.UtcNow;//TODO pass client timezone and set in datetimeoffset DateTimeOffset.UtcNow.ToOffset(clientOffset);
             _context.WishlistItems.Add(item);
             _context.SaveChanges();
         }

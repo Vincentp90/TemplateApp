@@ -6,6 +6,7 @@ export default function Header() {
       <div className="text-xl font-semibold">Top Bar</div>
       <nav className="space-x-4">
         <Link to="/" className="hover:text-gray-300">Home</Link>
+        <Link to="/overview" className="hover:text-gray-300">Overview</Link>
         <Link to="/about" className="hover:text-gray-300">About</Link>
         <Link to="/formExample" className="hover:text-gray-300">React Hook Form example</Link>
       </nav>

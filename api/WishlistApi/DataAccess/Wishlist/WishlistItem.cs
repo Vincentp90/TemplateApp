@@ -15,6 +15,7 @@ namespace DataAccess.Wishlist
 
         //[ForeignKey("User")]
         public string userid { get; set; }
+        public DateTimeOffset dateadded { get; set; }
 
         [ForeignKey("AppListing")]
         public int appid { get; set; }
