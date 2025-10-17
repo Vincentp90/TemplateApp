@@ -41,14 +41,17 @@ CRUD app template
 Adding new migration:
     - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
 
+TODO:
+- tanstack query learn more about and implement https://www.youtube.com/watch?v=mPaCnwpFvZY
+    
+
 Later steps to add:
-- tailwind primary secondary color
-- tanstack query learn more about and implement
 - run as container for future deployment (make dockerfile, run with https)
 - Authentication (OAuth?)
 - TODOs in code
 
 Things to try/add later:
+- tailwind primary secondary color (once we have some buttons )
 - concurrency for CRUD operations
 - gRCP
 - GraphQL

@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import debounce from 'lodash.debounce';
 
+import { Loading02Icon } from "hugeicons-react";
+
 //TODO move to separate file?
 type AppListing = { appid: number; name: string };
 
@@ -38,7 +40,7 @@ export default function Search() {
   });
 
   // Number 1 in ['wishlist', 1] to be replaced later with userId
-  const { data: wishlistItems = [] } = useQuery<AppListing[]>({
+  const { data: wishlistItems = [], isPending: wishlistItemsPending } = useQuery<AppListing[]>({
     queryKey: ['wishlist', 1],
     queryFn: async () => {
       const res = await fetch(`${APIURL}/wishlist?fields=appid,name`, {
@@ -109,9 +111,8 @@ export default function Search() {
     removeMutation.mutate(appItem);
   };
 
-  return (
-    <div className="grid grid-cols-2 gap-6 max-w-4xl">
-      {/* Left Column: Search */}
+  const SearchColumn = () => {
+    return (
       <div className="flex flex-col gap-4">
         <input
           type="text"
@@ -133,26 +134,40 @@ export default function Search() {
               </li>
             ))}
           </ul>
-        )}
-      </div>
+        )
+        }
 
-      {/* Right Column: Wishlist */}
+      </div>
+    )
+  };
+
+  const WishlistColumn = () => {
+    return (
       <div className="flex flex-col gap-2">
         <h2 className="text-xl font-semibold">Wishlist</h2>
         <ul className="border rounded p-2 bg-white shadow divide-y">
-          {wishlistItems.map((s, i) => (
-            <li key={i} className="flex items-center justify-between py-2 px-1">
-              <span>{s.name}</span>
-              <button
-                onClick={() => removeFromWishlist(s)}
-                className="text-red-600 hover:text-white hover:bg-red-600 border border-red-600 px-2 py-1 rounded text-sm transition"
-              >
-                Delete
-              </button>
-            </li>
-          ))}
+          {wishlistItemsPending ? (<Loading02Icon size={48} />) :
+            wishlistItems.map((s, i) => (
+              <li key={i} className="flex items-center justify-between py-2 px-1">
+                <span>{s.name}</span>
+                <button
+                  onClick={() => removeFromWishlist(s)}
+                  className="text-red-600 hover:text-white hover:bg-red-600 border border-red-600 px-2 py-1 rounded text-sm transition"
+                >
+                  Delete
+                </button>
+              </li>
+            ))
+          }
         </ul>
       </div>
+    )
+  };
+
+  return (
+    <div className="grid grid-cols-2 gap-6 max-w-4xl">
+      <SearchColumn />
+      <WishlistColumn />
     </div>
   );
 }
