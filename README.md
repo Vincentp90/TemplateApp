@@ -38,11 +38,8 @@ CRUD app template
     - In the app you can make wishlist
     - If you have an account it will remember your wishlist
 
-TODO next
-- Learn more how to clean up migration cs files (can wrong migration with wishlist appid string be removed)
-
 Adding new migration:
-    - dotnet ef migrations add WishlistItemDateAdded --project DataAccess --startup-project WishlistApi
+    - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
 
 Later steps to add:
 - tailwind primary secondary color

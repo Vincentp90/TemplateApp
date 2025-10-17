@@ -55,7 +55,7 @@ namespace DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("appid");
 
-                    b.Property<DateTimeOffset?>("dateadded")
+                    b.Property<DateTimeOffset>("dateadded")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("dateadded");
 
