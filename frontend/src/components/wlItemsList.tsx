@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
 
 //TODO move to separate file
 type AppListingDetailed = { appid: number; name: string; dateadded: string };
@@ -9,7 +9,7 @@ const APIURL = "http://localhost:5186";//TODO put in better spot
 
 export default function WLItemsList() {
   // Number 1 in ['wishlist', 1] to be replaced later with userId
-  const { data: wishlistItems = [] } = useQuery<AppListingDetailed[]>({
+  const { data: wishlistItems = [] } = useSuspenseQuery<AppListingDetailed[]>({
     queryKey: ['wishlist', 1],
     queryFn: async () => {
       const res = await fetch(`${APIURL}/wishlist?fields=name,dateadded`, {

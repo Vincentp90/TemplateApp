@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import WLItemsList from '../components/wlItemsList'
+import { Suspense } from 'react'
+import { Loading02Icon } from "hugeicons-react";
 
 export const Route = createFileRoute('/overview')({
   component: Overview,
@@ -7,6 +9,9 @@ export const Route = createFileRoute('/overview')({
 
 function Overview() {
   return (
-    <WLItemsList />
+    <Suspense fallback={<div>Loading...<Loading02Icon size={48} /></div>}>
+      <WLItemsList />
+    </Suspense>
+
   )
 }

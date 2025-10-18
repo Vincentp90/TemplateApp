@@ -111,8 +111,8 @@ export default function Search() {
     removeMutation.mutate(appItem);
   };
 
-  const SearchColumn = () => {
-    return (
+  return (
+    <div className="grid grid-cols-2 gap-6 max-w-4xl">
       <div className="flex flex-col gap-4">
         <input
           type="text"
@@ -136,13 +136,8 @@ export default function Search() {
           </ul>
         )
         }
-
       </div>
-    )
-  };
 
-  const WishlistColumn = () => {
-    return (
       <div className="flex flex-col gap-2">
         <h2 className="text-xl font-semibold">Wishlist</h2>
         <ul className="border rounded p-2 bg-white shadow divide-y">
@@ -161,13 +156,6 @@ export default function Search() {
           }
         </ul>
       </div>
-    )
-  };
-
-  return (
-    <div className="grid grid-cols-2 gap-6 max-w-4xl">
-      <SearchColumn />
-      <WishlistColumn />
     </div>
   );
 }

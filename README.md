@@ -42,12 +42,12 @@ Adding new migration:
     - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
 
 TODO:
-- tanstack query learn more about and implement https://www.youtube.com/watch?v=mPaCnwpFvZY
+- Authentication (OAuth?), make login screen, block api calls when not logged in
     
 
 Later steps to add:
 - run as container for future deployment (make dockerfile, run with https)
-- Authentication (OAuth?)
+- How to use Zod (runtime validation of type?)
 - TODOs in code
 
 Things to try/add later:
@@ -55,9 +55,10 @@ Things to try/add later:
 - concurrency for CRUD operations
 - gRCP
 - GraphQL
-- Redis cache (or redis fork)
+- Redis cache (or redis fork) (maybe not much point when using tanstack query)
 - steam openID integration
 - Add jenkinsfile for CI/CD
 - upgrade from .NET 9 to 10 (november)
 - scan container (Anchore ?)
 - scan code (SonarQube?)
+- nicer loading screen (use with suspense)
