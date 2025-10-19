@@ -4,6 +4,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using DataAccess.AppListings;
 using DataAccess.Wishlist;
+using DataAccess.Users;
 
 namespace DataAccess
 {
@@ -13,7 +14,18 @@ namespace DataAccess
 
         public DbSet<WishlistItem> WishlistItems { get; set; }
 
+        public DbSet<User> Users { get; set; }
+
         public WishlistDbContext(DbContextOptions<WishlistDbContext> options)
             : base(options) { }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.username)
+                .IsUnique();
+        }
     }
 }

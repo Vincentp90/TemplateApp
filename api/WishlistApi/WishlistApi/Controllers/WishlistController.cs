@@ -1,5 +1,6 @@
 ﻿using DataAccess.AppListings;
 using DataAccess.Wishlist;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Dynamic;
 using WishlistApi.Steam;
@@ -7,6 +8,7 @@ using WishlistApi.Steam;
 namespace WishlistApi.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("[controller]")]
     public class WishlistController : ControllerBase
     {

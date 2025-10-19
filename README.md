@@ -43,9 +43,13 @@ Adding new migration:
 
 TODO:
 - Authentication (OAuth?), make login screen, block api calls when not logged in
-    
+    - Create and run DB migration
+    - implement api methods
+    - frontend 
+    - https://chatgpt.com/c/68f4f466-7fd4-8325-b7c6-e579c6727d8d
 
 Later steps to add:
+- Read more about how to use Microsoft.AspNetCore.Authentication.JwtBearer https://devblogs.microsoft.com/dotnet/jwt-validation-and-authorization-in-asp-net-core/
 - run as container for future deployment (make dockerfile, run with https)
 - How to use Zod (runtime validation of type?)
 - TODOs in code
@@ -62,3 +66,6 @@ Things to try/add later:
 - scan container (Anchore ?)
 - scan code (SonarQube?)
 - nicer loading screen (use with suspense)
+- auth
+    - Use refresh tokens for long sessions.
+    - Add roles/claims for authorization.

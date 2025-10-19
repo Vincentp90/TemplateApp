@@ -1,8 +1,11 @@
 using DataAccess;
 using DataAccess.AppListings;
 using DataAccess.Wishlist;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Text;
 using WishlistApi.HostedServices;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +38,24 @@ builder.Services.AddHostedService<SteamUpdaterService>();
 
 builder.Services.AddScoped<AppListingDA, AppListingDA>();//TODO interface and unit test
 builder.Services.AddScoped<WishlistItemDA, WishlistItemDA>();
+
+//TODO read more what is recommended prod JWT config
+string jwtKey = builder.Configuration.GetValue<string>("Jwt:Key") ?? throw new Exception("Missing Jwt:Key in appsettings.json");
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "WishlistApp",
+            ValidAudience = "WishlistApp_audience",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 app.UseCors("RestrictedCORS");
