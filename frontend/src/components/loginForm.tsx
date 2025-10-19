@@ -1,13 +1,8 @@
-//import './App.css'
+'use client';
 
-import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-
-export const Route = createFileRoute('/app/formExample')({
-  component: FormExample,
-})
 
 const schema = z.object({
     email: z.string().email('Invalid email'),
@@ -16,8 +11,10 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-function FormExample() {
-    const { register, handleSubmit, formState: { errors, isSubmitting }, } = useForm<FormData>({
+const isDev = import.meta.env.MODE === "development";
+
+export default function LoginForm() {
+    const { register, handleSubmit, formState: { errors, isSubmitting }, setValue} = useForm<FormData>({
         resolver: zodResolver(schema),
         mode: 'onBlur',
     })
@@ -26,11 +23,21 @@ function FormExample() {
         console.log('Form submitted', data)
     }
 
+    const fillDevCreds = () => {
+        setValue("email", "dev@example.com");
+        setValue("password", "password123");
+    };
+
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
             className="flex flex-col gap-3 max-w-sm mx-auto p-4"
         >
+            {isDev && (
+                <button onClick={fillDevCreds} className="mt-2 bg-gray-500 text-white p-2 w-full">
+                    I'm a developer
+                </button>
+            )}
             <label className="flex flex-col">
                 <span>Email</span>
                 <input
@@ -65,6 +72,3 @@ function FormExample() {
         </form>
     )
 }
-
-export default FormExample
-
