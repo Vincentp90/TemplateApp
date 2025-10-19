@@ -9,24 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as OverviewRouteImport } from './routes/overview'
-import { Route as FormExampleRouteImport } from './routes/formExample'
-import { Route as AboutRouteImport } from './routes/about'
+import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app/index'
+import { Route as AppOverviewRouteImport } from './routes/app/overview'
+import { Route as AppFormExampleRouteImport } from './routes/app/formExample'
+import { Route as AppAboutRouteImport } from './routes/app/about'
 
-const OverviewRoute = OverviewRouteImport.update({
-  id: '/overview',
-  path: '/overview',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FormExampleRoute = FormExampleRouteImport.update({
-  id: '/formExample',
-  path: '/formExample',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const AppRouteRoute = AppRouteRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -34,62 +26,84 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppOverviewRoute = AppOverviewRouteImport.update({
+  id: '/overview',
+  path: '/overview',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppFormExampleRoute = AppFormExampleRouteImport.update({
+  id: '/formExample',
+  path: '/formExample',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppAboutRoute = AppAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/formExample': typeof FormExampleRoute
-  '/overview': typeof OverviewRoute
+  '/app': typeof AppRouteRouteWithChildren
+  '/app/about': typeof AppAboutRoute
+  '/app/formExample': typeof AppFormExampleRoute
+  '/app/overview': typeof AppOverviewRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/formExample': typeof FormExampleRoute
-  '/overview': typeof OverviewRoute
+  '/app/about': typeof AppAboutRoute
+  '/app/formExample': typeof AppFormExampleRoute
+  '/app/overview': typeof AppOverviewRoute
+  '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/formExample': typeof FormExampleRoute
-  '/overview': typeof OverviewRoute
+  '/app': typeof AppRouteRouteWithChildren
+  '/app/about': typeof AppAboutRoute
+  '/app/formExample': typeof AppFormExampleRoute
+  '/app/overview': typeof AppOverviewRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/formExample' | '/overview'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/app/about'
+    | '/app/formExample'
+    | '/app/overview'
+    | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/formExample' | '/overview'
-  id: '__root__' | '/' | '/about' | '/formExample' | '/overview'
+  to: '/' | '/app/about' | '/app/formExample' | '/app/overview' | '/app'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/app/about'
+    | '/app/formExample'
+    | '/app/overview'
+    | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  FormExampleRoute: typeof FormExampleRoute
-  OverviewRoute: typeof OverviewRoute
+  AppRouteRoute: typeof AppRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/overview': {
-      id: '/overview'
-      path: '/overview'
-      fullPath: '/overview'
-      preLoaderRoute: typeof OverviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/formExample': {
-      id: '/formExample'
-      path: '/formExample'
-      fullPath: '/formExample'
-      preLoaderRoute: typeof FormExampleRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -99,14 +113,58 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/overview': {
+      id: '/app/overview'
+      path: '/overview'
+      fullPath: '/app/overview'
+      preLoaderRoute: typeof AppOverviewRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/formExample': {
+      id: '/app/formExample'
+      path: '/formExample'
+      fullPath: '/app/formExample'
+      preLoaderRoute: typeof AppFormExampleRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/about': {
+      id: '/app/about'
+      path: '/about'
+      fullPath: '/app/about'
+      preLoaderRoute: typeof AppAboutRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
   }
 }
 
+interface AppRouteRouteChildren {
+  AppAboutRoute: typeof AppAboutRoute
+  AppFormExampleRoute: typeof AppFormExampleRoute
+  AppOverviewRoute: typeof AppOverviewRoute
+  AppIndexRoute: typeof AppIndexRoute
+}
+
+const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppAboutRoute: AppAboutRoute,
+  AppFormExampleRoute: AppFormExampleRoute,
+  AppOverviewRoute: AppOverviewRoute,
+  AppIndexRoute: AppIndexRoute,
+}
+
+const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
+  AppRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  FormExampleRoute: FormExampleRoute,
-  OverviewRoute: OverviewRoute,
+  AppRouteRoute: AppRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

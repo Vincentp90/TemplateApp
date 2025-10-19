@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
-export const Route = createFileRoute('/formExample')({
+export const Route = createFileRoute('/app/formExample')({
   component: FormExample,
 })
 

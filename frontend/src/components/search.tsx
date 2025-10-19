@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import debounce from 'lodash.debounce';
 
@@ -28,10 +28,11 @@ export default function Search() {
     }, 300)
   );
 
-  useEffect(() => {
+  const handleSearchInputChange = (input: string) =>{
+    setSearchInputValue(input);
     if (searchInputValue.length > 2) debounceQueryInput.current(searchInputValue);
     else setSearchQuery('');
-  }, [searchInputValue]);
+  };
 
   const { data: searchResults = [] } = useQuery<AppListing[]>({
     queryKey: ['search', searchQuery],
@@ -117,7 +118,7 @@ export default function Search() {
         <input
           type="text"
           value={searchInputValue}
-          onChange={(e) => setSearchInputValue(e.target.value)}
+          onChange={(e) => handleSearchInputChange(e.target.value)}
           placeholder="Type to search..."
           className="p-2 border rounded shadow-sm"
         />

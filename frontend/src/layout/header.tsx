@@ -5,10 +5,10 @@ export default function Header() {
     <header className="bg-gray-900 text-white px-6 py-4 shadow-md flex justify-between items-center">
       <div className="text-xl font-semibold">Top Bar</div>
       <nav className="space-x-4">
-        <Link to="/" className="hover:text-gray-300">Home</Link>
-        <Link to="/overview" className="hover:text-gray-300">Overview</Link>
-        <Link to="/about" className="hover:text-gray-300">About</Link>
-        <Link to="/formExample" className="hover:text-gray-300">React Hook Form example</Link>
+        <Link to="/app" className="hover:text-gray-300">Home</Link>
+        <Link to="/app/overview" className="hover:text-gray-300">Overview</Link>
+        <Link to="/app/about" className="hover:text-gray-300">About</Link>
+        <Link to="/app/formExample" className="hover:text-gray-300">React Hook Form example</Link>
       </nav>
     </header>
   );
