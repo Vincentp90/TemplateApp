@@ -6,11 +6,11 @@ namespace DataAccess.Wishlist
 {
     public class WishlistItem
     {
-        public int id { get; set; }
+        public int ID { get; set; }
 
         //[ForeignKey("User")]
-        public string userid { get; set; }
-        public DateTimeOffset dateadded { get; set; }
+        public string UserID { get; set; }
+        public DateTimeOffset DateAdded { get; set; }
 
         [ForeignKey("AppListing")]
         public int appid { get; set; }

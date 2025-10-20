@@ -26,13 +26,31 @@ namespace DataAccess.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "users",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    uuid = table.Column<Guid>(type: "uuid", nullable: false),
+                    username = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    password_hash = table.Column<byte[]>(type: "bytea", nullable: false),
+                    password_salt = table.Column<byte[]>(type: "bytea", nullable: false),
+                    create_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    role = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_users", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "wishlist_items",
                 columns: table => new
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    userid = table.Column<string>(type: "text", nullable: false),
-                    dateadded = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    user_id = table.Column<string>(type: "text", nullable: false),
+                    date_added = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     appid = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -45,6 +63,12 @@ namespace DataAccess.Migrations
                         principalColumn: "appid",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_users_username",
+                table: "users",
+                column: "username",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "ix_wishlist_items_appid",
@@ -65,6 +89,9 @@ namespace DataAccess.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "users");
+
             migrationBuilder.DropTable(
                 name: "wishlist_items");
 

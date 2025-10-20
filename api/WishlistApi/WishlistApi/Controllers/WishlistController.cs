@@ -3,7 +3,6 @@ using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Dynamic;
-using WishlistApi.Steam;
 
 namespace WishlistApi.Controllers
 {
@@ -36,7 +35,7 @@ namespace WishlistApi.Controllers
                 if (includeAll || fieldList.Contains("appid"))
                     item["appid"] = x.appid;
                 if(includeAll || fieldList.Contains("dateadded"))
-                    item["dateadded"] = x.dateadded;
+                    item["dateadded"] = x.DateAdded;
                 if (x.AppListing != null && (includeAll || fieldList.Contains("name")))
                     item["name"] = x.AppListing.name;
                 return obj;
@@ -53,7 +52,7 @@ namespace WishlistApi.Controllers
                 return BadRequest("Missing x-user-id header");
 
             _wishlistItemDA.AddWishlistItem(new WishlistItem(){
-                userid = userId, 
+                UserID = userId, 
                 appid = appId
             });
 

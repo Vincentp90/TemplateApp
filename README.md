@@ -39,7 +39,7 @@ CRUD app template
     - If you have an account it will remember your wishlist
 
 Adding new migration:
-    - dotnet ef migrations add UserTable --project DataAccess --startup-project WishlistApi
+    - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
 
 TODO:
 - Authentication (OAuth?), make login screen, block api calls when not logged in
@@ -48,7 +48,6 @@ TODO:
     - https://chatgpt.com/c/68f4f466-7fd4-8325-b7c6-e579c6727d8d
 
 Later steps to add:
-- Fix mix of casing in names in backend
 - Make backend async
 - Read more about how to use Microsoft.AspNetCore.Authentication.JwtBearer https://devblogs.microsoft.com/dotnet/jwt-validation-and-authorization-in-asp-net-core/
 - run as container for future deployment (make dockerfile, run with https, reverse proxy (nginx, yarp?))
@@ -74,3 +73,4 @@ Things to try/add later:
     - Use refresh tokens for long sessions.
     - Add roles/claims for authorization.
 - temporal
+- backend build warning CS8618

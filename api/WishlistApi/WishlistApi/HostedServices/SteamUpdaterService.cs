@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System;
-using WishlistApi.Steam;
 using DataAccess.AppListings;
 
 namespace WishlistApi.HostedServices

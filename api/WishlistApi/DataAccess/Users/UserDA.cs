@@ -21,7 +21,7 @@ namespace DataAccess.Users
 
         public async Task<bool> IsUsernameAvailable(string username)
         {
-            return !await _context.Users.AnyAsync(u => u.username == username);
+            return !await _context.Users.AnyAsync(u => u.Username == username);
         }
 
         public async Task AddUser(string username, string password)
@@ -30,9 +30,9 @@ namespace DataAccess.Users
 
             var user = new User
             {
-                username = username,
-                passwordhash = hash,
-                passwordsalt = salt
+                Username = username,
+                PasswordHash = hash,
+                PasswordSalt = salt
             };
 
             _context.Users.Add(user);
@@ -41,11 +41,11 @@ namespace DataAccess.Users
 
         public async Task<User?> LoginUser(string username, string password)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.username == username);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
             if (user == null)
                 return null;
 
-            if (!VerifyPasswordHash(password, user.passwordhash, user.passwordsalt))
+            if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
                 return null;
             return user;
         }

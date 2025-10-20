@@ -24,7 +24,7 @@ namespace DataAccess
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<User>()
-                .HasIndex(u => u.username)
+                .HasIndex(u => u.Username)
                 .IsUnique();
         }
     }

@@ -44,46 +44,46 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("DataAccess.Users.User", b =>
                 {
-                    b.Property<int>("id")
+                    b.Property<int>("ID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ID"));
 
-                    b.Property<DateTime>("createdat")
+                    b.Property<DateTime>("CreateDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("createdat");
+                        .HasColumnName("create_date");
 
-                    b.Property<byte[]>("passwordhash")
+                    b.Property<byte[]>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("bytea")
-                        .HasColumnName("passwordhash");
+                        .HasColumnName("password_hash");
 
-                    b.Property<byte[]>("passwordsalt")
+                    b.Property<byte[]>("PasswordSalt")
                         .IsRequired()
                         .HasColumnType("bytea")
-                        .HasColumnName("passwordsalt");
+                        .HasColumnName("password_salt");
 
-                    b.Property<string>("role")
+                    b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("role");
 
-                    b.Property<string>("username")
+                    b.Property<Guid>("UUID")
+                        .HasColumnType("uuid")
+                        .HasColumnName("uuid");
+
+                    b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("username");
 
-                    b.Property<Guid>("uuid")
-                        .HasColumnType("uuid")
-                        .HasColumnName("uuid");
-
-                    b.HasKey("id")
+                    b.HasKey("ID")
                         .HasName("pk_users");
 
-                    b.HasIndex("username")
+                    b.HasIndex("Username")
                         .IsUnique()
                         .HasDatabaseName("ix_users_username");
 
@@ -92,27 +92,27 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("DataAccess.Wishlist.WishlistItem", b =>
                 {
-                    b.Property<int>("id")
+                    b.Property<int>("ID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ID"));
+
+                    b.Property<DateTimeOffset>("DateAdded")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_added");
+
+                    b.Property<string>("UserID")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
 
                     b.Property<int>("appid")
                         .HasColumnType("integer")
                         .HasColumnName("appid");
 
-                    b.Property<DateTimeOffset>("dateadded")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("dateadded");
-
-                    b.Property<string>("userid")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("userid");
-
-                    b.HasKey("id")
+                    b.HasKey("ID")
                         .HasName("pk_wishlist_items");
 
                     b.HasIndex("appid")

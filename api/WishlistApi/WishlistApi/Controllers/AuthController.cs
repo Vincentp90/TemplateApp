@@ -57,9 +57,9 @@ namespace WishlistApi.Controllers
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.uuid.ToString()),
-                new Claim(ClaimTypes.Name, user.username),
-                new Claim(ClaimTypes.Role, user.role)
+                new Claim(ClaimTypes.NameIdentifier, user.UUID.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role)
             };
 
             var key = new SymmetricSecurityKey(
