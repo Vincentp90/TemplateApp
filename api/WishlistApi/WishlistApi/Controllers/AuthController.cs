@@ -1,5 +1,12 @@
 ﻿using DataAccess.AppListings;
+using DataAccess.Users;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using static WishlistApi.DTOs.AuthDTOs;
 
 namespace WishlistApi.Controllers
 {
@@ -8,34 +15,64 @@ namespace WishlistApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ILogger<AuthController> _logger;
-        private readonly AppListingDA _appListingDA;
+        private readonly UserDA _userDA;
+        private readonly IConfiguration _config;
 
-        public AuthController(ILogger<AuthController> logger, AppListingDA appListingDA)
+        // TODO how to do config DI
+        public AuthController(ILogger<AuthController> logger, IConfiguration config, UserDA userDA)
         {
             _logger = logger;
-            _appListingDA = appListingDA;
+            _userDA = userDA;
+            _config = config;
         }
 
         [HttpPost("register")]
-        public ActionResult Register(string todo)
+        public async Task<ActionResult> Register(RegisterRequest request)
         {
-            //TODO
+            if (!await _userDA.IsUsernameAvailable(request.Username))
+                return BadRequest("Username already taken");
+
+            await _userDA.AddUser(request.Username, request.Password);            
             return Ok();
         }
 
         [HttpPost("login")]
-        public ActionResult Login(string todo)
+        public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
         {
-            //TODO
-            return Ok();
+            var user = await _userDA.LoginUser(request.Username, request.Password);
+            if(user == null)
+                return Unauthorized();
+
+            var token = CreateToken(user);
+            return Ok(new AuthResponse(token));
         }
 
-        // TODO what is the REST way to do this
         [HttpGet("check")]
-        public ActionResult CheckUsernameAvailable(string todo)
+        public async Task<ActionResult<bool>> CheckUsernameAvailable([FromQuery] string username)
         {
-            //TODO
-            return Ok();
+            return Ok(await _userDA.IsUsernameAvailable(username));
+        }
+
+        private string CreateToken(User user)
+        {
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.uuid.ToString()),
+                new Claim(ClaimTypes.Name, user.username),
+                new Claim(ClaimTypes.Role, user.role)
+            };
+
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(2),
+                signingCredentials: creds);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }

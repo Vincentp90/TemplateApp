@@ -39,23 +39,25 @@ CRUD app template
     - If you have an account it will remember your wishlist
 
 Adding new migration:
-    - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
+    - dotnet ef migrations add UserTable --project DataAccess --startup-project WishlistApi
 
 TODO:
 - Authentication (OAuth?), make login screen, block api calls when not logged in
-    - Create and run DB migration
-    - implement api methods
     - frontend 
+    - OpenID Connect flow or an OAuth standard flow for creating access tokens
     - https://chatgpt.com/c/68f4f466-7fd4-8325-b7c6-e579c6727d8d
 
 Later steps to add:
+- Fix mix of casing in names in backend
+- Make backend async
 - Read more about how to use Microsoft.AspNetCore.Authentication.JwtBearer https://devblogs.microsoft.com/dotnet/jwt-validation-and-authorization-in-asp-net-core/
-- run as container for future deployment (make dockerfile, run with https)
+- run as container for future deployment (make dockerfile, run with https, reverse proxy (nginx, yarp?))
 - How to use Zod (runtime validation of type?)
 - TODOs in code
 
 Things to try/add later:
 - tailwind primary secondary color (once we have some buttons )
+- unit tests (Moq. MSTest vs xUnit?)
 - concurrency for CRUD operations
 - gRCP
 - GraphQL
@@ -66,6 +68,9 @@ Things to try/add later:
 - scan container (Anchore ?)
 - scan code (SonarQube?)
 - nicer loading screen (use with suspense)
+- Reconsider current approach of using POCO db classes throughout the whole backend. Use DTOs?
+- Async in method names or not?
 - auth
     - Use refresh tokens for long sessions.
     - Add roles/claims for authorization.
+- temporal
