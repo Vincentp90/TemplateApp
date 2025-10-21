@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(WishlistDbContext))]
-    [Migration("20251017082529_InitialMigration")]
+    [Migration("20251020155447_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -45,29 +45,77 @@ namespace DataAccess.Migrations
                     b.ToTable("app_listings", (string)null);
                 });
 
-            modelBuilder.Entity("DataAccess.Wishlist.WishlistItem", b =>
+            modelBuilder.Entity("DataAccess.Users.User", b =>
                 {
-                    b.Property<int>("id")
+                    b.Property<int>("ID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ID"));
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("create_date");
+
+                    b.Property<byte[]>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("password_hash");
+
+                    b.Property<byte[]>("PasswordSalt")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("password_salt");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("role");
+
+                    b.Property<Guid>("UUID")
+                        .HasColumnType("uuid")
+                        .HasColumnName("uuid");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("username");
+
+                    b.HasKey("ID")
+                        .HasName("pk_users");
+
+                    b.HasIndex("Username")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_username");
+
+                    b.ToTable("users", (string)null);
+                });
+
+            modelBuilder.Entity("DataAccess.Wishlist.WishlistItem", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ID"));
+
+                    b.Property<DateTimeOffset>("DateAdded")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_added");
+
+                    b.Property<string>("UserID")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
 
                     b.Property<int>("appid")
                         .HasColumnType("integer")
                         .HasColumnName("appid");
 
-                    b.Property<DateTimeOffset>("dateadded")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("dateadded");
-
-                    b.Property<string>("userid")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("userid");
-
-                    b.HasKey("id")
+                    b.HasKey("ID")
                         .HasName("pk_wishlist_items");
 
                     b.HasIndex("appid")

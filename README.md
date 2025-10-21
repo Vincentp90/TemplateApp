@@ -7,14 +7,9 @@ This is a template for a typical business CRUD app. The goal is to have a templa
 
 Installation steps:
 - Install Node.js v22
-    - New frontend
-        - cd frontend
-        - npm run dev
-        - http://localhost:5173
-    - Old frontend
-        - cd wishlist
-        - npm run dev
-        - http://localhost:3000
+    - cd frontend
+    - npm run dev
+    - http://localhost:5173
 - docker-compose up -d (postgres)
     - Adminer: http://localhost:8080/
     - username postgres
@@ -42,19 +37,21 @@ Adding new migration:
     - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
 
 TODO:
-- Authentication (OAuth?), make login screen, block api calls when not logged in
-    
+- Make backend async
 
 Later steps to add:
-- run as container for future deployment (make dockerfile, run with https)
+- Make backend async
+- run as container for future deployment (make dockerfile, run with https, reverse proxy (nginx, yarp?))
 - How to use Zod (runtime validation of type?)
+- Delete buttons are very ugly
+- Add Logout and do localStorage.removeItem('token'); queryClient.clear();
 - TODOs in code
 
 Things to try/add later:
+- read more: OpenID Connect flow or an OAuth standard flow for creating access tokens https://devblogs.microsoft.com/dotnet/jwt-validation-and-authorization-in-asp-net-core/
 - tailwind primary secondary color (once we have some buttons )
+- unit tests (Moq. MSTest vs xUnit?)
 - concurrency for CRUD operations
-- gRCP
-- GraphQL
 - Redis cache (or redis fork) (maybe not much point when using tanstack query)
 - steam openID integration
 - Add jenkinsfile for CI/CD
@@ -62,3 +59,13 @@ Things to try/add later:
 - scan container (Anchore ?)
 - scan code (SonarQube?)
 - nicer loading screen (use with suspense)
+- Reconsider current approach of using POCO db classes throughout the whole backend. Use DTOs?
+- Async in method names or not?
+- auth
+    - Use refresh tokens for long sessions.
+    - Add roles/claims for authorization.
+- temporal
+- backend build warning CS8618
+- Review XSS vulnerabilities
+    - https://pragmaticwebsecurity.com/articles/oauthoidc/localstorage-xss.html
+    - https://pragmaticwebsecurity.com/img/cheatsheets/reactxss.png

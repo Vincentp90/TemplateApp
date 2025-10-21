@@ -1,21 +1,17 @@
 ﻿using DataAccess.AppListings;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess.Wishlist
 {
     public class WishlistItem
     {
-        public int id { get; set; }
+        public int ID { get; set; }
 
+        //TODO FK to User ID, also in DA get user ID first instead of using User.UUID for this field -> this might be could example for caching
         //[ForeignKey("User")]
-        public string userid { get; set; }
-        public DateTimeOffset dateadded { get; set; }
+        public string UserID { get; set; } // TODO index 
+        public DateTimeOffset DateAdded { get; set; }
 
         [ForeignKey("AppListing")]
         public int appid { get; set; }

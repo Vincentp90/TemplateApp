@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace DataAccess.AppListings
 {
     public class AppListing
     {
+        // Using lowercase so we can directly deserialize from steamapi into this object
         [Key]
         public int appid { get; set; }
         public string name { get; set; }

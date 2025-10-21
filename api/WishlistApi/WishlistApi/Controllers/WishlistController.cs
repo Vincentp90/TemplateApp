@@ -1,12 +1,14 @@
 ﻿using DataAccess.AppListings;
 using DataAccess.Wishlist;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Dynamic;
-using WishlistApi.Steam;
+using System.Security.Claims;
 
 namespace WishlistApi.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("[controller]")]
     public class WishlistController : ControllerBase
     {
@@ -18,23 +20,24 @@ namespace WishlistApi.Controllers
         }
 
         [HttpGet()]
-        public ActionResult GetWishlist([FromHeader(Name = "x-user-id")] string userId, [FromQuery] string? fields = null)
+        public async Task<ActionResult> GetWishlist([FromQuery] string? fields = null)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
-                return BadRequest("Missing x-user-id header");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
             var fieldList = (fields ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                                 .Select(f => f.ToLower())
                                 .ToHashSet();
             bool includeAll = fieldList.Count == 0;
-            var result = _wishlistItemDA.GetWishlistItems(userId).Select(x => 
+            var result = (await _wishlistItemDA.GetWishlistItems(userId)).Select(x => 
             {
                 var obj = new ExpandoObject();
                 var item = obj as IDictionary<string, object>;
                 if (includeAll || fieldList.Contains("appid"))
                     item["appid"] = x.appid;
                 if(includeAll || fieldList.Contains("dateadded"))
-                    item["dateadded"] = x.dateadded;
+                    item["dateadded"] = x.DateAdded;
                 if (x.AppListing != null && (includeAll || fieldList.Contains("name")))
                     item["name"] = x.AppListing.name;
                 return obj;
@@ -43,15 +46,14 @@ namespace WishlistApi.Controllers
         }
 
         [HttpPost("{appId}")]
-        public ActionResult AddWishlistItem(int appId)
+        public async Task<ActionResult> AddWishlistItem(int appId)
         {
-            //TODO get user id from x-user-id header, real auth later
-            string? userId = Request.Headers["x-user-id"];
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
-                return BadRequest("Missing x-user-id header");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
-            _wishlistItemDA.AddWishlistItem(new WishlistItem(){
-                userid = userId, 
+            await _wishlistItemDA.AddWishlistItem(new WishlistItem(){
+                UserID = userId, 
                 appid = appId
             });
 
@@ -59,16 +61,15 @@ namespace WishlistApi.Controllers
         }
 
         [HttpDelete("{appId}")]
-        public ActionResult DeleteAppFromWishlist(int appId)
+        public async Task<ActionResult> DeleteAppFromWishlist(int appId)
         {
-            string? userId = Request.Headers["x-user-id"];
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
-                return BadRequest("Missing x-user-id header");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
-            _wishlistItemDA.DeleteWishlistItem(userId, appId);
+            await _wishlistItemDA.DeleteWishlistItem(userId, appId);
 
             return Ok();
         }
-
     }
 }
