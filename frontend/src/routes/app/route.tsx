@@ -1,10 +1,14 @@
-import { Outlet, createFileRoute } from '@tanstack/react-router'
+import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 import Header from '../../layout/header.tsx'
 import Sidebar from '../../layout/sidebar.tsx'
 import Footer from '../../layout/footer.tsx'
 
 export const Route = createFileRoute('/app')({
-  component: AppLayout
+  component: AppLayout,
+  beforeLoad: () => {
+    const token = localStorage.getItem("token");
+    if (!token) throw redirect({ to: "/auth/login" });
+  },
 })
 
 function AppLayout() {

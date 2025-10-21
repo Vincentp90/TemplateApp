@@ -3,17 +3,17 @@
 import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import debounce from 'lodash.debounce';
+import { api } from "../api";
 
 import { Loading02Icon } from "hugeicons-react";
 
 //TODO move to separate file?
 type AppListing = { appid: number; name: string };
-
-const APIURL = "http://localhost:5186";//TODO put in better spot
+const wlQueryKey = ['wishlist'];
 
 const fetchSearchResults = async (query: string): Promise<AppListing[]> => {
-  const res = await fetch(`${APIURL}/applisting/search/${encodeURIComponent(query)}`);
-  const data = await res.json();
+  const res = await api.get(`/applisting/search/${encodeURIComponent(query)}`);
+  const data = res.data;
   return data.slice(0, 10);
 };
 
@@ -40,14 +40,11 @@ export default function Search() {
     enabled: searchQuery.length > 2,
   });
 
-  // Number 1 in ['wishlist', 1] to be replaced later with userId
   const { data: wishlistItems = [], isPending: wishlistItemsPending } = useQuery<AppListing[]>({
-    queryKey: ['wishlist', 1],
+    queryKey: wlQueryKey,
     queryFn: async () => {
-      const res = await fetch(`${APIURL}/wishlist?fields=appid,name`, {
-        headers: { 'x-user-id': '1' },
-      });
-      const data = await res.json();
+      const res = await api.get(`/wishlist?fields=appid,name`);
+      const data = res.data;
       return data.map((item: AppListing) => ({
         appid: item.appid,
         name: item.name,
@@ -55,52 +52,47 @@ export default function Search() {
     },
   });
 
+  // TODO further learn what this does and how it works
   const addMutation = useMutation({
     mutationFn: async (appItem: AppListing) => {
-      await fetch(`${APIURL}/wishlist/${appItem.appid}`, {
-        method: 'POST',
-        headers: { 'x-user-id': '1' },
-      });
+      await api.post(`/wishlist/${appItem.appid}`);
       return appItem;
     },
     onMutate: async (appItem) => {
-      await queryClient.cancelQueries({ queryKey: ['wishlist', 1] });
-      const previous = queryClient.getQueryData<AppListing[]>(['wishlist', 1]) || [];
-      queryClient.setQueryData(['wishlist', 1], [...previous, appItem]);
+      await queryClient.cancelQueries({ queryKey: wlQueryKey });
+      const previous = queryClient.getQueryData<AppListing[]>(wlQueryKey) || [];
+      queryClient.setQueryData(wlQueryKey, [...previous, appItem]);
       return { previous };
     },
     onError: (_err, _appItem, context) => {
       if (context?.previous)
-        queryClient.setQueryData(['wishlist', 1], context.previous);
+        queryClient.setQueryData(wlQueryKey, context.previous);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist', 1] });
+      queryClient.invalidateQueries({ queryKey: wlQueryKey });
     },
   });
 
   const removeMutation = useMutation({
     mutationFn: async (appItem: AppListing) => {
-      await fetch(`${APIURL}/wishlist/${appItem.appid}`, {
-        method: 'DELETE',
-        headers: { 'x-user-id': '1' },
-      });
+      await api.delete(`/wishlist/${appItem.appid}`);
       return appItem;
     },
     onMutate: async (appItem) => {
-      await queryClient.cancelQueries({ queryKey: ['wishlist', 1] });
-      const previous = queryClient.getQueryData<AppListing[]>(['wishlist', 1]) || [];
+      await queryClient.cancelQueries({ queryKey: wlQueryKey });
+      const previous = queryClient.getQueryData<AppListing[]>(wlQueryKey) || [];
       queryClient.setQueryData(
-        ['wishlist', 1],
+        wlQueryKey,
         previous.filter(i => i.appid !== appItem.appid)
       );
       return { previous };
     },
     onError: (_err, _appItem, context) => {
       if (context?.previous)
-        queryClient.setQueryData(['wishlist', 1], context.previous);
+        queryClient.setQueryData(wlQueryKey, context.previous);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist', 1] });
+      queryClient.invalidateQueries({ queryKey: wlQueryKey });
     },
   });
 

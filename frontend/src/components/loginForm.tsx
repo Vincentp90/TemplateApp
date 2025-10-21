@@ -3,9 +3,14 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useState } from 'react';
+import { router } from '../router';
+import { queryClient } from '../queryClient';
+
+const APIURL = "http://localhost:5186";//TODO use axios api object instead of fetch?? 
 
 const schema = z.object({
-    email: z.string().email('Invalid email'),
+    email: z.email('Invalid email'),
     password: z.string().min(6, 'Password must be at least 6 chars'),
 })
 
@@ -14,13 +19,26 @@ type FormData = z.infer<typeof schema>
 const isDev = import.meta.env.MODE === "development";
 
 export default function LoginForm() {
+    const [action, setAction] = useState<string>("login");
     const { register, handleSubmit, formState: { errors, isSubmitting }, setValue} = useForm<FormData>({
         resolver: zodResolver(schema),
         mode: 'onBlur',
     })
 
-    const onSubmit = (data: FormData) => {
-        console.log('Form submitted', data)
+    const onSubmit = async (data: FormData) => {
+        const res = await fetch(`${APIURL}/auth/${action}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: data.email, password: data.password })
+        });
+        if (!res.ok) throw new Error("Login failed");// TODO show nice error in UI
+        const { token } = await res.json();
+        localStorage.setItem("token", token);
+        if(action === "login")
+        {
+            router.navigate({ to: "/app" });
+            queryClient.clear();
+        }        
     }
 
     const fillDevCreds = () => {
@@ -66,8 +84,17 @@ export default function LoginForm() {
                 type="submit"
                 disabled={isSubmitting}
                 className="bg-blue-600 text-white p-2 rounded"
+                onClick={() => setAction("login")}
             >
                 {isSubmitting ? 'Submitting...' : 'Login'}
+            </button>
+            <button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-blue-600 text-white p-2 rounded"
+                onClick={() => setAction("register")}
+            >
+                {isSubmitting ? 'Submitting...' : 'Register'}
             </button>
         </form>
     )

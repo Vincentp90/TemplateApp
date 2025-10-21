@@ -18,7 +18,6 @@ namespace WishlistApi.Controllers
         private readonly UserDA _userDA;
         private readonly IConfiguration _config;
 
-        // TODO how to do config DI
         public AuthController(ILogger<AuthController> logger, IConfiguration config, UserDA userDA)
         {
             _logger = logger;
@@ -36,6 +35,7 @@ namespace WishlistApi.Controllers
             return Ok();
         }
 
+        // Could be improved by returning short lived token (<5 mins) and then other call returns bearer token, after doing extra checks (MFA, device, IP, risk scoring)
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
         {

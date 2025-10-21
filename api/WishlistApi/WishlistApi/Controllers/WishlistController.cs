@@ -3,6 +3,7 @@ using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Dynamic;
+using System.Security.Claims;
 
 namespace WishlistApi.Controllers
 {
@@ -19,10 +20,11 @@ namespace WishlistApi.Controllers
         }
 
         [HttpGet()]
-        public ActionResult GetWishlist([FromHeader(Name = "x-user-id")] string userId, [FromQuery] string? fields = null)
+        public ActionResult GetWishlist([FromQuery] string? fields = null)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
-                return BadRequest("Missing x-user-id header");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
             var fieldList = (fields ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                                 .Select(f => f.ToLower())
@@ -46,10 +48,9 @@ namespace WishlistApi.Controllers
         [HttpPost("{appId}")]
         public ActionResult AddWishlistItem(int appId)
         {
-            //TODO get user id from x-user-id header, real auth later
-            string? userId = Request.Headers["x-user-id"];
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
-                return BadRequest("Missing x-user-id header");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
             _wishlistItemDA.AddWishlistItem(new WishlistItem(){
                 UserID = userId, 
@@ -62,14 +63,13 @@ namespace WishlistApi.Controllers
         [HttpDelete("{appId}")]
         public ActionResult DeleteAppFromWishlist(int appId)
         {
-            string? userId = Request.Headers["x-user-id"];
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
-                return BadRequest("Missing x-user-id header");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
             _wishlistItemDA.DeleteWishlistItem(userId, appId);
 
             return Ok();
         }
-
     }
 }

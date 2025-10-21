@@ -8,8 +8,9 @@ namespace DataAccess.Wishlist
     {
         public int ID { get; set; }
 
+        //TODO FK to User ID, also in DA get user ID first instead of using User.UUID for this field -> this might be could example for caching
         //[ForeignKey("User")]
-        public string UserID { get; set; }
+        public string UserID { get; set; } // TODO index 
         public DateTimeOffset DateAdded { get; set; }
 
         [ForeignKey("AppListing")]

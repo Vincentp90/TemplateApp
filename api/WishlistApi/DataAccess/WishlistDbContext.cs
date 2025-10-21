@@ -25,7 +25,7 @@ namespace DataAccess
 
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
-                .IsUnique();
+                .IsUnique();            
         }
     }
 }
