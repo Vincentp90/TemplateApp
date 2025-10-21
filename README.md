@@ -7,14 +7,9 @@ This is a template for a typical business CRUD app. The goal is to have a templa
 
 Installation steps:
 - Install Node.js v22
-    - New frontend
-        - cd frontend
-        - npm run dev
-        - http://localhost:5173
-    - Old frontend
-        - cd wishlist
-        - npm run dev
-        - http://localhost:3000
+    - cd frontend
+    - npm run dev
+    - http://localhost:5173
 - docker-compose up -d (postgres)
     - Adminer: http://localhost:8080/
     - username postgres
@@ -42,7 +37,6 @@ Adding new migration:
     - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
 
 TODO:
-- delete nextjs
 - Make backend async
 
 Later steps to add:
