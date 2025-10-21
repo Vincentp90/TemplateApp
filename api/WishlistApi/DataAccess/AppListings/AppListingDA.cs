@@ -16,18 +16,18 @@ namespace DataAccess.AppListings
             _context = dbContext;
         }
 
-        public List<AppListing> SearchAppListings(string term)
+        public async Task<List<AppListing>> SearchAppListings(string term)
         {
             if(string.IsNullOrEmpty(term) || term.Length < 3)
                 return new List<AppListing>();
-            return _context.AppListings
+            return await _context.AppListings
                 .FromSqlRaw("SELECT * FROM app_listings WHERE similarity(name, {0}) > 0.3 ORDER BY similarity(name, {0}) DESC", term)
-                .ToList();
+                .ToListAsync();
         }
 
-        public List<AppListing> GetAppListings()
+        public async Task<List<AppListing>> GetAppListings()
         {
-            return _context.AppListings.Take(100).ToList();
+            return await _context.AppListings.Take(100).ToListAsync();
         }
 
 

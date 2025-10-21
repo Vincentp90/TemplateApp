@@ -20,7 +20,7 @@ namespace WishlistApi.Controllers
         }
 
         [HttpGet()]
-        public ActionResult GetWishlist([FromQuery] string? fields = null)
+        public async Task<ActionResult> GetWishlist([FromQuery] string? fields = null)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -30,7 +30,7 @@ namespace WishlistApi.Controllers
                                 .Select(f => f.ToLower())
                                 .ToHashSet();
             bool includeAll = fieldList.Count == 0;
-            var result = _wishlistItemDA.GetWishlistItems(userId).Select(x => 
+            var result = (await _wishlistItemDA.GetWishlistItems(userId)).Select(x => 
             {
                 var obj = new ExpandoObject();
                 var item = obj as IDictionary<string, object>;
@@ -46,13 +46,13 @@ namespace WishlistApi.Controllers
         }
 
         [HttpPost("{appId}")]
-        public ActionResult AddWishlistItem(int appId)
+        public async Task<ActionResult> AddWishlistItem(int appId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
                 return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
-            _wishlistItemDA.AddWishlistItem(new WishlistItem(){
+            await _wishlistItemDA.AddWishlistItem(new WishlistItem(){
                 UserID = userId, 
                 appid = appId
             });
@@ -61,13 +61,13 @@ namespace WishlistApi.Controllers
         }
 
         [HttpDelete("{appId}")]
-        public ActionResult DeleteAppFromWishlist(int appId)
+        public async Task<ActionResult> DeleteAppFromWishlist(int appId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
                 return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
-            _wishlistItemDA.DeleteWishlistItem(userId, appId);
+            await _wishlistItemDA.DeleteWishlistItem(userId, appId);
 
             return Ok();
         }
