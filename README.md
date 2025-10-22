@@ -33,19 +33,26 @@ CRUD app template
     - In the app you can make wishlist
     - If you have an account it will remember your wishlist
 
+Run for prod:
+    - docker compose -p templateapp_prod -f docker-compose.prod.yml up -d
+    - docker compose -p templateapp_prod -f docker-compose.prod.yml up -d (if backend crashed TODO fix)
+    - http://localhost:80
+
 Adding new migration:
     - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
 
 TODO:
-- Make backend async
+    - DOTNET_ENVIRONMENT=Production not working for selecting appsettings.production.json
+    - 502 bad gateway
+    - https
 
 Later steps to add:
-- Make backend async
 - run as container for future deployment (make dockerfile, run with https, reverse proxy (nginx, yarp?))
 - How to use Zod (runtime validation of type?)
 - Delete buttons are very ugly
 - Add Logout and do localStorage.removeItem('token'); queryClient.clear();
 - TODOs in code
+- review dockerfiles, probably a lot of unnecessary stuff in there
 
 Things to try/add later:
 - read more: OpenID Connect flow or an OAuth standard flow for creating access tokens https://devblogs.microsoft.com/dotnet/jwt-validation-and-authorization-in-asp-net-core/
@@ -69,3 +76,5 @@ Things to try/add later:
 - Review XSS vulnerabilities
     - https://pragmaticwebsecurity.com/articles/oauthoidc/localstorage-xss.html
     - https://pragmaticwebsecurity.com/img/cheatsheets/reactxss.png
+- WCAG
+- stress test API

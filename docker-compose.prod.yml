@@ -1,4 +1,4 @@
-# postres, web api, next.js, reverse proxy
+# postres, web api, react, reverse proxy
 
 services:
   db:
@@ -8,7 +8,7 @@ services:
     ports:
       - 5432:5432 # todo remove for final version
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_PASSWORD: example # todo from env var
     volumes:
       - db_data:/var/lib/postgresql/data
 
@@ -20,18 +20,18 @@ services:
 
   backend:
     build:
-      context: ./path-to-your-api #
+      context: ./api/WishlistApi
+    depends_on:
+      - db
     container_name: my-api
-    # The port 8080 is internal to the Docker network
-    # We don't expose it to the host because Nginx will handle traffic
     environment:
-      - ASPNETCORE_URLS=http://+:8080
+      - DOTNET_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5186
 
   frontend:
     build:
-      context: ./path-to-your-nextjs-app #
+      context: ./frontend
     container_name: my-frontend
-    # The port 3000 is internal to the Docker network
     environment:
       - NODE_ENV=production
 
