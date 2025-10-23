@@ -27,10 +27,14 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5186
+    ports:
+      - 5186:5186 # todo remove for final version
 
   frontend:
     build:
       context: ./frontend
+      args:
+        - VITE_MODE=production
     container_name: my-frontend
     environment:
       - NODE_ENV=production

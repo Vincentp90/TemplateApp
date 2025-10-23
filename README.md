@@ -36,19 +36,17 @@ CRUD app template
 Run for prod:
     - docker compose -p templateapp_prod -f docker-compose.prod.yml up -d
     - docker compose -p templateapp_prod -f docker-compose.prod.yml up -d (if backend crashed TODO fix)
-    - http://localhost:80
+    - http://localhost
 
 Adding new migration:
     - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
 
-TODO:
-    - 502 bad gateway
-    - https
 
 Later steps to add:
-- run as container for future deployment (make dockerfile, run with https, reverse proxy (nginx, yarp?))
+- Configure https
 - How to use Zod (runtime validation of type?)
 - Delete buttons are very ugly
+- register button gives console error: Uncaught (in promise) SyntaxError: JSON.parse: unexpected end of data at line 1 column 1 of the JSON data
 - Add Logout and do localStorage.removeItem('token'); queryClient.clear();
 - TODOs in code
 - review dockerfiles, probably a lot of unnecessary stuff in there
@@ -78,3 +76,6 @@ Things to try/add later:
     - https://pragmaticwebsecurity.com/img/cheatsheets/reactxss.png
 - WCAG
 - stress test API
+- host
+    - where? Hetzner? Azure?
+    - TODO: configure urls, still using localhost in prod config

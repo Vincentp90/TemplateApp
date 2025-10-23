@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { router } from '../router';
 import { queryClient } from '../queryClient';
 
-const APIURL = "http://localhost:5186";//TODO use axios api object instead of fetch?? 
+const APIURL = import.meta.env.VITE_API_URL;//TODO use axios api object instead of fetch?? 
 
 const schema = z.object({
     email: z.email('Invalid email'),
@@ -51,6 +51,7 @@ export default function LoginForm() {
             onSubmit={handleSubmit(onSubmit)}
             className="flex flex-col gap-3 max-w-sm mx-auto p-4"
         >
+            <div><span>APIURL: {import.meta.env.VITE_API_URL}</span></div>
             {isDev && (
                 <button onClick={fillDevCreds} className="mt-2 bg-gray-500 text-white p-2 w-full">
                     I'm a developer
