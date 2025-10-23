@@ -42,7 +42,6 @@ Adding new migration:
     - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
 
 TODO:
-    - DOTNET_ENVIRONMENT=Production not working for selecting appsettings.production.json
     - 502 bad gateway
     - https
 
@@ -53,6 +52,7 @@ Later steps to add:
 - Add Logout and do localStorage.removeItem('token'); queryClient.clear();
 - TODOs in code
 - review dockerfiles, probably a lot of unnecessary stuff in there
+- prod JWT set with env var instead of commited to git
 
 Things to try/add later:
 - read more: OpenID Connect flow or an OAuth standard flow for creating access tokens https://devblogs.microsoft.com/dotnet/jwt-validation-and-authorization-in-asp-net-core/

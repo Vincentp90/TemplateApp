@@ -10,7 +10,7 @@ services:
     environment:
       POSTGRES_PASSWORD: example # todo from env var
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
 
   adminer:
     image: adminer
@@ -25,7 +25,7 @@ services:
       - db
     container_name: my-api
     environment:
-      - DOTNET_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5186
 
   frontend:
