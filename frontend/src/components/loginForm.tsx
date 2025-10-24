@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { useState } from 'react';
 import { router } from '../router';
 import { queryClient } from '../queryClient';
+import WlButton from './tiny/wlButton';
 
 const APIURL = import.meta.env.VITE_API_URL;//TODO use axios api object instead of fetch?? 
 
@@ -81,22 +82,20 @@ export default function LoginForm() {
                 )}
             </label>
 
-            <button
+            <WlButton
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-blue-600 text-white p-2 rounded"
                 onClick={() => setAction("login")}
             >
                 {isSubmitting ? 'Submitting...' : 'Login'}
-            </button>
-            <button
+            </WlButton>
+            <WlButton
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-blue-600 text-white p-2 rounded"
                 onClick={() => setAction("register")}
             >
                 {isSubmitting ? 'Submitting...' : 'Register'}
-            </button>
+            </WlButton>
         </form>
     )
 }

@@ -43,9 +43,6 @@ Adding new migration:
 
 
 Later steps to add:
-- Configure https
-- How to use Zod (runtime validation of type?)
-- Delete buttons are very ugly
 - register button gives console error: Uncaught (in promise) SyntaxError: JSON.parse: unexpected end of data at line 1 column 1 of the JSON data
 - Add Logout and do localStorage.removeItem('token'); queryClient.clear();
 - TODOs in code
@@ -78,4 +75,5 @@ Things to try/add later:
 - stress test API
 - host
     - where? Hetzner? Azure?
+    - Configure https
     - TODO: configure urls, still using localhost in prod config

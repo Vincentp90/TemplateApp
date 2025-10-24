@@ -6,6 +6,7 @@ import debounce from 'lodash.debounce';
 import { api } from "../api";
 
 import { Loading02Icon } from "hugeicons-react";
+import WlButton from './tiny/wlButton';
 
 //TODO move to separate file?
 type AppListing = { appid: number; name: string };
@@ -105,8 +106,9 @@ export default function Search() {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-6 max-w-4xl">
+    <div className="grid grid-cols-2 gap-6 max-w-4xl">      
       <div className="flex flex-col gap-4">
+        <h2>Search steam games to add to wishlist</h2>
         <input
           type="text"
           value={searchInputValue}
@@ -138,12 +140,9 @@ export default function Search() {
             wishlistItems.map((s, i) => (
               <li key={i} className="flex items-center justify-between py-2 px-1">
                 <span>{s.name}</span>
-                <button
-                  onClick={() => removeFromWishlist(s)}
-                  className="text-red-600 hover:text-white hover:bg-red-600 border border-red-600 px-2 py-1 rounded text-sm transition"
-                >
+                <WlButton onClick={() => removeFromWishlist(s)} >
                   Delete
-                </button>
+                </WlButton>
               </li>
             ))
           }
