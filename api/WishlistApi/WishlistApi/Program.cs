@@ -94,6 +94,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<WishlistDbContext>();
+
+    try
+    {
+        // Apply any pending migrations
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        // Log error
+        Console.WriteLine($"Migration failed: {ex.Message}");
+        throw;
+    }
+}
+
 app.UseCors("RestrictedCORS");
 app.MapOpenApi();
 app.UseSwagger();
