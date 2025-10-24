@@ -8,6 +8,7 @@ export default function Header() {
         <Link to="/app" className="hover:text-gray-300">Home</Link>
         <Link to="/app/overview" className="hover:text-gray-300">Overview</Link>
         <Link to="/app/about" className="hover:text-gray-300">About</Link>
+        <Link to="/auth/logout" className="hover:text-gray-300">Logout</Link>
       </nav>
     </header>
   );

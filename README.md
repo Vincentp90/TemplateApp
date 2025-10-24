@@ -43,11 +43,8 @@ Adding new migration:
 
 
 Later steps to add:
-- register button gives console error: Uncaught (in promise) SyntaxError: JSON.parse: unexpected end of data at line 1 column 1 of the JSON data
-- Add Logout and do localStorage.removeItem('token'); queryClient.clear();
 - TODOs in code
 - review dockerfiles, probably a lot of unnecessary stuff in there
-- prod JWT set with env var instead of commited to git
 
 Things to try/add later:
 - read more: OpenID Connect flow or an OAuth standard flow for creating access tokens https://devblogs.microsoft.com/dotnet/jwt-validation-and-authorization-in-asp-net-core/
@@ -76,4 +73,5 @@ Things to try/add later:
 - host
     - where? Hetzner? Azure?
     - Configure https
-    - TODO: configure urls, still using localhost in prod config
+    - prod JWT set with env var instead of commited to git
+    - configure urls, still using localhost in prod config

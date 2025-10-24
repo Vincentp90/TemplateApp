@@ -19,8 +19,9 @@ type FormData = z.infer<typeof schema>
 
 const isDev = import.meta.env.MODE === "development";
 
-export default function LoginForm() {
+export default function LoginForm() {    
     const [action, setAction] = useState<string>("login");
+    const [isRegistered, setIsRegistered] = useState<boolean>(false);
     const { register, handleSubmit, formState: { errors, isSubmitting }, setValue} = useForm<FormData>({
         resolver: zodResolver(schema),
         mode: 'onBlur',
@@ -32,14 +33,17 @@ export default function LoginForm() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username: data.email, password: data.password })
         });
-        if (!res.ok) throw new Error("Login failed");// TODO show nice error in UI
-        const { token } = await res.json();
-        localStorage.setItem("token", token);
+        if (!res.ok) throw new Error("Login failed");// TODO show nice error in UI, hook form has something for this?
         if(action === "login")
         {
+            const { token } = await res.json();
+            localStorage.setItem("token", token);
             router.navigate({ to: "/app" });
             queryClient.clear();
-        }        
+        }
+        else if (action === "register"){
+            setIsRegistered(true);//TODO show in nicer way or make separate register screen
+        }
     }
 
     const fillDevCreds = () => {
@@ -96,6 +100,7 @@ export default function LoginForm() {
             >
                 {isSubmitting ? 'Submitting...' : 'Register'}
             </WlButton>
+            {isRegistered && <div>Registered, now you can click login</div>}
         </form>
     )
 }

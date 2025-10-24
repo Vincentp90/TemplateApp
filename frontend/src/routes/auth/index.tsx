@@ -4,9 +4,9 @@ import { redirect, createFileRoute } from '@tanstack/react-router'
 // If not redirect to /auth/login
 export const Route = createFileRoute('/auth/')({
   component: RouteComponent,
-    beforeLoad: () => {
-      throw redirect({ to: '/auth/login' })
-    },
+  beforeLoad: () => {
+    throw redirect({ to: '/auth/login' })
+  },
 })
 
 function RouteComponent() {
