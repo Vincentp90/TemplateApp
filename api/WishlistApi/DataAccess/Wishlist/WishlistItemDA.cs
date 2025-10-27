@@ -16,9 +16,9 @@ namespace DataAccess.Wishlist
             _context = dbContext;
         }
 
-        public async Task<List<WishlistItem>> GetWishlistItems(string userid)
+        public async Task<List<WishlistItem>> GetWishlistItems(int userID)
         {
-            return await _context.WishlistItems.Where(i => i.UserID == userid).Include(i => i.AppListing).ToListAsync();
+            return await _context.WishlistItems.Where(i => i.UserID == userID).Include(i => i.AppListing).ToListAsync();
         }
 
         public async Task AddWishlistItem(WishlistItem item)
@@ -28,9 +28,9 @@ namespace DataAccess.Wishlist
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteWishlistItem(string userid, int appid)
+        public async Task DeleteWishlistItem(int userID, int appid)
         {
-            var item = _context.WishlistItems.FirstOrDefault(i => i.UserID == userid && i.appid == appid);
+            var item = _context.WishlistItems.FirstOrDefault(i => i.UserID == userID && i.appid == appid);
             if (item != null)
             {
                 _context.WishlistItems.Remove(item);

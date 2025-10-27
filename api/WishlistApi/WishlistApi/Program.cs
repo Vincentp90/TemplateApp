@@ -13,7 +13,10 @@ using WishlistApi.HostedServices;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+builder.Services.AddMemoryCache(options =>
+{
+    options.SizeLimit = 500000; // If we count size 1 as 100 B, 500000 is ~50 MB
+});
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

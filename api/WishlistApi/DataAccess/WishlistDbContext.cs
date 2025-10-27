@@ -25,7 +25,17 @@ namespace DataAccess
 
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
-                .IsUnique();            
+                .IsUnique();
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.UUID)
+                .IsUnique();
+
+            modelBuilder.Entity<WishlistItem>()
+                .HasIndex(wi => wi.UserID);
+
+            modelBuilder.Entity<AppListing>()
+                .HasIndex(a => a.appid);
+
         }
     }
 }

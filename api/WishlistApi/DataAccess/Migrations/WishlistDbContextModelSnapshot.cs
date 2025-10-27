@@ -39,6 +39,9 @@ namespace DataAccess.Migrations
                     b.HasKey("appid")
                         .HasName("pk_app_listings");
 
+                    b.HasIndex("appid")
+                        .HasDatabaseName("ix_app_listings_appid");
+
                     b.ToTable("app_listings", (string)null);
                 });
 
@@ -83,6 +86,10 @@ namespace DataAccess.Migrations
                     b.HasKey("ID")
                         .HasName("pk_users");
 
+                    b.HasIndex("UUID")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_uuid");
+
                     b.HasIndex("Username")
                         .IsUnique()
                         .HasDatabaseName("ix_users_username");
@@ -103,9 +110,8 @@ namespace DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_added");
 
-                    b.Property<string>("UserID")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<int>("UserID")
+                        .HasColumnType("integer")
                         .HasColumnName("user_id");
 
                     b.Property<int>("appid")
@@ -115,6 +121,9 @@ namespace DataAccess.Migrations
                     b.HasKey("ID")
                         .HasName("pk_wishlist_items");
 
+                    b.HasIndex("UserID")
+                        .HasDatabaseName("ix_wishlist_items_user_id");
+
                     b.HasIndex("appid")
                         .HasDatabaseName("ix_wishlist_items_appid");
 
@@ -123,6 +132,13 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("DataAccess.Wishlist.WishlistItem", b =>
                 {
+                    b.HasOne("DataAccess.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_wishlist_items_users_user_id");
+
                     b.HasOne("DataAccess.AppListings.AppListing", "AppListing")
                         .WithMany()
                         .HasForeignKey("appid")
@@ -131,6 +147,8 @@ namespace DataAccess.Migrations
                         .HasConstraintName("fk_wishlist_items_app_listings_appid");
 
                     b.Navigation("AppListing");
+
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

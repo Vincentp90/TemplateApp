@@ -49,9 +49,9 @@ namespace DataAccess.Migrations
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    user_id = table.Column<string>(type: "text", nullable: false),
                     date_added = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    appid = table.Column<int>(type: "integer", nullable: false)
+                    appid = table.Column<int>(type: "integer", nullable: false),
+                    user_id = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -62,7 +62,18 @@ namespace DataAccess.Migrations
                         principalTable: "app_listings",
                         principalColumn: "appid",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_wishlist_items_users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_app_listings_appid",
+                table: "app_listings",
+                column: "appid");
 
             migrationBuilder.CreateIndex(
                 name: "ix_users_username",
@@ -71,11 +82,20 @@ namespace DataAccess.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "ix_users_uuid",
+                table: "users",
+                column: "uuid",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_wishlist_items_appid",
                 table: "wishlist_items",
                 column: "appid");
 
-            // Not auto generated:
+            migrationBuilder.CreateIndex(
+                name: "ix_wishlist_items_user_id",
+                table: "wishlist_items",
+                column: "user_id");
 
             // To allow fuzzy search on AppListings name column
             migrationBuilder.Sql("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
@@ -90,13 +110,13 @@ namespace DataAccess.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "users");
-
-            migrationBuilder.DropTable(
                 name: "wishlist_items");
 
             migrationBuilder.DropTable(
                 name: "app_listings");
+
+            migrationBuilder.DropTable(
+                name: "users");
         }
     }
 }

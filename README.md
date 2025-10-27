@@ -1,7 +1,7 @@
 # TemplateApp
 
 This is a template for a typical business CRUD app. The goal is to have a template using technologies that are modern, stable, popular and technologies I had good success with in my career. Reasons for focusing on those points:
-- Modern: To not fall behind with my experience 
+- Modern: To not fall behind with my experience and learn new technologies
 - Stable: An app made from this template should still be easy to run and maintain 10 years from now
 - Popular: Popular doesn't mean best in my opinion, but it greatly helps with development and diagnosing issues when you are googling/asking an LLM about a popular technology because there is a lot more information about it
 
@@ -39,12 +39,12 @@ Run for prod:
     - http://localhost
 
 Adding new migration:
+    - cd api/WishlistApi
     - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
 
 
 Later steps to add:
 - TODOs in code
-- review dockerfiles, probably a lot of unnecessary stuff in there
 
 Things to try/add later:
 - read more: OpenID Connect flow or an OAuth standard flow for creating access tokens https://devblogs.microsoft.com/dotnet/jwt-validation-and-authorization-in-asp-net-core/

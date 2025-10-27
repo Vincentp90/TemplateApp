@@ -1,4 +1,5 @@
 ﻿using DataAccess.AppListings;
+using DataAccess.Users;
 using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +14,12 @@ namespace WishlistApi.Controllers
     public class WishlistController : ControllerBase
     {
         private readonly WishlistItemDA _wishlistItemDA;
+        private readonly UserDA _userDA;
 
-        public WishlistController(WishlistItemDA wishlistItemDA)
+        public WishlistController(WishlistItemDA wishlistItemDA, UserDA userDA)
         {
             _wishlistItemDA = wishlistItemDA;
+            _userDA = userDA;
         }
 
         [HttpGet()]
@@ -26,11 +29,13 @@ namespace WishlistApi.Controllers
             if (string.IsNullOrEmpty(userId))
                 return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
+            int internalUserId = await _userDA.GetInternalUserId(new Guid(userId));
+
             var fieldList = (fields ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                                 .Select(f => f.ToLower())
                                 .ToHashSet();
             bool includeAll = fieldList.Count == 0;
-            var result = (await _wishlistItemDA.GetWishlistItems(userId)).Select(x => 
+            var result = (await _wishlistItemDA.GetWishlistItems(internalUserId)).Select(x => 
             {
                 var obj = new ExpandoObject();
                 var item = obj as IDictionary<string, object>;
@@ -52,8 +57,9 @@ namespace WishlistApi.Controllers
             if (string.IsNullOrEmpty(userId))
                 return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
+            int internalUserId = await _userDA.GetInternalUserId(new Guid(userId));
             await _wishlistItemDA.AddWishlistItem(new WishlistItem(){
-                UserID = userId, 
+                UserID = internalUserId, 
                 appid = appId
             });
 
@@ -67,7 +73,8 @@ namespace WishlistApi.Controllers
             if (string.IsNullOrEmpty(userId))
                 return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
-            await _wishlistItemDA.DeleteWishlistItem(userId, appId);
+            int internalUserId = await _userDA.GetInternalUserId(new Guid(userId));
+            await _wishlistItemDA.DeleteWishlistItem(internalUserId, appId);
 
             return Ok();
         }

@@ -7,16 +7,30 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace DataAccess.Users
 {
     public class UserDA
     {
         private readonly WishlistDbContext _context;
+        private readonly IMemoryCache _cache;
 
-        public UserDA(WishlistDbContext dbContext)
+        public UserDA(WishlistDbContext dbContext, IMemoryCache cache)
         {
             _context = dbContext;
+            _cache = cache;
+        }
+
+        public async Task<int> GetInternalUserId(Guid guid)
+        {
+            if (_cache.TryGetValue(guid, out int id))
+                return id;
+
+            id = await _context.Users.Where(u => u.UUID == guid).Select(u => u.ID).FirstAsync();
+
+            _cache.Set(guid, id, new MemoryCacheEntryOptions { Size = 1 });
+            return await _context.Users.Where(u => u.UUID == guid).Select(u => u.ID).FirstAsync();
         }
 
         public async Task<bool> IsUsernameAvailable(string username)
