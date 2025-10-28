@@ -44,14 +44,10 @@ Adding new migration:
 
 
 Later steps to add:
-- TODOs in code
-
-Things to try/add later:
-- read more: OpenID Connect flow or an OAuth standard flow for creating access tokens https://devblogs.microsoft.com/dotnet/jwt-validation-and-authorization-in-asp-net-core/
-- tailwind primary secondary color (once we have some buttons )
 - unit tests (Moq. MSTest vs xUnit?)
 - concurrency for CRUD operations
-- Redis cache (or redis fork) (maybe not much point when using tanstack query)
+
+Things to try/add later:
 - steam openID integration
 - Add jenkinsfile for CI/CD
 - upgrade from .NET 9 to 10 (november)
@@ -65,13 +61,15 @@ Things to try/add later:
     - Add roles/claims for authorization.
 - temporal
 - backend build warning CS8618
+- TODOs in code
 - Review XSS vulnerabilities
     - https://pragmaticwebsecurity.com/articles/oauthoidc/localstorage-xss.html
     - https://pragmaticwebsecurity.com/img/cheatsheets/reactxss.png
 - WCAG
 - stress test API
+- dark mode
 - host
     - where? Hetzner? Azure?
-    - Configure https
+    - Configure https in nginx + app.UseForwardedHeaders(), app.UseHsts()  https://gemini.google.com/app/a3815289ab113d8c
     - prod JWT set with env var instead of commited to git
     - configure urls, still using localhost in prod config

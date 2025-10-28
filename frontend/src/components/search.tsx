@@ -8,7 +8,6 @@ import { api } from "../api";
 import { Loading02Icon } from "hugeicons-react";
 import WlButton from './tiny/wlButton';
 
-//TODO move to separate file?
 type AppListing = { appid: number; name: string };
 const wlQueryKey = ['wishlist'];
 
@@ -140,7 +139,7 @@ export default function Search() {
             wishlistItems.map((s, i) => (
               <li key={i} className="flex items-center justify-between py-2 px-1">
                 <span>{s.name}</span>
-                <WlButton onClick={() => removeFromWishlist(s)} >
+                <WlButton onClick={() => removeFromWishlist(s)} isPrimary={true}>
                   Delete
                 </WlButton>
               </li>

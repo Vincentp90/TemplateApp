@@ -3,7 +3,6 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { api } from "../api";
 
-//TODO move to separate file
 type AppListingDetailed = { appid: number; name: string; dateadded: string };
 
 export default function WLItemsList() {

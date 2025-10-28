@@ -62,7 +62,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("RestrictedCORS", policy =>
     {
-        policy.WithOrigins(corsOrigins)//TODO read more what is recommended prod CORS config
+        policy.WithOrigins(corsOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -78,7 +78,6 @@ builder.Services.AddScoped<AppListingDA, AppListingDA>();//TODO interface and un
 builder.Services.AddScoped<WishlistItemDA, WishlistItemDA>();
 builder.Services.AddScoped<UserDA, UserDA>();
 
-//TODO read more what is recommended prod JWT config
 string jwtKey = builder.Configuration.GetValue<string>("Jwt:Key") ?? throw new Exception("Missing Jwt:Key in appsettings.json");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

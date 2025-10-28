@@ -58,9 +58,9 @@ export default function LoginForm() {
         >
             <div><span>APIURL: {import.meta.env.VITE_API_URL}</span></div>
             {isDev && (
-                <button onClick={fillDevCreds} className="mt-2 bg-gray-500 text-white p-2 w-full">
+                <WlButton onClick={fillDevCreds} isPrimary={true}>
                     I'm a developer
-                </button>
+                </WlButton>
             )}
             <label className="flex flex-col">
                 <span>Email</span>
@@ -90,6 +90,7 @@ export default function LoginForm() {
                 type="submit"
                 disabled={isSubmitting}
                 onClick={() => setAction("login")}
+                isPrimary={true}
             >
                 {isSubmitting ? 'Submitting...' : 'Login'}
             </WlButton>
@@ -97,6 +98,7 @@ export default function LoginForm() {
                 type="submit"
                 disabled={isSubmitting}
                 onClick={() => setAction("register")}
+                isPrimary={false}
             >
                 {isSubmitting ? 'Submitting...' : 'Register'}
             </WlButton>

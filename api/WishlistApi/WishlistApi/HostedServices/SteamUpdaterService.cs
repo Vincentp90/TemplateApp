@@ -32,7 +32,6 @@ namespace WishlistApi.HostedServices
             }
         }
 
-        //TODO move db specific code to DataAccess
         private async Task UpdateAppListingsIfEmpty(CancellationToken stoppingToken)
         {
             using var scope = _serviceProvider.CreateScope();
@@ -52,7 +51,6 @@ namespace WishlistApi.HostedServices
             }
         }
 
-        //TODO move to separate class or project, specific for getting data from steam
         private async Task<Root?> GetAppListingsFromSteam()
         {
             //Prod
