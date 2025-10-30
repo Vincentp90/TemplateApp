@@ -103,12 +103,10 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        // Apply any pending migrations
         db.Database.Migrate();
     }
     catch (Exception ex)
     {
-        // Log error
         Console.WriteLine($"Migration failed: {ex.Message}");
         throw;
     }
