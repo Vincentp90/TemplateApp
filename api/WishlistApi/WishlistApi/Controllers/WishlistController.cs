@@ -13,10 +13,10 @@ namespace WishlistApi.Controllers
     [Route("[controller]")]
     public class WishlistController : ControllerBase
     {
-        private readonly WishlistItemDA _wishlistItemDA;
-        private readonly UserDA _userDA;
+        private readonly IWishlistItemDA _wishlistItemDA;
+        private readonly IUserDA _userDA;
 
-        public WishlistController(WishlistItemDA wishlistItemDA, UserDA userDA)
+        public WishlistController(IWishlistItemDA wishlistItemDA, IUserDA userDA)
         {
             _wishlistItemDA = wishlistItemDA;
             _userDA = userDA;

@@ -21,31 +21,38 @@ Installation steps:
 
 
 CRUD app template
-- React frontend, there are two frontends right now:
-    - /wishlist: Next.js create-next-app with TypeScript, ESLint, Tailwind CSS, App Router, Webpack
-    - /frontend: Tanstack Query, Router, React Hook Form, Zod, TypeScript, ESLint, Tailwind CSS, Vite
-- .NET Web Api backend. Swagger, Moq. MSTest vs xUnit?
-- Split up API into BFF and REST?
+- React frontend
+    - Tanstack Query, Router
+    - React Hook Form with Zod for validations
+    - TypeScript, ESLint, Tailwind CSS, Vite
+- ASP.NET Web Api backend
+    - Entity Framework code first
+    - Swagger
+    - Tests: xUnit, Moq, FluentAssertions
+- JWT authentication
 - PostgreSQL
 - docker compose
-    - Reverse proxy nginx to fix CORS https://aistudio.google.com/prompts/18eIrTUYifiLP6D_tK_pOUzVrj9Gpkcly
-- Topic? Enhanced Steam Wishlist (integrate with steam api https://api.steampowered.com/ISteamApps/GetAppList/v2/)
+    - For development we only use docker to run postgres and adminer
+    - For production setup everything is running as containers, with additionally:
+        - Reverse proxy nginx
+        - React frontend served from an internal nginx instance
+- Topic: Enhanced Steam Wishlist (consuming steam api https://api.steampowered.com/ISteamApps/GetAppList/v2/)
     - In the app you can make wishlist
     - If you have an account it will remember your wishlist
 
 Run for prod:
-    - docker compose -p templateapp_prod -f docker-compose.prod.yml up -d
-    - docker compose -p templateapp_prod -f docker-compose.prod.yml up -d (if backend crashed TODO fix)
-    - http://localhost
+- docker compose -p templateapp_prod -f docker-compose.prod.yml up -d
+- docker compose -p templateapp_prod -f docker-compose.prod.yml up -d (if backend crashed TODO fix)
+- http://localhost
 
 Adding new migration:
-    - cd api/WishlistApi
-    - dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
+- cd api/WishlistApi
+- dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
 
 
 Later steps to add:
-- unit tests (Moq. MSTest vs xUnit?)
 - concurrency for CRUD operations
+- react unit tests
 
 Things to try/add later:
 - steam openID integration
@@ -58,9 +65,10 @@ Things to try/add later:
 - Async in method names or not?
 - auth
     - Use refresh tokens for long sessions.
-    - Add roles/claims for authorization.
+    - Add roles/claims for authorization (add admin role, need an admin screen first)
 - temporal
 - backend build warning CS8618
+- UI test
 - TODOs in code
 - Review XSS vulnerabilities
     - https://pragmaticwebsecurity.com/articles/oauthoidc/localstorage-xss.html
@@ -68,6 +76,8 @@ Things to try/add later:
 - WCAG
 - stress test API
 - dark mode
+- Split up API into BFF and REST?
+- more unit tests
 - host
     - where? Hetzner? Azure?
     - Configure https in nginx + app.UseForwardedHeaders(), app.UseHsts()  https://gemini.google.com/app/a3815289ab113d8c

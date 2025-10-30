@@ -7,7 +7,13 @@ using System.Threading.Tasks;
 
 namespace DataAccess.AppListings
 {
-    public class AppListingDA
+    public interface IAppListingDA
+    {
+        Task<List<AppListing>> SearchAppListings(string term);
+        Task<List<AppListing>> GetAppListings();
+    }
+
+    public class AppListingDA : IAppListingDA
     {
         private readonly WishlistDbContext _context;
 

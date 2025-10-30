@@ -11,7 +11,15 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace DataAccess.Users
 {
-    public class UserDA
+    public interface IUserDA
+    {
+        Task<int> GetInternalUserId(Guid guid);
+        Task<bool> IsUsernameAvailable(string username);
+        Task AddUser(string username, string password);
+        Task<User?> LoginUser(string username, string password);
+    }
+
+    public class UserDA : IUserDA
     {
         private readonly WishlistDbContext _context;
         private readonly IMemoryCache _cache;

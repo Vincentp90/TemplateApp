@@ -7,7 +7,14 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Wishlist
 {
-    public class WishlistItemDA
+    public interface IWishlistItemDA
+    {
+        Task<List<WishlistItem>> GetWishlistItems(int userID);
+        Task AddWishlistItem(WishlistItem item);
+        Task DeleteWishlistItem(int userID, int appid);
+    }
+
+    public class WishlistItemDA : IWishlistItemDA
     {
         private readonly WishlistDbContext _context;
 

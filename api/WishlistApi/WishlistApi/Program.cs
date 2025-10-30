@@ -74,9 +74,9 @@ builder.Services.AddDbContext<WishlistDbContext>(options =>
 
 builder.Services.AddHostedService<SteamUpdaterService>();
 
-builder.Services.AddScoped<AppListingDA, AppListingDA>();//TODO interface and unit test
-builder.Services.AddScoped<WishlistItemDA, WishlistItemDA>();
-builder.Services.AddScoped<UserDA, UserDA>();
+builder.Services.AddScoped<IAppListingDA, AppListingDA>();
+builder.Services.AddScoped<IWishlistItemDA, WishlistItemDA>();
+builder.Services.AddScoped<IUserDA, UserDA>();
 
 string jwtKey = builder.Configuration.GetValue<string>("Jwt:Key") ?? throw new Exception("Missing Jwt:Key in appsettings.json");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
