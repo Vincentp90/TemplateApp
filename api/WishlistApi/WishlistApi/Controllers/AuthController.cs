@@ -15,10 +15,10 @@ namespace WishlistApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ILogger<AuthController> _logger;
-        private readonly UserDA _userDA;
+        private readonly IUserDA _userDA;
         private readonly IConfiguration _config;
 
-        public AuthController(ILogger<AuthController> logger, IConfiguration config, UserDA userDA)
+        public AuthController(ILogger<AuthController> logger, IConfiguration config, IUserDA userDA)
         {
             _logger = logger;
             _userDA = userDA;

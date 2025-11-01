@@ -10,9 +10,9 @@ namespace WishlistApi.Controllers
     public class AppListingController : ControllerBase
     {
         private readonly ILogger<AppListingController> _logger;
-        private readonly AppListingDA _appListingDA;
+        private readonly IAppListingDA _appListingDA;
 
-        public AppListingController(ILogger<AppListingController> logger, AppListingDA appListingDA)
+        public AppListingController(ILogger<AppListingController> logger, IAppListingDA appListingDA)
         {
             _logger = logger;
             _appListingDA = appListingDA;

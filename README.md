@@ -25,6 +25,7 @@ CRUD app template
     - Tanstack Query, Router
     - React Hook Form with Zod for validations
     - TypeScript, ESLint, Tailwind CSS, Vite
+    - Vitest (to run tests: npm run test)
 - ASP.NET Web Api backend
     - REST 
     - Entity Framework code first
@@ -52,7 +53,6 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later:
-- react unit tests
 - Add a lessons learned page
     - Review XSS vulnerabilities
         - https://pragmaticwebsecurity.com/articles/oauthoidc/localstorage-xss.html

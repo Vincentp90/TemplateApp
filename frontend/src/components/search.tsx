@@ -13,12 +13,11 @@ const wlQueryKey = ['wishlist'];
 
 const fetchSearchResults = async (query: string): Promise<AppListing[]> => {
   const res = await api.get(`/applisting/search/${encodeURIComponent(query)}`);
-  const data = res.data;
+  const data = res.data;  
   return data.slice(0, 10);
 };
 
 export default function Search() {
-  const [searchInputValue, setSearchInputValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
 
@@ -29,8 +28,7 @@ export default function Search() {
   );
 
   const handleSearchInputChange = (input: string) =>{
-    setSearchInputValue(input);
-    if (searchInputValue.length > 2) debounceQueryInput.current(searchInputValue);
+    if (input.length > 2) debounceQueryInput.current(input);
     else setSearchQuery('');
   };
 
@@ -110,7 +108,6 @@ export default function Search() {
         <h2>Search steam games to add to wishlist</h2>
         <input
           type="text"
-          value={searchInputValue}
           onChange={(e) => handleSearchInputChange(e.target.value)}
           placeholder="Type to search..."
           className="p-2 border rounded shadow-sm"
