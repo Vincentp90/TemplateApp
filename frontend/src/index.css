@@ -70,3 +70,16 @@ button:focus-visible {
     background-color: #1a1a1a;
   }
 }
+
+pre {
+  background-color: #f9fafb;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-family: monospace;
+  font-size: 0.875rem;
+}
+
+code {
+  color: #1e293b;
+}

@@ -17,6 +17,7 @@ import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AuthLogoutRouteImport } from './routes/auth/logout'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AppOverviewRouteImport } from './routes/app/overview'
+import { Route as AppLessonsLearnedRouteImport } from './routes/app/lessonsLearned'
 import { Route as AppAboutRouteImport } from './routes/app/about'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
@@ -59,6 +60,11 @@ const AppOverviewRoute = AppOverviewRouteImport.update({
   path: '/overview',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppLessonsLearnedRoute = AppLessonsLearnedRouteImport.update({
+  id: '/lessonsLearned',
+  path: '/lessonsLearned',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppAboutRoute = AppAboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
   '/app/about': typeof AppAboutRoute
+  '/app/lessonsLearned': typeof AppLessonsLearnedRoute
   '/app/overview': typeof AppOverviewRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app/about': typeof AppAboutRoute
+  '/app/lessonsLearned': typeof AppLessonsLearnedRoute
   '/app/overview': typeof AppOverviewRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
   '/app/about': typeof AppAboutRoute
+  '/app/lessonsLearned': typeof AppLessonsLearnedRoute
   '/app/overview': typeof AppOverviewRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/app/about'
+    | '/app/lessonsLearned'
     | '/app/overview'
     | '/auth/login'
     | '/auth/logout'
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/app/about'
+    | '/app/lessonsLearned'
     | '/app/overview'
     | '/auth/login'
     | '/auth/logout'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/app/about'
+    | '/app/lessonsLearned'
     | '/app/overview'
     | '/auth/login'
     | '/auth/logout'
@@ -195,6 +207,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOverviewRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/lessonsLearned': {
+      id: '/app/lessonsLearned'
+      path: '/lessonsLearned'
+      fullPath: '/app/lessonsLearned'
+      preLoaderRoute: typeof AppLessonsLearnedRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/about': {
       id: '/app/about'
       path: '/about'
@@ -207,12 +226,14 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteRouteChildren {
   AppAboutRoute: typeof AppAboutRoute
+  AppLessonsLearnedRoute: typeof AppLessonsLearnedRoute
   AppOverviewRoute: typeof AppOverviewRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAboutRoute: AppAboutRoute,
+  AppLessonsLearnedRoute: AppLessonsLearnedRoute,
   AppOverviewRoute: AppOverviewRoute,
   AppIndexRoute: AppIndexRoute,
 }
