@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 
 export default function Header() {
   return (
-    <header className="sticky top-0 bg-gray-900 text-white px-6 py-4 shadow-md flex justify-between items-center">
+    <header className="sticky top-0 bg-gray-900 text-white px-6 py-4 shadow-md flex justify-between items-center z-50">
       <div className="text-xl font-semibold">Top Bar</div>
       <nav className="space-x-4">
         <Link to="/app" className="hover:text-gray-300">Home</Link>
