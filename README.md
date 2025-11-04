@@ -53,10 +53,6 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later:
-- Add a lessons learned page
-    - Review XSS vulnerabilities
-        - https://pragmaticwebsecurity.com/articles/oauthoidc/localstorage-xss.html
-        - https://pragmaticwebsecurity.com/img/cheatsheets/reactxss.png
 - OAuth https://chatgpt.com/c/69039540-1818-832e-88ef-20605eba31c7
 - steam openID integration
 - Add jenkinsfile for CI/CD
