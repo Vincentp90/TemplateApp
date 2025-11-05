@@ -19,9 +19,9 @@ namespace WishlistApi.Controllers
         }
 
         [HttpGet("search/{term}")]
-        public async Task<ActionResult> Search(string term)
+        public async Task<ActionResult> SearchAsync(string term)
         {
-            return Ok(await _appListingDA.SearchAppListings(term));
+            return Ok(await _appListingDA.SearchAppListingsAsync(term));
         }
     }
 }

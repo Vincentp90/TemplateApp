@@ -9,9 +9,9 @@ namespace DataAccess.Wishlist
 {
     public interface IWishlistItemDA
     {
-        Task<List<WishlistItem>> GetWishlistItems(int userID);
-        Task AddWishlistItem(WishlistItem item);
-        Task DeleteWishlistItem(int userID, int appid);
+        Task<List<WishlistItem>> GetWishlistItemsAsync(int userID);
+        Task AddWishlistItemAsync(WishlistItem item);
+        Task DeleteWishlistItemAsync(int userID, int appid);
     }
 
     public class WishlistItemDA : IWishlistItemDA
@@ -23,19 +23,19 @@ namespace DataAccess.Wishlist
             _context = dbContext;
         }
 
-        public async Task<List<WishlistItem>> GetWishlistItems(int userID)
+        public async Task<List<WishlistItem>> GetWishlistItemsAsync(int userID)
         {
             return await _context.WishlistItems.Where(i => i.UserID == userID).Include(i => i.AppListing).ToListAsync();
         }
 
-        public async Task AddWishlistItem(WishlistItem item)
+        public async Task AddWishlistItemAsync(WishlistItem item)
         {
             item.DateAdded = DateTimeOffset.UtcNow;//TODO pass client timezone and set in datetimeoffset DateTimeOffset.UtcNow.ToOffset(clientOffset);
             _context.WishlistItems.Add(item);
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteWishlistItem(int userID, int appid)
+        public async Task DeleteWishlistItemAsync(int userID, int appid)
         {
             var item = _context.WishlistItems.FirstOrDefault(i => i.UserID == userID && i.appid == appid);
             if (item != null)

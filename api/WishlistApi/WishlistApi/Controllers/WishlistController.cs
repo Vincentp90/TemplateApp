@@ -23,19 +23,19 @@ namespace WishlistApi.Controllers
         }
 
         [HttpGet()]
-        public async Task<ActionResult> GetWishlist([FromQuery] string? fields = null)
+        public async Task<ActionResult> GetWishlistAsync([FromQuery] string? fields = null)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
                 return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
-            int internalUserId = await _userDA.GetInternalUserId(new Guid(userId));
+            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
 
             var fieldList = (fields ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                                 .Select(f => f.ToLower())
                                 .ToHashSet();
             bool includeAll = fieldList.Count == 0;
-            var result = (await _wishlistItemDA.GetWishlistItems(internalUserId)).Select(x => 
+            var result = (await _wishlistItemDA.GetWishlistItemsAsync(internalUserId)).Select(x => 
             {
                 var obj = new ExpandoObject();
                 var item = obj as IDictionary<string, object>;
@@ -51,14 +51,14 @@ namespace WishlistApi.Controllers
         }
 
         [HttpPost("{appId}")]
-        public async Task<ActionResult> AddWishlistItem(int appId)
+        public async Task<ActionResult> AddWishlistItemAsync(int appId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
                 return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
-            int internalUserId = await _userDA.GetInternalUserId(new Guid(userId));
-            await _wishlistItemDA.AddWishlistItem(new WishlistItem(){
+            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
+            await _wishlistItemDA.AddWishlistItemAsync(new WishlistItem(){
                 UserID = internalUserId, 
                 appid = appId
             });
@@ -67,14 +67,14 @@ namespace WishlistApi.Controllers
         }
 
         [HttpDelete("{appId}")]
-        public async Task<ActionResult> DeleteAppFromWishlist(int appId)
+        public async Task<ActionResult> DeleteAppFromWishlistAsync(int appId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
                 return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
-            int internalUserId = await _userDA.GetInternalUserId(new Guid(userId));
-            await _wishlistItemDA.DeleteWishlistItem(internalUserId, appId);
+            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
+            await _wishlistItemDA.DeleteWishlistItemAsync(internalUserId, appId);
 
             return Ok();
         }

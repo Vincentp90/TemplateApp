@@ -9,8 +9,8 @@ namespace DataAccess.AppListings
 {
     public interface IAppListingDA
     {
-        Task<List<AppListing>> SearchAppListings(string term);
-        Task<List<AppListing>> GetAppListings();
+        Task<List<AppListing>> SearchAppListingsAsync(string term);
+        Task<List<AppListing>> GetAppListingsAsync();
     }
 
     public class AppListingDA : IAppListingDA
@@ -22,7 +22,7 @@ namespace DataAccess.AppListings
             _context = dbContext;
         }
 
-        public async Task<List<AppListing>> SearchAppListings(string term)
+        public async Task<List<AppListing>> SearchAppListingsAsync(string term)
         {
             if(string.IsNullOrEmpty(term) || term.Length < 3)
                 return new List<AppListing>();
@@ -31,7 +31,7 @@ namespace DataAccess.AppListings
                 .ToListAsync();
         }
 
-        public async Task<List<AppListing>> GetAppListings()
+        public async Task<List<AppListing>> GetAppListingsAsync()
         {
             return await _context.AppListings.Take(100).ToListAsync();
         }

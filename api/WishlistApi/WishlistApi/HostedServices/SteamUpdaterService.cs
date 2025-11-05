@@ -23,7 +23,7 @@ namespace WishlistApi.HostedServices
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await UpdateAppListingsIfEmpty(stoppingToken);
+                await UpdateAppListingsIfEmptyAsync(stoppingToken);
 
                 // TODO add db table to keep track of last update
                 // update existing data if longer than X ago
@@ -32,14 +32,14 @@ namespace WishlistApi.HostedServices
             }
         }
 
-        private async Task UpdateAppListingsIfEmpty(CancellationToken stoppingToken)
+        private async Task UpdateAppListingsIfEmptyAsync(CancellationToken stoppingToken)
         {
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<WishlistDbContext>();
 
             if (!await dbContext.AppListings.AnyAsync(stoppingToken))
             {
-                var appListings = await GetAppListingsFromSteam();
+                var appListings = await GetAppListingsFromSteamAsync();
                 if(appListings == null)
                     throw new Exception("Failed to get game list from steam");
                 appListings.applist.apps = appListings.applist.apps
@@ -51,7 +51,7 @@ namespace WishlistApi.HostedServices
             }
         }
 
-        private async Task<Root?> GetAppListingsFromSteam()
+        private async Task<Root?> GetAppListingsFromSteamAsync()
         {
             //Prod
             HttpClient client = new HttpClient();

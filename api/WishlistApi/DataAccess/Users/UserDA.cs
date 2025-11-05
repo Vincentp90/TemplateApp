@@ -13,10 +13,10 @@ namespace DataAccess.Users
 {
     public interface IUserDA
     {
-        Task<int> GetInternalUserId(Guid guid);
-        Task<bool> IsUsernameAvailable(string username);
-        Task AddUser(string username, string password);
-        Task<User?> LoginUser(string username, string password);
+        Task<int> GetInternalUserIdAsync(Guid guid);
+        Task<bool> IsUsernameAvailableAsync(string username);
+        Task AddUserAsync(string username, string password);
+        Task<User?> LoginUserAsync(string username, string password);
     }
 
     public class UserDA : IUserDA
@@ -30,7 +30,7 @@ namespace DataAccess.Users
             _cache = cache;
         }
 
-        public async Task<int> GetInternalUserId(Guid guid)
+        public async Task<int> GetInternalUserIdAsync(Guid guid)
         {
             if (_cache.TryGetValue(guid, out int id))
                 return id;
@@ -41,12 +41,12 @@ namespace DataAccess.Users
             return await _context.Users.Where(u => u.UUID == guid).Select(u => u.ID).FirstAsync();
         }
 
-        public async Task<bool> IsUsernameAvailable(string username)
+        public async Task<bool> IsUsernameAvailableAsync(string username)
         {
             return !await _context.Users.AnyAsync(u => u.Username == username);
         }
 
-        public async Task AddUser(string username, string password)
+        public async Task AddUserAsync(string username, string password)
         {
             CreatePasswordHash(password, out byte[] hash, out byte[] salt);
 
@@ -61,7 +61,7 @@ namespace DataAccess.Users
             await _context.SaveChangesAsync();
         }
 
-        public async Task<User?> LoginUser(string username, string password)
+        public async Task<User?> LoginUserAsync(string username, string password)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
             if (user == null)

@@ -26,7 +26,7 @@ namespace Tests.ControllerTests
             const string APPNAME = "MockAppName";
 
             var wlDAMock = new Mock<IWishlistItemDA>(MockBehavior.Strict);
-            wlDAMock.Setup(x => x.GetWishlistItems(3)).ReturnsAsync(
+            wlDAMock.Setup(x => x.GetWishlistItemsAsync(3)).ReturnsAsync(
                 new List<WishlistItem>()
                 {
                     new WishlistItem() { 
@@ -39,7 +39,7 @@ namespace Tests.ControllerTests
                 });
 
             var userDAMock = new Mock<IUserDA>(MockBehavior.Strict);
-            userDAMock.Setup(x => x.GetInternalUserId(externalID)).ReturnsAsync(3);
+            userDAMock.Setup(x => x.GetInternalUserIdAsync(externalID)).ReturnsAsync(3);
 
             var controller = new WishlistController(wlDAMock.Object, userDAMock.Object);
 
@@ -57,12 +57,12 @@ namespace Tests.ControllerTests
 
 
             // Act
-            var actionResult = await controller.GetWishlist() as OkObjectResult;
+            var actionResult = await controller.GetWishlistAsync() as OkObjectResult;
 
             // Assert
             actionResult.Should().NotBeNull();
-            wlDAMock.Verify(x => x.GetWishlistItems(3), Times.Once);
-            userDAMock.Verify(x => x.GetInternalUserId(externalID), Times.Once);
+            wlDAMock.Verify(x => x.GetWishlistItemsAsync(3), Times.Once);
+            userDAMock.Verify(x => x.GetInternalUserIdAsync(externalID), Times.Once);
 
             var wl = actionResult.Value as IEnumerable<ExpandoObject>;
             wl.Should().NotBeNull();
@@ -80,7 +80,7 @@ namespace Tests.ControllerTests
 
 
             // Act
-            actionResult = await controller.GetWishlist("appid,name") as OkObjectResult; // Simulate fields=appid,name query param
+            actionResult = await controller.GetWishlistAsync("appid,name") as OkObjectResult; // Simulate fields=appid,name query param
 
             // Assert
             actionResult.Should().NotBeNull();

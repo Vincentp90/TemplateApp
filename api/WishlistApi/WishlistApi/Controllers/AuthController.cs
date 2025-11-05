@@ -26,20 +26,20 @@ namespace WishlistApi.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult> Register(RegisterRequest request)
+        public async Task<ActionResult> RegisterAsync(RegisterRequest request)
         {
-            if (!await _userDA.IsUsernameAvailable(request.Username))
+            if (!await _userDA.IsUsernameAvailableAsync(request.Username))
                 return BadRequest("Username already taken");
 
-            await _userDA.AddUser(request.Username, request.Password);            
+            await _userDA.AddUserAsync(request.Username, request.Password);            
             return Ok();
         }
 
         // Could be improved by returning short lived token (<5 mins) and then other call returns bearer token, after doing extra checks (MFA, device, IP, risk scoring)
         [HttpPost("login")]
-        public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
+        public async Task<ActionResult<AuthResponse>> LoginAsync(LoginRequest request)
         {
-            var user = await _userDA.LoginUser(request.Username, request.Password);
+            var user = await _userDA.LoginUserAsync(request.Username, request.Password);
             if(user == null)
                 return Unauthorized();
 
@@ -48,9 +48,9 @@ namespace WishlistApi.Controllers
         }
 
         [HttpGet("check")]
-        public async Task<ActionResult<bool>> CheckUsernameAvailable([FromQuery] string username)
+        public async Task<ActionResult<bool>> CheckUsernameAvailableAsync([FromQuery] string username)
         {
-            return Ok(await _userDA.IsUsernameAvailable(username));
+            return Ok(await _userDA.IsUsernameAvailableAsync(username));
         }
 
         private string CreateToken(User user)
