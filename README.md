@@ -54,11 +54,9 @@ Adding new EF migration:
 
 Things I'm going to try/add later:
 - upgrade from .NET 9 to 10 (november)
-- Async in method names or not?
 - auth
     - Use refresh tokens for long sessions.
     - Add roles/claims for authorization (add admin role, need an admin screen first)
-- temporal
 - backend build warning CS8618
 - UI test
 - TODOs in code

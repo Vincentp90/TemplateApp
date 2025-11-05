@@ -7,7 +7,7 @@ namespace DataAccess.AppListings
         // Using lowercase so we can directly deserialize from steamapi into this object
         [Key]
         public int appid { get; set; }
-        public string name { get; set; }
+        public required string name { get; set; }
 
     }
 }

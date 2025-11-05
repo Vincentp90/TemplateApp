@@ -64,12 +64,12 @@ namespace WishlistApi.HostedServices
 
         private class Root
         {
-            public AppList applist { get; set; }
+            public required AppList applist { get; set; }
         }
 
         private class AppList
         {
-            public List<AppListing> apps { get; set; }
+            public required List<AppListing> apps { get; set; }
         }
     }
 }
