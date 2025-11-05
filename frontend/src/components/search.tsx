@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import debounce from 'lodash.debounce';
 import { api } from "../api";
 
@@ -38,7 +38,7 @@ export default function Search() {
     enabled: searchQuery.length > 2,
   });
 
-  const { data: wishlistItems = [], isPending: wishlistItemsPending } = useQuery<AppListing[]>({
+  const { data: wishlistItems = [], isPending: wishlistItemsPending } = useSuspenseQuery<AppListing[]>({
     queryKey: wlQueryKey,
     queryFn: async () => {
       const res = await api.get(`/wishlist?fields=appid,name`);

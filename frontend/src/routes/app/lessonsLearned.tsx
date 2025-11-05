@@ -13,7 +13,7 @@ function shuffle(array: Card[]) {
 }
 
 function InfoCards() {
-  const cards = shuffle(data);
+  const cards = shuffle(data as Card[]);
 
   return (
     <div className="flex flex-col items-center p-4">

@@ -53,14 +53,7 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later:
-- OAuth https://chatgpt.com/c/69039540-1818-832e-88ef-20605eba31c7
-- steam openID integration
-- Add jenkinsfile for CI/CD
 - upgrade from .NET 9 to 10 (november)
-- scan container (Anchore ?)
-- scan code (SonarQube?)
-- nicer loading screen (use with suspense)
-- Reconsider current approach of using POCO db classes throughout the whole backend. Use DTOs?
 - Async in method names or not?
 - auth
     - Use refresh tokens for long sessions.
@@ -76,6 +69,13 @@ Things I'm going to try/add later:
 - Split up API into BFF and REST?
 - more unit tests
 - How to handle a very large application? Should i use more design patterns to ensure maintainability and extensibility?
+    - Use DTOs
+- pgvector
+- Add jenkinsfile for CI/CD
+    - scan container (Anchore ?)
+    - scan code (SonarQube?)
+- OAuth https://chatgpt.com/c/69039540-1818-832e-88ef-20605eba31c7
+- steam openID integration
 - host
     - where? Hetzner? Azure?
     - Configure https in nginx + app.UseForwardedHeaders(), app.UseHsts()  https://gemini.google.com/app/a3815289ab113d8c
