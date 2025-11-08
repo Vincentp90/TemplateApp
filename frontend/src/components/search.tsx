@@ -50,7 +50,6 @@ export default function Search() {
     },
   });
 
-  // TODO further learn what this does and how it works
   const addMutation = useMutation({
     mutationFn: async (appItem: AppListing) => {
       await api.post(`/wishlist/${appItem.appid}`);

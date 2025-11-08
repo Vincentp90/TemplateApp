@@ -18,6 +18,7 @@ import { Route as AuthLogoutRouteImport } from './routes/auth/logout'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AppOverviewRouteImport } from './routes/app/overview'
 import { Route as AppLessonsLearnedRouteImport } from './routes/app/lessonsLearned'
+import { Route as AppAuctionRouteImport } from './routes/app/auction'
 import { Route as AppAboutRouteImport } from './routes/app/about'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
@@ -65,6 +66,11 @@ const AppLessonsLearnedRoute = AppLessonsLearnedRouteImport.update({
   path: '/lessonsLearned',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppAuctionRoute = AppAuctionRouteImport.update({
+  id: '/auction',
+  path: '/auction',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppAboutRoute = AppAboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
   '/app/about': typeof AppAboutRoute
+  '/app/auction': typeof AppAuctionRoute
   '/app/lessonsLearned': typeof AppLessonsLearnedRoute
   '/app/overview': typeof AppOverviewRoute
   '/auth/login': typeof AuthLoginRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app/about': typeof AppAboutRoute
+  '/app/auction': typeof AppAuctionRoute
   '/app/lessonsLearned': typeof AppLessonsLearnedRoute
   '/app/overview': typeof AppOverviewRoute
   '/auth/login': typeof AuthLoginRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
   '/app/about': typeof AppAboutRoute
+  '/app/auction': typeof AppAuctionRoute
   '/app/lessonsLearned': typeof AppLessonsLearnedRoute
   '/app/overview': typeof AppOverviewRoute
   '/auth/login': typeof AuthLoginRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/app/about'
+    | '/app/auction'
     | '/app/lessonsLearned'
     | '/app/overview'
     | '/auth/login'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/app/about'
+    | '/app/auction'
     | '/app/lessonsLearned'
     | '/app/overview'
     | '/auth/login'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/app/about'
+    | '/app/auction'
     | '/app/lessonsLearned'
     | '/app/overview'
     | '/auth/login'
@@ -214,6 +226,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLessonsLearnedRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/auction': {
+      id: '/app/auction'
+      path: '/auction'
+      fullPath: '/app/auction'
+      preLoaderRoute: typeof AppAuctionRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/about': {
       id: '/app/about'
       path: '/about'
@@ -226,6 +245,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteRouteChildren {
   AppAboutRoute: typeof AppAboutRoute
+  AppAuctionRoute: typeof AppAuctionRoute
   AppLessonsLearnedRoute: typeof AppLessonsLearnedRoute
   AppOverviewRoute: typeof AppOverviewRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -233,6 +253,7 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAboutRoute: AppAboutRoute,
+  AppAuctionRoute: AppAuctionRoute,
   AppLessonsLearnedRoute: AppLessonsLearnedRoute,
   AppOverviewRoute: AppOverviewRoute,
   AppIndexRoute: AppIndexRoute,

@@ -11,6 +11,7 @@ namespace DataAccess.AppListings
     {
         Task<List<AppListing>> SearchAppListingsAsync(string term);
         Task<List<AppListing>> GetAppListingsAsync();
+        Task<AppListing> GetRandomAppListingAsync();
     }
 
     public class AppListingDA : IAppListingDA
@@ -29,6 +30,14 @@ namespace DataAccess.AppListings
             return await _context.AppListings
                 .FromSqlRaw("SELECT * FROM app_listings WHERE similarity(name, {0}) > 0.3 ORDER BY similarity(name, {0}) DESC", term)
                 .ToListAsync();
+        }
+
+        public async Task<AppListing> GetRandomAppListingAsync()
+        {
+            // TODO look into more optimal ways to do this
+            return await _context.AppListings
+                .OrderBy(x => Guid.NewGuid())
+                .FirstAsync();
         }
 
         public async Task<List<AppListing>> GetAppListingsAsync()

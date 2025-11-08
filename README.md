@@ -49,19 +49,20 @@ Run for prod:
 
 Adding new EF migration:
 - cd api/WishlistApi
-- dotnet ef migrations add InitialMigration --project DataAccess --startup-project WishlistApi
+- dotnet ef migrations add AuctionAddedRV --project DataAccess --startup-project WishlistApi
 
 
 Things I'm going to try/add later:
+- concurrency for CRUD operations: add a functionality that could have concurrent edits on same data, add optimistic concurrency (Timestamp attribute EF) and implement merge with tanstack query on receiving a 409 from the backend https://chatgpt.com/c/6903b2f9-d6f4-8330-8e15-9b7524a6f121
 - upgrade from .NET 9 to 10 (november)
 - auth
     - Use refresh tokens for long sessions.
     - Add roles/claims for authorization (add admin role, need an admin screen first)
-- backend build warning CS8618
 - UI test
+- AuctionService add logger
+- EF mocking unit test
 - TODOs in code
 - WCAG
-- concurrency for CRUD operations: add a functionality that could have concurrent edits on same data, add optimistic concurrency (Timestamp attribute EF) and implement merge with tanstack query on receiving a 409 from the backend https://chatgpt.com/c/6903b2f9-d6f4-8330-8e15-9b7524a6f121
 - stress test API
 - dark mode
 - Split up API into BFF and REST?
