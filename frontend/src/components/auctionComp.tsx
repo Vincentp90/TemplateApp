@@ -5,32 +5,33 @@ import { useInterval } from "./tiny/useInterval";
 
 type Auction = {
     ID: number;
-    startdate: Date;
-    enddate: Date;
-    userhasbid: boolean;
+    startDate: Date;
+    endDate: Date;
+    userHasBid: boolean;
     startingPrice: number;
     currentPrice: number;
-    appname: string;
+    appID: number;
+    appName: string;
 };
 
 export function AuctionComp() {
     const queryClient = useQueryClient();
-    const [bid, setBid] = useState("");
-    const [secondsLeft, setSecondsLeft] = useState<number>(60 * 30);
+    const [bid, setBid] = useState("");    
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    //const activePrice = currentPrice || startingPrice;
 
     const { data: currentAuction } = useSuspenseQuery<Auction>({
         queryKey: ['currentauction'],
         queryFn: async () => {
             const res = await api.get("/auction");
             const data = res.data;
-            setSecondsLeft((data.enddate - Date.now()) / 1000);
+            //setSecondsLeft((new Date(data.endDate).getTime() - Date.now()) / 1000);
             console.log(data);
             return data;
         },
     });
+
+    const endtime = new Date(currentAuction.endDate).getTime();
+    const [secondsLeft, setSecondsLeft] = useState<number>((endtime - Date.now()) / 1000);
 
     useInterval(() => {
         setSecondsLeft(secondsLeft > 0 ? secondsLeft - 1 : 0);
@@ -63,20 +64,23 @@ export function AuctionComp() {
     };
 
     const minutes = Math.floor(secondsLeft / 60);
-    const seconds = secondsLeft % 60;
+    const seconds = (secondsLeft % 60).toFixed(0);
+
+    const currentPriceMult = (mult: number) => (Math.max(currentAuction?.currentPrice, currentAuction?.startingPrice) * mult)?.toFixed(2);
 
     return (
-        <div className={`max-w-md mx-auto p-4 rounded-2xl shadow-md border ${currentAuction.userhasbid ? "border-green-500" : "border-gray-300"}`}>
+        <div className={`max-w-md mx-auto p-4 rounded-2xl shadow-md border ${currentAuction.userHasBid ? "border-green-500" : "border-gray-300"}`}>
             <div className="mb-4">
                 <h2 className="text-xl font-semibold">{currentAuction?.currentPrice}</h2>
-                <p className={`text-sm ${currentAuction.userhasbid ? "text-green-600" : "text-gray-500"}`}>
-                    {currentAuction.userhasbid
+                <p className={`text-sm ${currentAuction.userHasBid ? "text-green-600" : "text-gray-500"}`}>
+                    {currentAuction.userHasBid
                         ? "You hold the highest bid"
                         : "You are not the highest bidder"}
                 </p>
             </div>
 
             <div className="space-y-1 mb-4">
+                <h3>App for auction: {currentAuction.appName}</h3>
                 <p>Starting price: ${currentAuction.startingPrice.toFixed(2)}</p>
                 <p>Current price: ${currentAuction?.currentPrice?.toFixed(2)}</p>
                 <p>
@@ -107,12 +111,12 @@ export function AuctionComp() {
                     <button
                         key={mult}
                         onClick={() =>
-                            submitBid(parseFloat((currentAuction?.currentPrice * mult)?.toFixed(2)))
+                            submitBid(parseFloat(currentPriceMult(mult)))
                         }
                         disabled={isSubmitting}
                         className="flex-1 mx-1 px-3 py-2 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
                     >
-                        {mult * 100}% (${(currentAuction?.currentPrice * mult)?.toFixed(2)})
+                        +{(mult * 100 - 100).toFixed(0)}% (${currentPriceMult(mult)})
                     </button>
                 ))}
             </div>

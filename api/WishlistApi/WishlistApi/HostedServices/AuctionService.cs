@@ -14,13 +14,15 @@ namespace WishlistApi.HostedServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            using var scope = _scopeFactory.CreateScope();
-            var _auctionDA = scope.ServiceProvider.GetRequiredService<IAuctionDA>();
-            var _appListingDA = scope.ServiceProvider.GetRequiredService<IAppListingDA>();
+            
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
+                    using var scope = _scopeFactory.CreateScope();
+                    var _auctionDA = scope.ServiceProvider.GetRequiredService<IAuctionDA>();
+                    var _appListingDA = scope.ServiceProvider.GetRequiredService<IAppListingDA>();
+
                     var app = await _appListingDA.GetRandomAppListingAsync();
 
                     var newAuction = new Auction()
@@ -47,7 +49,7 @@ namespace WishlistApi.HostedServices
                 }
 
                 //TODO instead of wait 30 minutes, wait until next half or full hour
-                await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
+                await Task.Delay(Auction.Duration, stoppingToken);
             }
         }
     }

@@ -42,6 +42,7 @@ namespace WishlistApi.Controllers
                 UserHasBid: (auction.User?.UUID.ToString() == userId),
                 StartingPrice: auction.StartingPrice,
                 CurrentPrice: auction.CurrentPrice,
+                AppID: auction.appid,
                 AppName: auction.AppListing.name,
                 RowVersion: auction.RowVersion
             ));
@@ -58,7 +59,7 @@ namespace WishlistApi.Controllers
 
             try
             {
-                await _auctionDA.UpdateAuctionAsync(new Auction { 
+                await _auctionDA.UpdateAuctionBidAsync(new Auction { 
                     ID = auction.ID, 
                     CurrentPrice = auction.CurrentPrice, 
                     RowVersion = auction.RowVersion,

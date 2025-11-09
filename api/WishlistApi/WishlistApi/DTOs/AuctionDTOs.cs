@@ -2,6 +2,16 @@
 {
     public class AuctionDTOs
     {
-        public record Auction(int ID, DateTimeOffset StartDate, DateTimeOffset EndDate, bool UserHasBid, decimal StartingPrice, decimal? CurrentPrice, string AppName, Guid RowVersion);
+        public record Auction(
+            int ID, 
+            DateTimeOffset StartDate, 
+            DateTimeOffset EndDate, 
+            bool UserHasBid, 
+            decimal StartingPrice, 
+            decimal? CurrentPrice, 
+            int AppID, 
+            string AppName, 
+            Guid RowVersion
+            );
     }
 }

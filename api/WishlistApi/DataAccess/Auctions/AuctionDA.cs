@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace DataAccess.Auctions
     {
         Task<Auction?> GetLatestAuctionAsync();
         Task AddAuctionAsync(Auction auction);
-        Task UpdateAuctionAsync(Auction auction);
+        Task UpdateAuctionBidAsync(Auction auction);
         Task CloseAuctionAndAddNewAsync(Auction oldAuction, Auction newAuction);
     }
 
@@ -36,8 +37,21 @@ namespace DataAccess.Auctions
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAuctionAsync(Auction auction)
+        public async Task UpdateAuctionBidAsync(Auction auctionBid)
         {
+            var auction = await GetLatestAuctionAsync();
+            if(auction == null)
+                throw new DBConcurrencyException("No open auction found.");
+            if(auction.ID != auctionBid.ID)
+                throw new DBConcurrencyException("Auction is no longer open.");
+
+            if(auction.StartingPrice >= auctionBid.CurrentPrice)
+                throw new Exception("Bid is not higher than starting price.");
+            // Don't need to check currentprice is higher than previous bid, because optimistic concurrency RowVersions check will stop it
+
+            auction.CurrentPrice = auctionBid.CurrentPrice;
+            auction.UserID = auctionBid.UserID;
+            auction.RowVersion = auctionBid.RowVersion;
             _context.Auctions.Update(auction);
             await _context.SaveChangesAsync();
         }
