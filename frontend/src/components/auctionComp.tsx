@@ -2,6 +2,7 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import { useState } from "react";
 import { api } from "../api";
 import { useInterval } from "./tiny/useInterval";
+import WlButton from "./tiny/wlButton";
 
 type Auction = {
     ID: number;
@@ -16,7 +17,7 @@ type Auction = {
 
 export function AuctionComp() {
     const queryClient = useQueryClient();
-    const [bid, setBid] = useState("");    
+    const [bid, setBid] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { data: currentAuction } = useSuspenseQuery<Auction>({
@@ -39,24 +40,24 @@ export function AuctionComp() {
 
     const addMutation = useMutation({
         mutationFn: async (auction: Auction) => {
-          setIsSubmitting(true);
-          await api.post(`/auction`, auction);
-          return auction;
+            setIsSubmitting(true);
+            await api.post(`/auction`, auction);
+            return auction;
         },
         onMutate: async (auction) => {
-          await queryClient.cancelQueries({ queryKey: ['currentauction'] });
-          queryClient.setQueryData(['currentauction'], auction);
-          return auction;
+            await queryClient.cancelQueries({ queryKey: ['currentauction'] });
+            queryClient.setQueryData(['currentauction'], auction);
+            return auction;
         },
         onError: () => {
-          // TODO
+            // TODO
         },
         onSettled: () => {
-          queryClient.invalidateQueries({ queryKey: ['currentauction'] });
-          setIsSubmitting(false);
-          setBid("");
+            queryClient.invalidateQueries({ queryKey: ['currentauction'] });
+            setIsSubmitting(false);
+            setBid("");
         },
-      });
+    });
 
     const submitBid = (bid: number) => {
         const auction = { ...currentAuction, currentprice: bid };
@@ -67,6 +68,10 @@ export function AuctionComp() {
     const seconds = (secondsLeft % 60).toFixed(0);
 
     const currentPriceMult = (mult: number) => (Math.max(currentAuction?.currentPrice, currentAuction?.startingPrice) * mult)?.toFixed(2);
+
+    const simulateBid = async () => {
+        api.get('auction/simulatebid');
+    }
 
     return (
         <div className={`max-w-md mx-auto p-4 rounded-2xl shadow-md border ${currentAuction.userHasBid ? "border-green-500" : "border-gray-300"}`}>
@@ -97,29 +102,33 @@ export function AuctionComp() {
                     disabled={isSubmitting}
                     className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <button
+                <WlButton
                     onClick={() => submitBid(parseFloat(bid))}
                     disabled={isSubmitting || !bid}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                    isPrimary={true}
                 >
                     Submit
-                </button>
+                </WlButton>
             </div>
 
             <div className="flex justify-between">
                 {[1.1, 1.4, 2.0].map((mult) => (
-                    <button
+                    <WlButton
                         key={mult}
                         onClick={() =>
                             submitBid(parseFloat(currentPriceMult(mult)))
                         }
                         disabled={isSubmitting}
-                        className="flex-1 mx-1 px-3 py-2 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
+                        isPrimary={true}
                     >
                         +{(mult * 100 - 100).toFixed(0)}% (${currentPriceMult(mult)})
-                    </button>
+                    </WlButton>
                 ))}
             </div>
+
+            <WlButton onClick={() => simulateBid()} isPrimary={false}>
+                Simulate higher bid from other user
+            </WlButton>
         </div>
     );
 }

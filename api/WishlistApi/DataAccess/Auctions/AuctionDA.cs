@@ -51,7 +51,7 @@ namespace DataAccess.Auctions
 
             auction.CurrentPrice = auctionBid.CurrentPrice;
             auction.UserID = auctionBid.UserID;
-            auction.RowVersion = auctionBid.RowVersion;
+            auction.RowVersion = auctionBid.RowVersion;//TODO correct version number but doesn't stop update https://github.com/npgsql/efcore.pg/issues/3270#issuecomment-2346017231
             _context.Auctions.Update(auction);
             await _context.SaveChangesAsync();
         }

@@ -3,6 +3,7 @@ using DataAccess.Users;
 using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 using System.Data;
 using System.Dynamic;
 using System.Security.Claims;
@@ -67,10 +68,43 @@ namespace WishlistApi.Controllers
                 });
                 return Ok();
             }
-            catch(DBConcurrencyException ex)
+            catch(DBConcurrencyException)
             {
                 return StatusCode(StatusCodes.Status409Conflict);
             }
+        }
+
+        [HttpGet("SimulateBid")]
+        public async Task<ActionResult> PostSimulateBidAsync()
+        {
+            var user = await GetSimulationUser();
+
+            try
+            {
+                Auction auction = (await _auctionDA.GetLatestAuctionAsync())!;
+                var newPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
+                auction.CurrentPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
+                auction.UserID = user.ID;
+                await _auctionDA.UpdateAuctionBidAsync(auction);
+                return Ok();
+            }
+            catch (DBConcurrencyException)
+            {
+                return StatusCode(StatusCodes.Status409Conflict);
+            }
+        }
+
+        private async Task<User> GetSimulationUser()
+        {
+            // TODO get psw from config
+            const string username = "SimulateAuctionUser";
+            var user = await _userDA.LoginUserAsync(username, username);
+            if (user == null)
+            {
+                await _userDA.AddUserAsync(username, username);
+                user = await _userDA.LoginUserAsync(username, username);
+            }
+            return user!;
         }
     }
 }

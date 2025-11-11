@@ -49,7 +49,7 @@ Run for prod:
 
 Adding new EF migration:
 - cd api/WishlistApi
-- dotnet ef migrations add AuctionAddedRV --project DataAccess --startup-project WishlistApi
+- dotnet ef migrations add AuctionRowVersion --project DataAccess --startup-project WishlistApi
 
 
 Things I'm going to try/add later:

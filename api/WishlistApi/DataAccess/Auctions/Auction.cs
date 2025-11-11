@@ -23,7 +23,7 @@ namespace DataAccess.Auctions
         public decimal? CurrentPrice { get; set; }
 
         [Timestamp]
-        public Guid RowVersion { get; set; }
+        public uint RowVersion { get; set; }
 
         [ForeignKey("AppListing")]
         public int appid { get; set; }

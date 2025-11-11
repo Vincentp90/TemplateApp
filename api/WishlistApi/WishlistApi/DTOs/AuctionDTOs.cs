@@ -11,7 +11,7 @@
             decimal? CurrentPrice, 
             int AppID, 
             string AppName, 
-            Guid RowVersion
+            uint RowVersion
             );
     }
 }

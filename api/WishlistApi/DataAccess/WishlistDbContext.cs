@@ -38,10 +38,7 @@ namespace DataAccess
 
             modelBuilder.Entity<Auction>()
                 .Property(e => e.RowVersion)
-                .IsRequired()
-                .HasDefaultValueSql("gen_random_uuid()")
-                .ValueGeneratedOnAddOrUpdate()
-                .IsConcurrencyToken();
+                .IsRowVersion();
         }
     }
 }
