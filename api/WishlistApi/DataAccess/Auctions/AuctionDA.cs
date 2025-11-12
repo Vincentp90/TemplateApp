@@ -51,7 +51,12 @@ namespace DataAccess.Auctions
 
             auction.CurrentPrice = auctionBid.CurrentPrice;
             auction.UserID = auctionBid.UserID;
-            auction.RowVersion = auctionBid.RowVersion;//TODO correct version number but doesn't stop update https://github.com/npgsql/efcore.pg/issues/3270#issuecomment-2346017231
+
+            // Setting RowVersion to make EF check for optimistic concurrency
+            // This is wrong way: auction.RowVersion = auctionBid.RowVersion;
+            // This is right way:
+            _context.Entry(auction).Property(a => a.RowVersion).OriginalValue = auctionBid.RowVersion;
+
             _context.Auctions.Update(auction);
             await _context.SaveChangesAsync();
         }

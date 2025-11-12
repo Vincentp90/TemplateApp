@@ -3,6 +3,7 @@ using DataAccess.Users;
 using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using System.Data;
 using System.Dynamic;
@@ -68,7 +69,7 @@ namespace WishlistApi.Controllers
                 });
                 return Ok();
             }
-            catch(DBConcurrencyException)
+            catch(DbUpdateConcurrencyException)
             {
                 return StatusCode(StatusCodes.Status409Conflict);
             }
@@ -88,7 +89,7 @@ namespace WishlistApi.Controllers
                 await _auctionDA.UpdateAuctionBidAsync(auction);
                 return Ok();
             }
-            catch (DBConcurrencyException)
+            catch (DbUpdateConcurrencyException)
             {
                 return StatusCode(StatusCodes.Status409Conflict);
             }

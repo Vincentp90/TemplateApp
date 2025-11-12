@@ -54,7 +54,15 @@ Adding new EF migration:
 
 Things I'm going to try/add later:
 - concurrency for CRUD operations: add a functionality that could have concurrent edits on same data, add optimistic concurrency (Timestamp attribute EF) and implement merge with tanstack query on receiving a 409 from the backend https://chatgpt.com/c/6903b2f9-d6f4-8330-8e15-9b7524a6f121
+    - handle 409: refetch and if value higher automaticly resubmit, else show message that someone else already bid higher
+    - make lessons learned (RowVersion column config, how to set RowVersion value)
+    - Add explanation to auction page that this is to demonstrate optimistic concurrency
+    - make auction component layout nicer
+    - Design pattern useful for rowversion check? 
 - upgrade from .NET 9 to 10 (november)
+- aspire
+- Add a second auction implementation with real time updates
+- Add a form with optimistic concurrency to have a better example for merging an update
 - auth
     - Use refresh tokens for long sessions.
     - Add roles/claims for authorization (add admin role, need an admin screen first)

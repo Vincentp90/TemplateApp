@@ -36,6 +36,8 @@ namespace DataAccess
             modelBuilder.Entity<AppListing>()
                 .HasIndex(a => a.appid);
 
+            // Explains how to enable RowVersion with EF + Postgres:
+            // https://github.com/npgsql/efcore.pg/issues/3270#issuecomment-2346017231
             modelBuilder.Entity<Auction>()
                 .Property(e => e.RowVersion)
                 .IsRowVersion();
