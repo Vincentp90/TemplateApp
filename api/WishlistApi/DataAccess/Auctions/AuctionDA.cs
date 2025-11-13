@@ -41,13 +41,16 @@ namespace DataAccess.Auctions
         {
             var auction = await GetLatestAuctionAsync();
             if(auction == null)
-                throw new DBConcurrencyException("No open auction found.");
+                throw new DbUpdateConcurrencyException("No open auction found.");
             if(auction.ID != auctionBid.ID)
-                throw new DBConcurrencyException("Auction is no longer open.");
+                throw new DbUpdateConcurrencyException("Auction is no longer open.");
 
             if(auction.StartingPrice >= auctionBid.CurrentPrice)
-                throw new Exception("Bid is not higher than starting price.");
-            // Don't need to check currentprice is higher than previous bid, because optimistic concurrency RowVersions check will stop it
+                throw new DbUpdateConcurrencyException("Bid is not higher than starting price.");// TODO give more appropriate error type
+            // If detached (different object), check new price is higher
+            if (auctionBid != auction && auction.CurrentPrice >= auctionBid.CurrentPrice)
+                throw new DbUpdateConcurrencyException("Bid is not higher than current price.");
+            
 
             auction.CurrentPrice = auctionBid.CurrentPrice;
             auction.UserID = auctionBid.UserID;

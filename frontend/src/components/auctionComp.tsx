@@ -13,6 +13,7 @@ type Auction = {
     currentPrice: number;
     appID: number;
     appName: string;
+    rowVersion: number;
 };
 
 export function AuctionComp() {
@@ -26,7 +27,6 @@ export function AuctionComp() {
             const res = await api.get("/auction");
             const data = res.data;
             //setSecondsLeft((new Date(data.endDate).getTime() - Date.now()) / 1000);
-            console.log(data);
             return data;
         },
     });
@@ -49,8 +49,26 @@ export function AuctionComp() {
             queryClient.setQueryData(['currentauction'], auction);
             return auction;
         },
-        onError: () => {
-            // TODO
+        onError: async (err, submittedAuction) => {
+            // Handle concurrency error. Refech current auction and if price is lower than our bid, resubmit with updated RowVersion stamp
+            // if price is higher, show message to user that other bid is higher
+            if(err.status === 409) {//TODO fix eslint error
+                await queryClient.refetchQueries({ queryKey: ['currentauction'] });
+                const latestAuction = queryClient.getQueryData<Auction>(['currentauction']);
+                                
+                if (latestAuction!.currentPrice < Number(bid)) {
+                    const updatedAuction = {
+                        ...submittedAuction,
+                        currentprice: bid,
+                        rowVersion: latestAuction!.rowVersion,
+                    };
+                    queryClient.setQueryData(['currentauction'], updatedAuction);
+                    addMutation.mutate(updatedAuction);
+                } else {
+                    alert('Another bidder placed a higher offer before you.');
+                    queryClient.setQueryData(['currentauction'], latestAuction);
+                }
+            }
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['currentauction'] });
@@ -61,6 +79,7 @@ export function AuctionComp() {
 
     const submitBid = (bid: number) => {
         const auction = { ...currentAuction, currentprice: bid };
+        setBid(bid.toString());
         addMutation.mutate(auction);
     };
 
