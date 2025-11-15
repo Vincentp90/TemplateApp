@@ -3,6 +3,7 @@ import { useState } from "react";
 import { api } from "../api";
 import { useInterval } from "./tiny/useInterval";
 import WlButton from "./tiny/wlButton";
+import type { AxiosError } from "axios";
 
 type Auction = {
     ID: number;
@@ -49,10 +50,11 @@ export function AuctionComp() {
             queryClient.setQueryData(['currentauction'], auction);
             return auction;
         },
-        onError: async (err, submittedAuction) => {
+        onError: async (err: unknown, submittedAuction) => {
             // Handle concurrency error. Refech current auction and if price is lower than our bid, resubmit with updated RowVersion stamp
             // if price is higher, show message to user that other bid is higher
-            if(err.status === 409) {//TODO fix eslint error
+            const axiosError = err as AxiosError;
+            if(axiosError.status === 409) {
                 await queryClient.refetchQueries({ queryKey: ['currentauction'] });
                 const latestAuction = queryClient.getQueryData<Auction>(['currentauction']);
                                 
