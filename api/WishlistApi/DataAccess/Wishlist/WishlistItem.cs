@@ -7,6 +7,7 @@ namespace DataAccess.Wishlist
 {
     public class WishlistItem
     {
+        [Key]
         public int ID { get; set; }
         public DateTimeOffset DateAdded { get; set; }
 

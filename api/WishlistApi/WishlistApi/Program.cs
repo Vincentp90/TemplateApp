@@ -1,5 +1,6 @@
 using DataAccess;
 using DataAccess.AppListings;
+using DataAccess.Auctions;
 using DataAccess.Users;
 using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -73,10 +74,11 @@ builder.Services.AddDbContext<WishlistDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseSnakeCaseNamingConvention());
 
 builder.Services.AddHostedService<SteamUpdaterService>();
-
 builder.Services.AddScoped<IAppListingDA, AppListingDA>();
 builder.Services.AddScoped<IWishlistItemDA, WishlistItemDA>();
 builder.Services.AddScoped<IUserDA, UserDA>();
+builder.Services.AddScoped<IAuctionDA, AuctionDA>();
+builder.Services.AddHostedService<AuctionService>();
 
 string jwtKey = builder.Configuration.GetValue<string>("Jwt:Key") ?? throw new Exception("Missing Jwt:Key in appsettings.json");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
