@@ -74,16 +74,14 @@ namespace DataAccess.Users
 
         private static void CreatePasswordHash(string password, out byte[] hash, out byte[] salt)
         {
-            using var hmac = new Rfc2898DeriveBytes(password, 16, 100_000, HashAlgorithmName.SHA256);
-            salt = hmac.Salt;
-            hash = hmac.GetBytes(32);
+            salt = RandomNumberGenerator.GetBytes(16);
+            hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations: 100_000, HashAlgorithmName.SHA256, outputLength: 32);
         }
 
         private static bool VerifyPasswordHash(string password, byte[] storedHash, byte[] storedSalt)
         {
-            using var hmac = new Rfc2898DeriveBytes(password, storedSalt, 100_000, HashAlgorithmName.SHA256);
-            var computed = hmac.GetBytes(32);
-            return computed.SequenceEqual(storedHash);
+            var computed = Rfc2898DeriveBytes.Pbkdf2(password, storedSalt, 100_000, HashAlgorithmName.SHA256, 32);
+            return CryptographicOperations.FixedTimeEquals(computed, storedHash);
         }        
     }
 }
