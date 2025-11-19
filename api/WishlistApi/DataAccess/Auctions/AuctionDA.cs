@@ -56,8 +56,6 @@ namespace DataAccess.Auctions
             auction.UserID = auctionBid.UserID;
 
             // Setting RowVersion to make EF check for optimistic concurrency
-            // This is wrong way: auction.RowVersion = auctionBid.RowVersion;
-            // This is right way:
             _context.Entry(auction).Property(a => a.RowVersion).OriginalValue = auctionBid.RowVersion;
 
             _context.Auctions.Update(auction);

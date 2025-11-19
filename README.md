@@ -53,10 +53,6 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later:
-- concurrency for CRUD operations: add a functionality that could have concurrent edits on same data, add optimistic concurrency (Timestamp attribute EF) and implement merge with tanstack query on receiving a 409 from the backend https://chatgpt.com/c/6903b2f9-d6f4-8330-8e15-9b7524a6f121
-    - Add explanation to auction page that this is to demonstrate optimistic concurrency
-    - make auction component layout nicer
-    - Design pattern useful for rowversion check? 
 - upgrade from .NET 9 to 10 (november)
 - aspire
 - Add a second auction implementation with real time updates
