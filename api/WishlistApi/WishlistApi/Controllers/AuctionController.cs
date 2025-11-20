@@ -3,6 +3,7 @@ using DataAccess.Users;
 using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using System.Data;
@@ -12,6 +13,10 @@ using WishlistApi.DTOs;
 
 namespace WishlistApi.Controllers
 {
+    public class AuctionHub : Hub
+    {
+    }
+
     [ApiController]
     [Authorize]
     [Route("[controller]")]
@@ -19,11 +24,13 @@ namespace WishlistApi.Controllers
     {
         private readonly IAuctionDA _auctionDA;
         private readonly IUserDA _userDA;
+        private readonly IHubContext<AuctionHub> _hub;
 
-        public AuctionController(IAuctionDA auctionDA, IUserDA userDA)
+        public AuctionController(IAuctionDA auctionDA, IUserDA userDA, IHubContext<AuctionHub> hub)
         {
             _auctionDA = auctionDA;
             _userDA = userDA;
+            _hub = hub;
         }
 
         [HttpGet()]
@@ -67,6 +74,7 @@ namespace WishlistApi.Controllers
                     RowVersion = auction.RowVersion,
                     UserID = internalUserId
                 });
+                _ = _hub.Clients.All.SendAsync("AuctionUpdated");
                 return Ok();
             }
             catch(DbUpdateConcurrencyException)
@@ -87,6 +95,7 @@ namespace WishlistApi.Controllers
                 auction.CurrentPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
                 auction.UserID = user.ID;
                 await _auctionDA.UpdateAuctionBidAsync(auction);
+                _ = _hub.Clients.All.SendAsync("AuctionUpdated");
                 return Ok();
             }
             catch (DbUpdateConcurrencyException)

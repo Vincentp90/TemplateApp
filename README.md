@@ -53,9 +53,6 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later:
-- upgrade from .NET 9 to 10 (november)
-- aspire
-- Add a second auction implementation with real time updates
 - Add a form with optimistic concurrency to have a better example for merging an update
 - auth
     - Use refresh tokens for long sessions.
