@@ -1,5 +1,6 @@
 ﻿using DataAccess.AppListings;
 using DataAccess.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -44,7 +45,21 @@ namespace WishlistApi.Controllers
                 return Unauthorized();
 
             var token = CreateToken(user);
-            return Ok(new AuthResponse(token));
+            Response.Cookies.Append("auth_token", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddHours(2)
+            });
+            return Ok();
+        }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("auth_token");
+            return Ok();
         }
 
         [HttpGet("check")]
@@ -52,6 +67,10 @@ namespace WishlistApi.Controllers
         {
             return Ok(await _userDA.IsUsernameAvailableAsync(username));
         }
+
+        [Authorize]
+        [HttpGet("me")]
+        public IActionResult Me() => Ok();
 
         private string CreateToken(User user)
         {

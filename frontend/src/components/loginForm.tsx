@@ -30,14 +30,14 @@ export default function LoginForm() {
     const onSubmit = async (data: FormData) => {
         const res = await fetch(`${APIURL}/auth/${action}`, {
             method: "POST",
+            credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username: data.email, password: data.password })
         });
+        console.log(res);
         if (!res.ok) throw new Error("Login failed");// TODO show nice error in UI, hook form has something for this?
         if(action === "login")
         {
-            const { token } = await res.json();
-            localStorage.setItem("token", token);
             router.navigate({ to: "/app" });
             queryClient.clear();
         }
@@ -49,7 +49,7 @@ export default function LoginForm() {
     const fillDevCreds = () => {
         setValue("email", "dev@example.com");
         setValue("password", "password123");
-    };
+    };//TODO add second button to more easily test multiple users
 
     return (
         <form
