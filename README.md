@@ -52,11 +52,11 @@ Adding new EF migration:
 - dotnet ef migrations add AuctionRowVersion --project DataAccess --startup-project WishlistApi
 
 
-Things I'm going to try/add later:
+Things I'm going to try/add later (my todo list):
 - Bearer in httpOnly cookie
     - Zustand add isAuthenticated to avoid repeated auth/me calls
-    - login still doesn't work smoothly with cookies
-    - config.withCredentials = true;//TODO check is this needed
+        -TODO test with app open in multiple pages
+        -learn more about zustand and the point of using it
 - Add a form with optimistic concurrency to have a better example for merging an update
 - auth
     - Use refresh tokens for long sessions.

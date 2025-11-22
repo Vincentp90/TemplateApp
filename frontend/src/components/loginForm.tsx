@@ -7,8 +7,7 @@ import { useState } from 'react';
 import { router } from '../router';
 import { queryClient } from '../queryClient';
 import WlButton from './tiny/wlButton';
-
-const APIURL = import.meta.env.VITE_API_URL;//TODO use axios api object instead of fetch?? 
+import { api } from '../api';
 
 const schema = z.object({
     email: z.email('Invalid email'),
@@ -28,14 +27,8 @@ export default function LoginForm() {
     })
 
     const onSubmit = async (data: FormData) => {
-        const res = await fetch(`${APIURL}/auth/${action}`, {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: data.email, password: data.password })
-        });
-        console.log(res);
-        if (!res.ok) throw new Error("Login failed");// TODO show nice error in UI, hook form has something for this?
+        const res = await api.post(`/auth/${action}`, { username: data.email, password: data.password });
+        if (res.status !== 200) throw new Error("Login failed");// TODO show nice error in UI, hook form has something for this?
         if (action === "login") {
             router.navigate({ to: "/app" });
             queryClient.clear();

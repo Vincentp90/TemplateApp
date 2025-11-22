@@ -3,12 +3,16 @@ import Header from '../../layout/header.tsx'
 import Sidebar from '../../layout/sidebar.tsx'
 import Footer from '../../layout/footer.tsx'
 import { api } from '../../api.ts'
+import { useAuthStore } from '../../AuthState.ts'
 
 export const Route = createFileRoute('/app')({
   component: AppLayout,
   beforeLoad: async () => {
-    try {
-      await api.get("/auth/me");//TODO store isAuthenticated in Zustand and use that after first check
+    try {      
+      const authStore = useAuthStore.getState();
+      if(authStore.isAuthenticated) return;
+      await api.get("/auth/me");
+      authStore.setAuthenticated(true);
     } catch {
       throw redirect({ to: "/auth/login" });
     }
