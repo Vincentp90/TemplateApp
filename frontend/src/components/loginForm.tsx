@@ -19,10 +19,10 @@ type FormData = z.infer<typeof schema>
 
 const isDev = import.meta.env.MODE === "development";
 
-export default function LoginForm() {    
+export default function LoginForm() {
     const [action, setAction] = useState<string>("login");
     const [isRegistered, setIsRegistered] = useState<boolean>(false);
-    const { register, handleSubmit, formState: { errors, isSubmitting }, setValue} = useForm<FormData>({
+    const { register, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm<FormData>({
         resolver: zodResolver(schema),
         mode: 'onBlur',
     })
@@ -36,12 +36,11 @@ export default function LoginForm() {
         });
         console.log(res);
         if (!res.ok) throw new Error("Login failed");// TODO show nice error in UI, hook form has something for this?
-        if(action === "login")
-        {
+        if (action === "login") {
             router.navigate({ to: "/app" });
             queryClient.clear();
         }
-        else if (action === "register"){
+        else if (action === "register") {
             setIsRegistered(true);//TODO show in nicer way or make separate register screen
         }
     }
@@ -49,7 +48,11 @@ export default function LoginForm() {
     const fillDevCreds = () => {
         setValue("email", "dev@example.com");
         setValue("password", "password123");
-    };//TODO add second button to more easily test multiple users
+    };
+    const fillDevCreds2 = () => {
+        setValue("email", "dev2@example2.com");
+        setValue("password", "password123");
+    };
 
     return (
         <form
@@ -58,9 +61,14 @@ export default function LoginForm() {
         >
             <div><span>APIURL: {import.meta.env.VITE_API_URL}</span></div>
             {isDev && (
-                <WlButton onClick={fillDevCreds} isPrimary={true}>
-                    I'm a developer
-                </WlButton>
+                <>
+                    <WlButton onClick={fillDevCreds} isPrimary={true}>
+                        Login with test acc 1
+                    </WlButton>
+                    <WlButton onClick={fillDevCreds2} isPrimary={true}>
+                        Login with test acc 2
+                    </WlButton>
+                </>
             )}
             <label className="flex flex-col">
                 <span>Email</span>
