@@ -2,12 +2,21 @@ import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 import Header from '../../layout/header.tsx'
 import Sidebar from '../../layout/sidebar.tsx'
 import Footer from '../../layout/footer.tsx'
+import { api } from '../../api.ts'
+import { useAuthStore } from '../../AuthState.ts'
 
 export const Route = createFileRoute('/app')({
   component: AppLayout,
-  beforeLoad: () => {
-    const token = localStorage.getItem("token");
-    if (!token) throw redirect({ to: "/auth/login" });
+  beforeLoad: async () => {
+    try {      
+      const authStore = useAuthStore.getState();
+      if(authStore.isAuthenticated) return;
+      const res = await api.get("/auth/me");
+      authStore.setUser(res.data.username);
+      authStore.setAuthenticated(true);
+    } catch {
+      throw redirect({ to: "/auth/login" });
+    }
   },
 })
 

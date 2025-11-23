@@ -52,28 +52,32 @@ Adding new EF migration:
 - dotnet ef migrations add AuctionRowVersion --project DataAccess --startup-project WishlistApi
 
 
-Things I'm going to try/add later:
-- Add a form with optimistic concurrency to have a better example for merging an update
-- auth
-    - Use refresh tokens for long sessions.
-    - Add roles/claims for authorization (add admin role, need an admin screen first)
+Things I'm going to try/add later (my todo list):
+- Add admin role and admin section where admins can change any user profile's details
+    - Add a form with optimistic concurrency to have a better example for merging an update
+    - Add auditing: keep track who changed profile details
 - UI test
 - AuctionService add logger
 - EF mocking unit test
 - TODOs in code
 - WCAG
-- stress test API
+- stress test API/app
 - dark mode
-- Split up API into BFF and REST?
+- Add BFF?
+    - Explains why BFF is more secure than bearer+refresh tokens: https://www.pingidentity.com/en/resources/blog/post/refresh-token-rotation-spa.html
+    - If we don't add BFF:
+        - Use refresh tokens for long sessions.
 - more unit tests
 - How to handle a very large application? Should i use more design patterns to ensure maintainability and extensibility?
     - Use DTOs
 - pgvector
 - Add jenkinsfile for CI/CD
     - scan container (Anchore ?)
-    - scan code (SonarQube?)
+    - scan code (SonarQube,Semgrep?)
 - OAuth https://chatgpt.com/c/69039540-1818-832e-88ef-20605eba31c7
 - steam openID integration
+- Add general functionality:
+    - Delete profile (GDPR right to forget)
 - host
     - where? Hetzner? Azure?
     - Configure https in nginx + app.UseForwardedHeaders(), app.UseHsts()  https://gemini.google.com/app/a3815289ab113d8c

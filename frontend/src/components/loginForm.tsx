@@ -7,8 +7,7 @@ import { useState } from 'react';
 import { router } from '../router';
 import { queryClient } from '../queryClient';
 import WlButton from './tiny/wlButton';
-
-const APIURL = import.meta.env.VITE_API_URL;//TODO use axios api object instead of fetch?? 
+import { api } from '../api';
 
 const schema = z.object({
     email: z.email('Invalid email'),
@@ -19,35 +18,32 @@ type FormData = z.infer<typeof schema>
 
 const isDev = import.meta.env.MODE === "development";
 
-export default function LoginForm() {    
+export default function LoginForm() {
     const [action, setAction] = useState<string>("login");
     const [isRegistered, setIsRegistered] = useState<boolean>(false);
-    const { register, handleSubmit, formState: { errors, isSubmitting }, setValue} = useForm<FormData>({
+    const { register, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm<FormData>({
         resolver: zodResolver(schema),
         mode: 'onBlur',
     })
 
     const onSubmit = async (data: FormData) => {
-        const res = await fetch(`${APIURL}/auth/${action}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: data.email, password: data.password })
-        });
-        if (!res.ok) throw new Error("Login failed");// TODO show nice error in UI, hook form has something for this?
-        if(action === "login")
-        {
-            const { token } = await res.json();
-            localStorage.setItem("token", token);
+        const res = await api.post(`/auth/${action}`, { username: data.email, password: data.password });
+        if (res.status !== 200) throw new Error("Login failed");// TODO show nice error in UI, hook form has something for this?
+        if (action === "login") {
             router.navigate({ to: "/app" });
             queryClient.clear();
         }
-        else if (action === "register"){
+        else if (action === "register") {
             setIsRegistered(true);//TODO show in nicer way or make separate register screen
         }
     }
 
     const fillDevCreds = () => {
         setValue("email", "dev@example.com");
+        setValue("password", "password123");
+    };
+    const fillDevCreds2 = () => {
+        setValue("email", "dev2@example2.com");
         setValue("password", "password123");
     };
 
@@ -58,9 +54,14 @@ export default function LoginForm() {
         >
             <div><span>APIURL: {import.meta.env.VITE_API_URL}</span></div>
             {isDev && (
-                <WlButton onClick={fillDevCreds} isPrimary={true}>
-                    I'm a developer
-                </WlButton>
+                <>
+                    <WlButton onClick={fillDevCreds} isPrimary={true}>
+                        Login with test acc 1
+                    </WlButton>
+                    <WlButton onClick={fillDevCreds2} isPrimary={true}>
+                        Login with test acc 2
+                    </WlButton>
+                </>
             )}
             <label className="flex flex-col">
                 <span>Email</span>
