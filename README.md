@@ -53,23 +53,20 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later (my todo list):
-- Bearer in httpOnly cookie
-    - Zustand add isAuthenticated to avoid repeated auth/me calls
-        -TODO test with app open in multiple pages
-        -learn more about zustand and the point of using it
-- Add a form with optimistic concurrency to have a better example for merging an update
-- auth
-    - Use refresh tokens for long sessions.
-    - Add roles/claims for authorization (add admin role, need an admin screen first)
+- Add admin role and admin section where admins can change any user profile's details
+    - Add a form with optimistic concurrency to have a better example for merging an update
+    - Add auditing: keep track who changed profile details
 - UI test
 - AuctionService add logger
 - EF mocking unit test
 - TODOs in code
 - WCAG
-- stress test API
+- stress test API/app
 - dark mode
 - Add BFF?
     - Explains why BFF is more secure than bearer+refresh tokens: https://www.pingidentity.com/en/resources/blog/post/refresh-token-rotation-spa.html
+    - If we don't add BFF:
+        - Use refresh tokens for long sessions.
 - more unit tests
 - How to handle a very large application? Should i use more design patterns to ensure maintainability and extensibility?
     - Use DTOs
