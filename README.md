@@ -57,7 +57,6 @@ Things I'm going to try/add later (my todo list):
     - Add a form with optimistic concurrency to have a better example for merging an update
     - Add auditing: keep track who changed profile details
 - UI test
-- AuctionService add logger
 - EF mocking unit test
 - TODOs in code
 - WCAG
