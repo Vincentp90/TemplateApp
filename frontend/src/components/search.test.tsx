@@ -71,7 +71,7 @@ describe('Search component', () => {
 
     renderWithClient(<Search />);
 
-    const input = screen.getByPlaceholderText(/type to search/i);
+    const input = screen.getByPlaceholderText(/type to search/i);//TODO no longer works
 
     await userEvent.type(input, 'half');
     await waitFor(() => {

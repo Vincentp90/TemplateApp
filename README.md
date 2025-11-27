@@ -53,11 +53,11 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later (my todo list):
-- check swagger jwt still works
 - Add admin role and admin section where admins can change any user profile's details
     - Add a form with optimistic concurrency to have a better example for merging an update
     - Add auditing: keep track who changed profile details
 - UI test
+- fix issues with react unit test search.test.tsx
 - TODOs in code
 - WCAG
 - stress test API/app
