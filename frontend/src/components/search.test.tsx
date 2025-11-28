@@ -5,6 +5,7 @@ import { describe, it, vi, expect } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Search from './search';
 import { api } from '../api';
+import { Suspense } from 'react';
 
 
 vi.mock('../api', () => ({
@@ -23,13 +24,22 @@ vi.mock('lodash.debounce', () => ({
 
 const renderWithClient = (ui: React.ReactNode) => {
   const client = new QueryClient();
-  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+  return render(
+    <QueryClientProvider client={client}>
+      <Suspense fallback={<div>Loading...</div>}>
+        {ui}
+      </Suspense>
+    </QueryClientProvider>);
 };
 
 describe('Search component', () => {
   it('renders input and wishlist header', async () => {
+    // Even though the following returns empty data, we still need it otherwise the suspense will wait forever for the Search useSuspsenseQuery to finish
+    mockedApiGet.mockResolvedValueOnce({ data: [] });
     renderWithClient(<Search />);
-    expect(screen.getByPlaceholderText(/type to search/i)).toBeInTheDocument();
+
+    // We need to use find here because it will wait until the input is rendered (if we await)
+    expect(await screen.findByPlaceholderText(/type to search/i)).toBeInTheDocument();
     expect(screen.getAllByText(/wishlist/i)[0]).toBeInTheDocument();
 
     await waitFor(() => {
@@ -44,15 +54,14 @@ describe('Search component', () => {
         { appid: 2, name: 'Portal' },
       ],
     });
+    renderWithClient(<Search />);
 
-    renderWithClient(<Search />);   
-
-    await waitFor(() => {        
+    await waitFor(() => {
       expect(api.get).toHaveBeenNthCalledWith(2, '/wishlist?fields=appid,name');
     });
 
-    const input = screen.getByPlaceholderText(/type to search/i);    
-    
+    const input = await screen.findByPlaceholderText(/type to search/i);
+
     await userEvent.type(input, 'hal');
     await waitFor(() => {
       expect(api.get).toHaveBeenCalledWith('/applisting/search/hal');
@@ -71,7 +80,7 @@ describe('Search component', () => {
 
     renderWithClient(<Search />);
 
-    const input = screen.getByPlaceholderText(/type to search/i);//TODO no longer works
+    const input = await screen.findByPlaceholderText(/type to search/i);
 
     await userEvent.type(input, 'half');
     await waitFor(() => {
