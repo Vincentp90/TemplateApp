@@ -13,7 +13,7 @@ const wlQueryKey = ['wishlist'];
 
 const fetchSearchResults = async (query: string): Promise<AppListing[]> => {
   const res = await api.get(`/applisting/search/${encodeURIComponent(query)}`);
-  const data = res.data;  
+  const data = res.data;
   return data.slice(0, 10);
 };
 
@@ -27,7 +27,7 @@ export default function Search() {
     }, 300)
   );
 
-  const handleSearchInputChange = (input: string) =>{
+  const handleSearchInputChange = (input: string) => {
     if (input.length > 2) debounceQueryInput.current(input);
     else setSearchQuery('');
   };
@@ -102,7 +102,7 @@ export default function Search() {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-6 max-w-4xl">      
+    <div className="grid grid-cols-2 gap-6 max-w-4xl">
       <div className="flex flex-col gap-4">
         <h2>Search steam games to add to wishlist</h2>
         <input
@@ -114,13 +114,10 @@ export default function Search() {
         {searchResults.length > 0 && (
           <ul className="border rounded p-2 bg-white shadow">
             {searchResults.map((item: AppListing, idx) => (
-              <li
-                key={idx}
-                value={item.appid}
-                onClick={() => addToWishlist(item)}
-                className="cursor-pointer hover:bg-gray-100 p-1"
-              >
-                {item.name}
+              <li key={idx} value={item.appid} className="p-0">
+                <button onClick={() => addToWishlist(item)} className="w-full text-left cursor-pointer hover:bg-gray-100 p-1">
+                  {item.name}
+                </button>
               </li>
             ))}
           </ul>
