@@ -53,11 +53,11 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later (my todo list):
+- stress test API/app
 - Add admin role and admin section where admins can change any user profile's details
     - Add a form with optimistic concurrency to have a better example for merging an update
     - Add auditing: keep track who changed profile details
 - TODOs in code
-- stress test API/app
 - dark mode
 - Add BFF?
     - Explains why BFF is more secure than bearer+refresh tokens: https://www.pingidentity.com/en/resources/blog/post/refresh-token-rotation-spa.html
