@@ -48,14 +48,13 @@ function login() {
 let authToken = null;
 export default function () {
     // Perform login once per VU
-    let token = null;
     if (__ITER === 0) {
         register();
         authToken = login();
     }
 
     if (!authToken) {
-        return;
+        fail("Login failed");
     }
     const authHeaders = {
         'Content-Type': 'application/json',
