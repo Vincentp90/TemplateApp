@@ -1,7 +1,8 @@
 import http from 'k6/http';
 import { sleep, check } from 'k6';
 
-const APIURL = "http://localhost:5186"
+const APIURL = "http://localhost/api"
+//const APIURL = "http://localhost:5186"
 
 export const options = {
     vus: 200,

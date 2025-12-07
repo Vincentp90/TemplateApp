@@ -1,10 +1,11 @@
 import http from 'k6/http';
 import { sleep, check } from 'k6';
 
-const APIURL = "http://localhost:5186"
+const APIURL = "http://localhost/api"
+//const APIURL = "http://localhost:5186"
 
 export const options = {
-    vus: 10,
+    vus: 20,
     duration: '20s',
 };
 
@@ -46,7 +47,7 @@ function searchAndAdd(){
     const data = JSON.parse(res.body);
     const randomresult = data[Math.floor(Math.random() * data.length)];
 
-    console.log("Adding " + randomresult.name);
+    //console.log("Adding " + randomresult.name);
 
     const addRes = http.post(APIURL + `/wishlist/${randomresult.appid}`, null, { headers: authHeaders });
     check(addRes, { 'add ok': res => res.status === 200 });
@@ -66,7 +67,7 @@ function deleteIfMoreThanTen(){
         const delRes = http.del(`${APIURL}/wishlist/${randomItem.appid}`, null, { headers: authHeaders });
         check(delRes, { 'delete ok': r => r.status === 200 });
 
-        console.log(`Deleted ${randomItem.name} (${randomItem.appid})`);
+        //console.log(`Deleted ${randomItem.name} (${randomItem.appid})`);
     }
 }
 
