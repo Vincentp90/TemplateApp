@@ -1,8 +1,10 @@
 ﻿using DataAccess;
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
-using System;
 using DataAccess.AppListings;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Buffers.Text;
+using System.Text.Json;
 
 namespace WishlistApi.HostedServices
 {
@@ -11,7 +13,7 @@ namespace WishlistApi.HostedServices
     /// </summary>
     public class SteamUpdaterService : BackgroundService
     {
-        private const string _steamApiUrl = "https://api.steampowered.com/ISteamApps/GetAppList/v2/";
+        private const string _steamApiUrl = "https://api.steampowered.com/IStoreService/GetAppList/v1/";
         private readonly IServiceProvider _serviceProvider;
 
         public SteamUpdaterService(IServiceProvider serviceProvider) 
@@ -36,35 +38,44 @@ namespace WishlistApi.HostedServices
         {
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<WishlistDbContext>();
+            var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
             if (!await dbContext.AppListings.AnyAsync(stoppingToken))
             {
-                var appListings = await GetAppListingsFromSteamAsync();
-                if(appListings == null)
+                var appListings = await GetAppListingsFromSteamAsyncV1(config["SteamAPIKEY"]!);
+                if (appListings == null)
                     throw new Exception("Failed to get game list from steam");
-                appListings.applist.apps = appListings.applist.apps
+                appListings.response.apps = appListings.response.apps
                     .GroupBy(a => a.appid)
                     .Select(g => g.First())
                     .ToList();
-                dbContext.AppListings.AddRange(appListings.applist.apps);
+                dbContext.AppListings.AddRange(appListings.response.apps);
                 await dbContext.SaveChangesAsync(stoppingToken);
             }
         }
 
-        private async Task<Root?> GetAppListingsFromSteamAsync()
+        private async Task<Root?> GetAppListingsFromSteamAsyncV1(string apiKey)
         {
             //Prod
             HttpClient client = new HttpClient();
-            var response = await client.GetStringAsync(_steamApiUrl);
+            var url = QueryHelpers.AddQueryString(_steamApiUrl, new Dictionary<string, string?>
+            {
+                ["key"] = apiKey,
+                ["max_results"] = "30000",
+                ["include_dlc"] = "false",
+            });
+            var response = await client.GetStringAsync(url);
             var appListings = JsonSerializer.Deserialize<Root>(response);
+
             //Dev
             //TODO read steamapplistExample.json
+
             return appListings;
         }
 
         private class Root
         {
-            public required AppList applist { get; set; }
+            public required AppList response { get; set; }
         }
 
         private class AppList

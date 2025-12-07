@@ -1,0 +1,68 @@
+{
+  "response": {
+    "apps": [
+      {
+        "appid": 10,
+        "name": "Counter-Strike",
+        "last_modified": 1745368572,
+        "price_change_number": 31509480
+      },
+      {
+        "appid": 20,
+        "name": "Team Fortress Classic",
+        "last_modified": 1745368565,
+        "price_change_number": 31509480
+      },
+      {
+        "appid": 30,
+        "name": "Day of Defeat",
+        "last_modified": 1745368580,
+        "price_change_number": 31509480
+      },
+      {
+        "appid": 40,
+        "name": "Deathmatch Classic",
+        "last_modified": 1745368570,
+        "price_change_number": 31509480
+      },
+      {
+        "appid": 50,
+        "name": "Half-Life: Opposing Force",
+        "last_modified": 1745368539,
+        "price_change_number": 31509480
+      },
+      {
+        "appid": 60,
+        "name": "Ricochet",
+        "last_modified": 1745368568,
+        "price_change_number": 31509480
+      },
+      {
+        "appid": 70,
+        "name": "Half-Life",
+        "last_modified": 1745368462,
+        "price_change_number": 32053974
+      },
+      {
+        "appid": 80,
+        "name": "Counter-Strike: Condition Zero",
+        "last_modified": 1745368574,
+        "price_change_number": 31509480
+      },
+      {
+        "appid": 130,
+        "name": "Half-Life: Blue Shift",
+        "last_modified": 1745368541,
+        "price_change_number": 31509480
+      },
+      {
+        "appid": 220,
+        "name": "Half-Life 2",
+        "last_modified": 1745368545,
+        "price_change_number": 32053974
+      }
+    ],
+    "have_more_results": true,
+    "last_appid": 220
+  }
+}

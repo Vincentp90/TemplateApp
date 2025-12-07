@@ -15,6 +15,8 @@ Installation steps:
     - username postgres
     - password example
 - cd api/WishlistApi
+    - Get a steam API key: https://steamcommunity.com/dev/apikey
+    - For dev use dotnet user-secrets to store the apikey
     - dotnet ef database update --project DataAccess --startup-project WishlistApi
 - Run backend API in VS (debug, any cpu, http) not https!
     - http://localhost:5186/swagger/index.html
@@ -81,5 +83,5 @@ Things I'm going to try/add later (my todo list):
 - host
     - where? Hetzner? Azure?
     - Configure https in nginx + app.UseForwardedHeaders(), app.UseHsts()  https://gemini.google.com/app/a3815289ab113d8c
-    - prod JWT set with env var instead of commited to git
+    - prod JWT/steam api key set with env var instead of commited to git
     - configure urls, still using localhost in prod config
