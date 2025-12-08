@@ -11,11 +11,16 @@ import WlButton from './tiny/wlButton';
 type AppListing = { appid: number; name: string };
 const wlQueryKey = ['wishlist'];
 
+
 const fetchSearchResults = async (query: string): Promise<AppListing[]> => {
   const res = await api.get(`/applisting/search/${encodeURIComponent(query)}`);
   const data = res.data;
-  return data.slice(0, 10);
+  return data;
 };
+
+//This could be a memo to avoid this being called twice on a rerender (if condition and list iteration)
+const filteredSearchResults = (searchResults: AppListing[], wishlistItems: AppListing[]) =>
+  searchResults.filter((item) => !wishlistItems.find((wlItem) => wlItem.appid === item.appid)).slice(0, 10);
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -111,9 +116,9 @@ export default function Search() {
           placeholder="Type to search..."
           className="p-2 border rounded shadow-sm"
         />
-        {searchResults.length > 0 && (
+        {filteredSearchResults(searchResults, wishlistItems).length > 0 && (
           <ul className="border rounded p-2 bg-white shadow">
-            {searchResults.map((item: AppListing, idx) => (
+            {filteredSearchResults(searchResults, wishlistItems).map((item: AppListing, idx) => (
               <li key={idx} value={item.appid} className="p-0">
                 <button onClick={() => addToWishlist(item)} className="w-full text-left cursor-pointer hover:bg-gray-100 p-1">
                   {item.name}

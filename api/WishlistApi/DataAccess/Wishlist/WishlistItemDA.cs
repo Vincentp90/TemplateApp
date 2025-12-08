@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,6 +32,9 @@ namespace DataAccess.Wishlist
         public async Task AddWishlistItemAsync(WishlistItem item)
         {
             item.DateAdded = DateTimeOffset.UtcNow;//TODO pass client timezone and set in datetimeoffset DateTimeOffset.UtcNow.ToOffset(clientOffset);
+            var itemOnListAlready = _context.WishlistItems.Where(i => i.UserID == item.UserID && i.appid == item.appid).Any();
+            if (itemOnListAlready)
+                throw new DuplicateNameException("Item already on wishlist");
             _context.WishlistItems.Add(item);
             await _context.SaveChangesAsync();
         }

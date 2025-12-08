@@ -3,6 +3,7 @@ using DataAccess.Users;
 using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 using System.Dynamic;
 using System.Security.Claims;
 
@@ -58,10 +59,18 @@ namespace WishlistApi.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
             int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
-            await _wishlistItemDA.AddWishlistItemAsync(new WishlistItem(){
-                UserID = internalUserId, 
-                appid = appId
-            });
+            try
+            {
+                await _wishlistItemDA.AddWishlistItemAsync(new WishlistItem()
+                {
+                    UserID = internalUserId,
+                    appid = appId
+                });
+            }
+            catch (DuplicateNameException ex)
+            {
+                return StatusCode(StatusCodes.Status409Conflict, ex.Message);
+            }
 
             return Ok();
         }

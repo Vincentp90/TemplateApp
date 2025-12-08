@@ -7,6 +7,3 @@ Run:
 cd ./stresstest
 k6 run authme.js
 k6 run editwishlist.js
-
-TODO:
-test with prod docker setup

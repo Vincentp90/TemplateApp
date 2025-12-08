@@ -5,7 +5,7 @@ const APIURL = "http://localhost/api"
 //const APIURL = "http://localhost:5186"
 
 export const options = {
-    vus: 20,
+    vus: 160,
     duration: '20s',
 };
 

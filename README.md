@@ -55,11 +55,8 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later (my todo list):
-- fix steam removed V2 api, use V1 api
-- stress test API/app with docker prod config
 - search improvement:
-    - can't add same item multiple times
-    - search on the left doesn't show results that are already in the list
+    - update test for improved search
 - Add admin role and admin section where admins can change any user profile's details
     - Add a form with optimistic concurrency to have a better example for merging an update
     - Add auditing: keep track who changed profile details
