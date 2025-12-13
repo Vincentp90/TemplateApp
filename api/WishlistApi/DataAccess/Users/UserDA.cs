@@ -1,5 +1,7 @@
-﻿using DataAccess.Wishlist;
+﻿using DataAccess.Auctions;
+using DataAccess.Wishlist;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +9,6 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace DataAccess.Users
 {
@@ -17,6 +18,7 @@ namespace DataAccess.Users
         Task<bool> IsUsernameAvailableAsync(string username);
         Task AddUserAsync(string username, string password);
         Task<User?> LoginUserAsync(string username, string password);
+        Task<UserDetails> GetUserDetails(int userId);
     }
 
     public class UserDA : IUserDA
@@ -82,6 +84,21 @@ namespace DataAccess.Users
         {
             var computed = Rfc2898DeriveBytes.Pbkdf2(password, storedSalt, 100_000, HashAlgorithmName.SHA256, 32);
             return CryptographicOperations.FixedTimeEquals(computed, storedHash);
-        }        
+        }
+
+        public async Task<UserDetails> GetUserDetails(int userId)
+        {
+            var details = await _context.UserDetails.Include(u => u.User).FirstOrDefaultAsync(u => u.UserID == userId);
+            if (details != null)
+                return details;
+            else
+            {
+                var user = await _context.Users.FirstAsync(u => u.ID == userId);
+                var userDetails = new UserDetails { UserID = user.ID, User = user };
+                _context.UserDetails.Add(userDetails);
+                await _context.SaveChangesAsync();
+                return userDetails;
+            }
+        }
     }
 }

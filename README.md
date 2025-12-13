@@ -51,12 +51,10 @@ Run for prod:
 
 Adding new EF migration:
 - cd api/WishlistApi
-- dotnet ef migrations add AuctionRowVersion --project DataAccess --startup-project WishlistApi
+- dotnet ef migrations add UserDetails --project DataAccess --startup-project WishlistApi
 
 
 Things I'm going to try/add later (my todo list):
-- search improvement:
-    - update test for improved search
 - Add admin role and admin section where admins can change any user profile's details
     - Add a form with optimistic concurrency to have a better example for merging an update
     - Add auditing: keep track who changed profile details

@@ -21,6 +21,9 @@ import { Route as AppLiveauctionRouteImport } from './routes/app/liveauction'
 import { Route as AppLessonsLearnedRouteImport } from './routes/app/lessonsLearned'
 import { Route as AppAuctionRouteImport } from './routes/app/auction'
 import { Route as AppAboutRouteImport } from './routes/app/about'
+import { Route as AppProfileRouteRouteImport } from './routes/app/profile/route'
+import { Route as AppProfileIndexRouteImport } from './routes/app/profile/index'
+import { Route as AppProfileEditRouteImport } from './routes/app/profile/edit'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/auth',
@@ -82,11 +85,27 @@ const AppAboutRoute = AppAboutRouteImport.update({
   path: '/about',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppProfileRouteRoute = AppProfileRouteRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppProfileIndexRoute = AppProfileIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppProfileRouteRoute,
+} as any)
+const AppProfileEditRoute = AppProfileEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AppProfileRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
+  '/app/profile': typeof AppProfileRouteRouteWithChildren
   '/app/about': typeof AppAboutRoute
   '/app/auction': typeof AppAuctionRoute
   '/app/lessonsLearned': typeof AppLessonsLearnedRoute
@@ -96,6 +115,8 @@ export interface FileRoutesByFullPath {
   '/auth/logout': typeof AuthLogoutRoute
   '/app/': typeof AppIndexRoute
   '/auth/': typeof AuthIndexRoute
+  '/app/profile/edit': typeof AppProfileEditRoute
+  '/app/profile/': typeof AppProfileIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -108,12 +129,15 @@ export interface FileRoutesByTo {
   '/auth/logout': typeof AuthLogoutRoute
   '/app': typeof AppIndexRoute
   '/auth': typeof AuthIndexRoute
+  '/app/profile/edit': typeof AppProfileEditRoute
+  '/app/profile': typeof AppProfileIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
+  '/app/profile': typeof AppProfileRouteRouteWithChildren
   '/app/about': typeof AppAboutRoute
   '/app/auction': typeof AppAuctionRoute
   '/app/lessonsLearned': typeof AppLessonsLearnedRoute
@@ -123,6 +147,8 @@ export interface FileRoutesById {
   '/auth/logout': typeof AuthLogoutRoute
   '/app/': typeof AppIndexRoute
   '/auth/': typeof AuthIndexRoute
+  '/app/profile/edit': typeof AppProfileEditRoute
+  '/app/profile/': typeof AppProfileIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -130,6 +156,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/app/profile'
     | '/app/about'
     | '/app/auction'
     | '/app/lessonsLearned'
@@ -139,6 +166,8 @@ export interface FileRouteTypes {
     | '/auth/logout'
     | '/app/'
     | '/auth/'
+    | '/app/profile/edit'
+    | '/app/profile/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -151,11 +180,14 @@ export interface FileRouteTypes {
     | '/auth/logout'
     | '/app'
     | '/auth'
+    | '/app/profile/edit'
+    | '/app/profile'
   id:
     | '__root__'
     | '/'
     | '/app'
     | '/auth'
+    | '/app/profile'
     | '/app/about'
     | '/app/auction'
     | '/app/lessonsLearned'
@@ -165,6 +197,8 @@ export interface FileRouteTypes {
     | '/auth/logout'
     | '/app/'
     | '/auth/'
+    | '/app/profile/edit'
+    | '/app/profile/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -259,10 +293,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAboutRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/profile': {
+      id: '/app/profile'
+      path: '/profile'
+      fullPath: '/app/profile'
+      preLoaderRoute: typeof AppProfileRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/profile/': {
+      id: '/app/profile/'
+      path: '/'
+      fullPath: '/app/profile/'
+      preLoaderRoute: typeof AppProfileIndexRouteImport
+      parentRoute: typeof AppProfileRouteRoute
+    }
+    '/app/profile/edit': {
+      id: '/app/profile/edit'
+      path: '/edit'
+      fullPath: '/app/profile/edit'
+      preLoaderRoute: typeof AppProfileEditRouteImport
+      parentRoute: typeof AppProfileRouteRoute
+    }
   }
 }
 
+interface AppProfileRouteRouteChildren {
+  AppProfileEditRoute: typeof AppProfileEditRoute
+  AppProfileIndexRoute: typeof AppProfileIndexRoute
+}
+
+const AppProfileRouteRouteChildren: AppProfileRouteRouteChildren = {
+  AppProfileEditRoute: AppProfileEditRoute,
+  AppProfileIndexRoute: AppProfileIndexRoute,
+}
+
+const AppProfileRouteRouteWithChildren = AppProfileRouteRoute._addFileChildren(
+  AppProfileRouteRouteChildren,
+)
+
 interface AppRouteRouteChildren {
+  AppProfileRouteRoute: typeof AppProfileRouteRouteWithChildren
   AppAboutRoute: typeof AppAboutRoute
   AppAuctionRoute: typeof AppAuctionRoute
   AppLessonsLearnedRoute: typeof AppLessonsLearnedRoute
@@ -272,6 +342,7 @@ interface AppRouteRouteChildren {
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppProfileRouteRoute: AppProfileRouteRouteWithChildren,
   AppAboutRoute: AppAboutRoute,
   AppAuctionRoute: AppAuctionRoute,
   AppLessonsLearnedRoute: AppLessonsLearnedRoute,

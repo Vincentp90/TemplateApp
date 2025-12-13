@@ -14,6 +14,7 @@ namespace DataAccess
         public DbSet<AppListing> AppListings { get; set; }
         public DbSet<WishlistItem> WishlistItems { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<UserDetails> UserDetails { get; set; }
         public DbSet<Auction> Auctions { get; set; }
 
         public WishlistDbContext(DbContextOptions<WishlistDbContext> options)
@@ -41,6 +42,11 @@ namespace DataAccess
             modelBuilder.Entity<Auction>()
                 .Property(e => e.RowVersion)
                 .IsRowVersion();
+
+            modelBuilder.Entity<UserDetails>()
+                .Property(e => e.RowVersion)
+                .IsRowVersion()
+                .HasColumnName("xmin");
         }
     }
 }

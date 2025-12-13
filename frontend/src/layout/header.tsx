@@ -13,7 +13,7 @@ export default function Header() {
         <Link to="/app/about" className="hover:text-gray-300">About</Link>
         <Link to="/auth/logout" className="hover:text-gray-300">Logout</Link>
       </nav>
-      <div className="text-xl font-semibold">{username}</div>
+      <Link to="/app/profile" className="hover:text-gray-300 text-xl font-semibold">{username}</Link>
     </header>
   );
 }
