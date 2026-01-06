@@ -15,10 +15,12 @@ namespace DataAccess.Users
     public interface IUserDA
     {
         Task<int> GetInternalUserIdAsync(Guid guid);
+        //Task<User> GetUserAsync(int id);
         Task<bool> IsUsernameAvailableAsync(string username);
         Task AddUserAsync(string username, string password);
         Task<User?> LoginUserAsync(string username, string password);
-        Task<UserDetails> GetUserDetails(int userId);
+        Task<UserDetails> GetUserDetailsAsync(int userId);
+        Task UpdateUserDetailsAsync(UserDetails userDetails);
     }
 
     public class UserDA : IUserDA
@@ -40,8 +42,13 @@ namespace DataAccess.Users
             id = await _context.Users.Where(u => u.UUID == guid).Select(u => u.ID).FirstAsync();
 
             _cache.Set(guid, id, new MemoryCacheEntryOptions { Size = 1 });
-            return await _context.Users.Where(u => u.UUID == guid).Select(u => u.ID).FirstAsync();
+            return id;
         }
+
+        /*public async Task<User> GetUserAsync(int id)
+        {
+            return await _context.Users.Where(u => u.ID == id).FirstAsync();
+        }*/
 
         public async Task<bool> IsUsernameAvailableAsync(string username)
         {
@@ -86,7 +93,7 @@ namespace DataAccess.Users
             return CryptographicOperations.FixedTimeEquals(computed, storedHash);
         }
 
-        public async Task<UserDetails> GetUserDetails(int userId)
+        public async Task<UserDetails> GetUserDetailsAsync(int userId)
         {
             var details = await _context.UserDetails.Include(u => u.User).FirstOrDefaultAsync(u => u.UserID == userId);
             if (details != null)
@@ -99,6 +106,15 @@ namespace DataAccess.Users
                 await _context.SaveChangesAsync();
                 return userDetails;
             }
+        }
+
+        public async Task UpdateUserDetailsAsync(UserDetails userDetails)
+        {
+            // Optimistic concurrency check
+            _context.Entry(userDetails).Property(a => a.RowVersion).OriginalValue = userDetails.RowVersion;
+
+            _context.UserDetails.Update(userDetails);
+            await _context.SaveChangesAsync();
         }
     }
 }

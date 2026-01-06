@@ -1,6 +1,8 @@
 ﻿using DataAccess.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.Metrics;
 using System.Net;
 using System.Security.Claims;
@@ -29,7 +31,7 @@ namespace WishlistApi.Controllers
 
             int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
 
-            var userWithDetails = await _userDA.GetUserDetails(internalUserId);
+            var userWithDetails = await _userDA.GetUserDetailsAsync(internalUserId);
             return Ok(new UserDTOs.UserDetails(
                 RowVersion: userWithDetails.RowVersion,
                 Email: userWithDetails.User.Username,
@@ -39,6 +41,34 @@ namespace WishlistApi.Controllers
                 City: userWithDetails.City,
                 Address: userWithDetails.Address
             ));
+        }
+
+        [HttpPost()]
+        public async Task<ActionResult> PostUserAsync(UserDTOs.UserDetails userDetailsDTO)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
+
+            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
+            var userDetailsEntity = await _userDA.GetUserDetailsAsync(internalUserId);
+            try
+            {
+                userDetailsEntity.RowVersion = userDetailsDTO.RowVersion;
+
+                userDetailsEntity.FirstName = userDetailsDTO.FirstName;
+                userDetailsEntity.LastName = userDetailsDTO.LastName;
+                userDetailsEntity.Country = userDetailsDTO.Country;
+                userDetailsEntity.City = userDetailsDTO.City;
+                userDetailsEntity.Address = userDetailsDTO.Address;
+
+                await _userDA.UpdateUserDetailsAsync(userDetailsEntity);
+                return Ok();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode(StatusCodes.Status409Conflict);
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Suspense } from 'react'
 import { Loading } from '../../../components/tiny/loading'
+import ProfileEdit from '../../../components/profileEdit'
 
 export const Route = createFileRoute('/app/profile/edit')({
   component: Home,
@@ -9,7 +10,7 @@ export const Route = createFileRoute('/app/profile/edit')({
 function Home() {
   return (
     <Suspense fallback={<Loading />}>
-      <h1>TODO EDIT</h1>
+      <ProfileEdit />
     </Suspense>    
   )
 }

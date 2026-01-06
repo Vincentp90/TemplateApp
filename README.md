@@ -16,7 +16,7 @@ Installation steps:
     - password example
 - cd api/WishlistApi
     - Get a steam API key: https://steamcommunity.com/dev/apikey
-    - For dev use dotnet user-secrets to store the apikey
+    - For dev use dotnet user-secrets to store the apikey with command: dotnet user-secrets set "SteamAPIKEY" "yourapikeyhere"
     - dotnet ef database update --project DataAccess --startup-project WishlistApi
 - Run backend API in VS (debug, any cpu, http) not https!
     - http://localhost:5186/swagger/index.html
@@ -57,6 +57,7 @@ Adding new EF migration:
 Things I'm going to try/add later (my todo list):
 - Add admin role and admin section where admins can change any user profile's details
     - Add a form with optimistic concurrency to have a better example for merging an update
+        - Continue: test profileEdit
     - Add auditing: keep track who changed profile details
 - TODOs in code
 - dark mode
