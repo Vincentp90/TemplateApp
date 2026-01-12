@@ -16,6 +16,7 @@ namespace DataAccess.Users
     {
         Task<int> GetInternalUserIdAsync(Guid guid);
         //Task<User> GetUserAsync(int id);
+        Task<List<User>> GetUsersAsync();
         Task<bool> IsUsernameAvailableAsync(string username);
         Task AddUserAsync(string username, string password);
         Task<User?> LoginUserAsync(string username, string password);
@@ -49,6 +50,8 @@ namespace DataAccess.Users
         {
             return await _context.Users.Where(u => u.ID == id).FirstAsync();
         }*/
+
+        public async Task<List<User>> GetUsersAsync() => await _context.Users.Take(200).OrderBy(x => x.ID).ToListAsync(); // TODO pageable
 
         public async Task<bool> IsUsernameAvailableAsync(string username)
         {

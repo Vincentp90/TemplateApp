@@ -57,14 +57,16 @@ Adding new EF migration:
 Things I'm going to try/add later (my todo list):
 - Add admin role and admin section where admins can change any user profile's details
     - Add a form with optimistic concurrency to have a better example for merging an update
-        - Continue: test profileEdit
+        - Continue: improve users list, add edit profile link, edit profile admin page
     - Add auditing: keep track who changed profile details
 - TODOs in code
 - dark mode
 - Add BFF?
     - Explains why BFF is more secure than bearer+refresh tokens: https://www.pingidentity.com/en/resources/blog/post/refresh-token-rotation-spa.html
     - If we don't add BFF:
-        - Use refresh tokens for long sessions.
+        - Use refresh tokens for long sessions (and reducing the attack window when a token is stolen)
+- API base routes plural instead of singular to better fit REST
+- Permissions instead of just roles https://chatgpt.com/c/696517e7-c228-8327-961a-a6aebeff24e1
 - more unit tests
 - How to handle a very large application? Should i use more design patterns to ensure maintainability and extensibility?
     - Use DTOs

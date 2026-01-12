@@ -45,7 +45,7 @@ export default function ProfileEdit() {
     });
 
     const mutation = useMutation({
-        mutationFn: (data: UserDetails) => api.post("/user", data),
+        mutationFn: (data: UserDetails) => api.post("/users/me", data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey:['userDetails'] });
             router.navigate({ to: "/app/profile" });

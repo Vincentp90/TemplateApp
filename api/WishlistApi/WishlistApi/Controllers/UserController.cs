@@ -13,16 +13,16 @@ namespace WishlistApi.Controllers
     [ApiController]
     [Authorize]
     [Route("[controller]")]
-    public class UserController : ControllerBase
+    public class UsersController : ControllerBase
     {
         private readonly IUserDA _userDA;
 
-        public UserController(IUserDA userDA)
+        public UsersController(IUserDA userDA)
         {
             _userDA = userDA;
         }
 
-        [HttpGet()]
+        [HttpGet("me")]
         public async Task<ActionResult<UserDTOs.UserDetails>> Index()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -43,7 +43,7 @@ namespace WishlistApi.Controllers
             ));
         }
 
-        [HttpPost()]
+        [HttpPost("me")]
         public async Task<ActionResult> PostUserAsync(UserDTOs.UserDetails userDetailsDTO)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -69,6 +69,17 @@ namespace WishlistApi.Controllers
             {
                 return StatusCode(StatusCodes.Status409Conflict);
             }
+        }
+
+        [HttpGet("")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> GetAllUsersAsync()
+        {
+            var users = await _userDA.GetUsersAsync();
+            return Ok(users.Select(u => new {                
+                uuid = u.UUID,
+                username = u.Username
+            }).ToList());
         }
     }
 }

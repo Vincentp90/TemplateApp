@@ -22,7 +22,9 @@ import { Route as AppLessonsLearnedRouteImport } from './routes/app/lessonsLearn
 import { Route as AppAuctionRouteImport } from './routes/app/auction'
 import { Route as AppAboutRouteImport } from './routes/app/about'
 import { Route as AppProfileRouteRouteImport } from './routes/app/profile/route'
+import { Route as AppAdminRouteRouteImport } from './routes/app/admin/route'
 import { Route as AppProfileIndexRouteImport } from './routes/app/profile/index'
+import { Route as AppAdminIndexRouteImport } from './routes/app/admin/index'
 import { Route as AppProfileEditRouteImport } from './routes/app/profile/edit'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
@@ -90,10 +92,20 @@ const AppProfileRouteRoute = AppProfileRouteRouteImport.update({
   path: '/profile',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppAdminRouteRoute = AppAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppProfileIndexRoute = AppProfileIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppProfileRouteRoute,
+} as any)
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminRouteRoute,
 } as any)
 const AppProfileEditRoute = AppProfileEditRouteImport.update({
   id: '/edit',
@@ -105,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
+  '/app/admin': typeof AppAdminRouteRouteWithChildren
   '/app/profile': typeof AppProfileRouteRouteWithChildren
   '/app/about': typeof AppAboutRoute
   '/app/auction': typeof AppAuctionRoute
@@ -116,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/auth/': typeof AuthIndexRoute
   '/app/profile/edit': typeof AppProfileEditRoute
+  '/app/admin/': typeof AppAdminIndexRoute
   '/app/profile/': typeof AppProfileIndexRoute
 }
 export interface FileRoutesByTo {
@@ -130,6 +144,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/auth': typeof AuthIndexRoute
   '/app/profile/edit': typeof AppProfileEditRoute
+  '/app/admin': typeof AppAdminIndexRoute
   '/app/profile': typeof AppProfileIndexRoute
 }
 export interface FileRoutesById {
@@ -137,6 +152,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
+  '/app/admin': typeof AppAdminRouteRouteWithChildren
   '/app/profile': typeof AppProfileRouteRouteWithChildren
   '/app/about': typeof AppAboutRoute
   '/app/auction': typeof AppAuctionRoute
@@ -148,6 +164,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/auth/': typeof AuthIndexRoute
   '/app/profile/edit': typeof AppProfileEditRoute
+  '/app/admin/': typeof AppAdminIndexRoute
   '/app/profile/': typeof AppProfileIndexRoute
 }
 export interface FileRouteTypes {
@@ -156,6 +173,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/app/admin'
     | '/app/profile'
     | '/app/about'
     | '/app/auction'
@@ -167,6 +185,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/auth/'
     | '/app/profile/edit'
+    | '/app/admin/'
     | '/app/profile/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -181,12 +200,14 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth'
     | '/app/profile/edit'
+    | '/app/admin'
     | '/app/profile'
   id:
     | '__root__'
     | '/'
     | '/app'
     | '/auth'
+    | '/app/admin'
     | '/app/profile'
     | '/app/about'
     | '/app/auction'
@@ -198,6 +219,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/auth/'
     | '/app/profile/edit'
+    | '/app/admin/'
     | '/app/profile/'
   fileRoutesById: FileRoutesById
 }
@@ -300,12 +322,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/admin': {
+      id: '/app/admin'
+      path: '/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AppAdminRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/profile/': {
       id: '/app/profile/'
       path: '/'
       fullPath: '/app/profile/'
       preLoaderRoute: typeof AppProfileIndexRouteImport
       parentRoute: typeof AppProfileRouteRoute
+    }
+    '/app/admin/': {
+      id: '/app/admin/'
+      path: '/'
+      fullPath: '/app/admin/'
+      preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppAdminRouteRoute
     }
     '/app/profile/edit': {
       id: '/app/profile/edit'
@@ -316,6 +352,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AppAdminRouteRouteChildren {
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
+}
+
+const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminIndexRoute: AppAdminIndexRoute,
+}
+
+const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
+  AppAdminRouteRouteChildren,
+)
 
 interface AppProfileRouteRouteChildren {
   AppProfileEditRoute: typeof AppProfileEditRoute
@@ -332,6 +380,7 @@ const AppProfileRouteRouteWithChildren = AppProfileRouteRoute._addFileChildren(
 )
 
 interface AppRouteRouteChildren {
+  AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
   AppProfileRouteRoute: typeof AppProfileRouteRouteWithChildren
   AppAboutRoute: typeof AppAboutRoute
   AppAuctionRoute: typeof AppAuctionRoute
@@ -342,6 +391,7 @@ interface AppRouteRouteChildren {
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
   AppProfileRouteRoute: AppProfileRouteRouteWithChildren,
   AppAboutRoute: AppAboutRoute,
   AppAuctionRoute: AppAuctionRoute,

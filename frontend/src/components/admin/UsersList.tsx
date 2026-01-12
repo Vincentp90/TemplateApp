@@ -1,0 +1,44 @@
+'use client';
+
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { api } from '../../api';
+
+type User = { uuid: string; username: string; };
+
+export default function UsersList() {
+  const { data: userItems = [] } = useSuspenseQuery<User[]>({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const res = await api.get("/users");
+      return res.data;
+    },
+  });
+
+  return (
+    <>
+      <div className="flex flex-col gap-2">
+        <h2 className="text-xl font-semibold">Wishlist</h2>
+        <div className="inline-block rounded-lg bg-white shadow overflow-hidden border border-gray-200">
+          {/* Header */}
+          <div className="grid grid-cols-[auto_auto] bg-gray-100 text-gray-700 font-semibold px-6 py-3 border-b border-gray-200">
+            <span className="whitespace-nowrap">Name</span>
+            <span className="whitespace-nowrap text-right">Date Added</span>
+          </div>
+
+          {/* Rows */}
+          {userItems.map((s, i) => (
+            <div
+              key={i}
+              className={`grid grid-cols-[auto_auto] px-6 py-3 items-center ${
+                i % 2 === 0 ? "bg-white" : "bg-gray-50"
+              } hover:bg-gray-100 transition-colors duration-200`}
+            >
+              <span className="min-w-0 truncate">{s.uuid}</span>
+              <span className="min-w-0 truncate text-right">{s.username}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}

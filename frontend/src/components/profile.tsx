@@ -18,7 +18,7 @@ export default function Profile() {
     const { data: userDetails } = useSuspenseQuery<UserDetails>({
         queryKey: ['userDetails'],
         queryFn: async () => {
-            const res = await api.get("/user");
+            const res = await api.get("/users/me");
             const data = res.data;
             return data;
         },
