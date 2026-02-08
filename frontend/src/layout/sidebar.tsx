@@ -7,6 +7,7 @@ export default function Sidebar() {
       <nav className="space-y-4">
         <Link to="/app/auction" className="block hover:text-gray-300">Auction</Link>
         <Link to="/app/liveauction" className="block hover:text-gray-300">Auction with live updates</Link>
+        <Link to="/app/admin" className="block hover:text-gray-300">Admin temp link</Link>
       </nav>
     </aside>
   );

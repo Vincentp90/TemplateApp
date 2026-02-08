@@ -26,6 +26,8 @@ import { Route as AppAdminRouteRouteImport } from './routes/app/admin/route'
 import { Route as AppProfileIndexRouteImport } from './routes/app/profile/index'
 import { Route as AppAdminIndexRouteImport } from './routes/app/admin/index'
 import { Route as AppProfileEditRouteImport } from './routes/app/profile/edit'
+import { Route as AppAdminProfileRouteRouteImport } from './routes/app/admin/profile/route'
+import { Route as AppAdminProfileIndexRouteImport } from './routes/app/admin/profile/index'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/auth',
@@ -112,6 +114,16 @@ const AppProfileEditRoute = AppProfileEditRouteImport.update({
   path: '/edit',
   getParentRoute: () => AppProfileRouteRoute,
 } as any)
+const AppAdminProfileRouteRoute = AppAdminProfileRouteRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminProfileIndexRoute = AppAdminProfileIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminProfileRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -128,9 +140,11 @@ export interface FileRoutesByFullPath {
   '/auth/logout': typeof AuthLogoutRoute
   '/app/': typeof AppIndexRoute
   '/auth/': typeof AuthIndexRoute
+  '/app/admin/profile': typeof AppAdminProfileRouteRouteWithChildren
   '/app/profile/edit': typeof AppProfileEditRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/profile/': typeof AppProfileIndexRoute
+  '/app/admin/profile/': typeof AppAdminProfileIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -146,6 +160,7 @@ export interface FileRoutesByTo {
   '/app/profile/edit': typeof AppProfileEditRoute
   '/app/admin': typeof AppAdminIndexRoute
   '/app/profile': typeof AppProfileIndexRoute
+  '/app/admin/profile': typeof AppAdminProfileIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -163,9 +178,11 @@ export interface FileRoutesById {
   '/auth/logout': typeof AuthLogoutRoute
   '/app/': typeof AppIndexRoute
   '/auth/': typeof AuthIndexRoute
+  '/app/admin/profile': typeof AppAdminProfileRouteRouteWithChildren
   '/app/profile/edit': typeof AppProfileEditRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/profile/': typeof AppProfileIndexRoute
+  '/app/admin/profile/': typeof AppAdminProfileIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -184,9 +201,11 @@ export interface FileRouteTypes {
     | '/auth/logout'
     | '/app/'
     | '/auth/'
+    | '/app/admin/profile'
     | '/app/profile/edit'
     | '/app/admin/'
     | '/app/profile/'
+    | '/app/admin/profile/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -202,6 +221,7 @@ export interface FileRouteTypes {
     | '/app/profile/edit'
     | '/app/admin'
     | '/app/profile'
+    | '/app/admin/profile'
   id:
     | '__root__'
     | '/'
@@ -218,9 +238,11 @@ export interface FileRouteTypes {
     | '/auth/logout'
     | '/app/'
     | '/auth/'
+    | '/app/admin/profile'
     | '/app/profile/edit'
     | '/app/admin/'
     | '/app/profile/'
+    | '/app/admin/profile/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -350,14 +372,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileEditRouteImport
       parentRoute: typeof AppProfileRouteRoute
     }
+    '/app/admin/profile': {
+      id: '/app/admin/profile'
+      path: '/profile'
+      fullPath: '/app/admin/profile'
+      preLoaderRoute: typeof AppAdminProfileRouteRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/app/admin/profile/': {
+      id: '/app/admin/profile/'
+      path: '/'
+      fullPath: '/app/admin/profile/'
+      preLoaderRoute: typeof AppAdminProfileIndexRouteImport
+      parentRoute: typeof AppAdminProfileRouteRoute
+    }
   }
 }
 
+interface AppAdminProfileRouteRouteChildren {
+  AppAdminProfileIndexRoute: typeof AppAdminProfileIndexRoute
+}
+
+const AppAdminProfileRouteRouteChildren: AppAdminProfileRouteRouteChildren = {
+  AppAdminProfileIndexRoute: AppAdminProfileIndexRoute,
+}
+
+const AppAdminProfileRouteRouteWithChildren =
+  AppAdminProfileRouteRoute._addFileChildren(AppAdminProfileRouteRouteChildren)
+
 interface AppAdminRouteRouteChildren {
+  AppAdminProfileRouteRoute: typeof AppAdminProfileRouteRouteWithChildren
   AppAdminIndexRoute: typeof AppAdminIndexRoute
 }
 
 const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminProfileRouteRoute: AppAdminProfileRouteRouteWithChildren,
   AppAdminIndexRoute: AppAdminIndexRoute,
 }
 

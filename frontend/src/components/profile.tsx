@@ -14,11 +14,17 @@ type UserDetails = {
     address: string | null;
 };
 
-export default function Profile() {
+type ProfileProps = {
+  userId?: string | null
+}
+
+export default function Profile({ userId }: ProfileProps) {
     const { data: userDetails } = useSuspenseQuery<UserDetails>({
-        queryKey: ['userDetails'],
+        queryKey: ['userDetails', userId],
         queryFn: async () => {
-            const res = await api.get("/users/me");
+            const route = "/users/" + (userId ?? "me");
+            console.log(route);
+            const res = await api.get(route);            
             const data = res.data;
             return data;
         },

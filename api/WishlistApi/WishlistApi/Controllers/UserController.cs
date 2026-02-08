@@ -29,7 +29,19 @@ namespace WishlistApi.Controllers
             if (string.IsNullOrEmpty(userId))
                 return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
-            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
+            return await GetUserDetailsDTO(userId);
+        }
+
+        [HttpGet("{UserId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<UserDTOs.UserDetails>> Index([FromRoute] string UserId)
+        {
+            return await GetUserDetailsDTO(UserId);
+        }
+
+        private async Task<ActionResult<UserDTOs.UserDetails>> GetUserDetailsDTO(string UserId)
+        {
+            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(UserId));
 
             var userWithDetails = await _userDA.GetUserDetailsAsync(internalUserId);
             return Ok(new UserDTOs.UserDetails(

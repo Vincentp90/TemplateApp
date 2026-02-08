@@ -57,7 +57,8 @@ Adding new EF migration:
 Things I'm going to try/add later (my todo list):
 - Add admin role and admin section where admins can change any user profile's details
     - Add a form with optimistic concurrency to have a better example for merging an update
-        - Continue: improve users list, add edit profile link, edit profile admin page
+        - Continue: edit profile admin page
+        - Hide admin links when user doesn't have admin role
     - Add auditing: keep track who changed profile details
 - TODOs in code
 - dark mode
