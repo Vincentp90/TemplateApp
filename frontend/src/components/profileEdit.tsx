@@ -20,7 +20,7 @@ type UserDetails = {
 // Zod schema for validation
 const userSchema = z.object({
     rowVersion: z.number(),
-    email: z.email(),
+    email: z.string(),
     firstName: z.string().nullable(),
     lastName: z.string().nullable(),
     country: z.string().nullable(),
@@ -28,14 +28,20 @@ const userSchema = z.object({
     address: z.string().nullable(),
 });
 
-export default function ProfileEdit() {
+type ProfileEditProps = {
+  userId?: string | null
+}
+
+export default function ProfileEdit({ userId }: ProfileEditProps) {
     const queryClient = useQueryClient();
 
     const { data: userDetails } = useSuspenseQuery<UserDetails>({
-        queryKey: ['userDetails'],
+        queryKey: ['userDetails', userId],
         queryFn: async () => {
-            const res = await api.get("/user");
-            return res.data;
+            const route = "/users/" + (userId ?? "me");
+            const res = await api.get(route);            
+            const data = res.data;
+            return data;
         },
     });
 
@@ -45,19 +51,22 @@ export default function ProfileEdit() {
     });
 
     const mutation = useMutation({
-        mutationFn: (data: UserDetails) => api.post("/users/me", data),
+        mutationFn: (data: UserDetails) => api.post("/users/" + (userId ?? "me"), data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey:['userDetails'] });
-            router.navigate({ to: "/app/profile" });
+            queryClient.invalidateQueries({ queryKey:['userDetails', userId] });
+            if(userId === null)
+                router.navigate({ to: "/app/profile" });
+            else
+                router.navigate({ to: "/app/admin/profile", search: { userId: userId } });
         },
     });
 
-    const onSubmit = (data: UserDetails) => mutation.mutate(data);
+    const onSubmit = (data: UserDetails) => {console.log("bla");mutation.mutate(data);};
 
     return (
         <div className="max-w-3xl mx-auto p-6">
             <h2 className="text-2xl font-semibold mb-6">Edit Profile</h2>
-            <form className="grid grid-cols-1 sm:grid-cols-2 gap-6" onSubmit={handleSubmit(onSubmit)}>
+            <form className="grid grid-cols-1 sm:grid-cols-2 gap-6" onSubmit={handleSubmit(onSubmit, (err) => console.log(err))}>
                 <InputField label="First Name" {...register("firstName")} error={errors.firstName?.message} />
                 <InputField label="Last Name" {...register("lastName")} error={errors.lastName?.message} />
                 <Field label="Email" value={userDetails.email} />

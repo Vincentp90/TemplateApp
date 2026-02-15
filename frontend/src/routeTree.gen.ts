@@ -28,6 +28,7 @@ import { Route as AppAdminIndexRouteImport } from './routes/app/admin/index'
 import { Route as AppProfileEditRouteImport } from './routes/app/profile/edit'
 import { Route as AppAdminProfileRouteRouteImport } from './routes/app/admin/profile/route'
 import { Route as AppAdminProfileIndexRouteImport } from './routes/app/admin/profile/index'
+import { Route as AppAdminProfileEditRouteImport } from './routes/app/admin/profile/edit'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/auth',
@@ -124,6 +125,11 @@ const AppAdminProfileIndexRoute = AppAdminProfileIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppAdminProfileRouteRoute,
 } as any)
+const AppAdminProfileEditRoute = AppAdminProfileEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AppAdminProfileRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/app/profile/edit': typeof AppProfileEditRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/profile/': typeof AppProfileIndexRoute
+  '/app/admin/profile/edit': typeof AppAdminProfileEditRoute
   '/app/admin/profile/': typeof AppAdminProfileIndexRoute
 }
 export interface FileRoutesByTo {
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/app/profile/edit': typeof AppProfileEditRoute
   '/app/admin': typeof AppAdminIndexRoute
   '/app/profile': typeof AppProfileIndexRoute
+  '/app/admin/profile/edit': typeof AppAdminProfileEditRoute
   '/app/admin/profile': typeof AppAdminProfileIndexRoute
 }
 export interface FileRoutesById {
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/app/profile/edit': typeof AppProfileEditRoute
   '/app/admin/': typeof AppAdminIndexRoute
   '/app/profile/': typeof AppProfileIndexRoute
+  '/app/admin/profile/edit': typeof AppAdminProfileEditRoute
   '/app/admin/profile/': typeof AppAdminProfileIndexRoute
 }
 export interface FileRouteTypes {
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
     | '/app/profile/edit'
     | '/app/admin/'
     | '/app/profile/'
+    | '/app/admin/profile/edit'
     | '/app/admin/profile/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/app/profile/edit'
     | '/app/admin'
     | '/app/profile'
+    | '/app/admin/profile/edit'
     | '/app/admin/profile'
   id:
     | '__root__'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/app/profile/edit'
     | '/app/admin/'
     | '/app/profile/'
+    | '/app/admin/profile/edit'
     | '/app/admin/profile/'
   fileRoutesById: FileRoutesById
 }
@@ -386,14 +398,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminProfileIndexRouteImport
       parentRoute: typeof AppAdminProfileRouteRoute
     }
+    '/app/admin/profile/edit': {
+      id: '/app/admin/profile/edit'
+      path: '/edit'
+      fullPath: '/app/admin/profile/edit'
+      preLoaderRoute: typeof AppAdminProfileEditRouteImport
+      parentRoute: typeof AppAdminProfileRouteRoute
+    }
   }
 }
 
 interface AppAdminProfileRouteRouteChildren {
+  AppAdminProfileEditRoute: typeof AppAdminProfileEditRoute
   AppAdminProfileIndexRoute: typeof AppAdminProfileIndexRoute
 }
 
 const AppAdminProfileRouteRouteChildren: AppAdminProfileRouteRouteChildren = {
+  AppAdminProfileEditRoute: AppAdminProfileEditRoute,
   AppAdminProfileIndexRoute: AppAdminProfileIndexRoute,
 }
 

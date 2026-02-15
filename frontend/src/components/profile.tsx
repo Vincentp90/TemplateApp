@@ -23,7 +23,6 @@ export default function Profile({ userId }: ProfileProps) {
         queryKey: ['userDetails', userId],
         queryFn: async () => {
             const route = "/users/" + (userId ?? "me");
-            console.log(route);
             const res = await api.get(route);            
             const data = res.data;
             return data;
@@ -44,7 +43,10 @@ export default function Profile({ userId }: ProfileProps) {
             </div>
 
             <div className="mt-8 flex justify-end">
-                <Link to="/app/profile/edit" className="block hover:text-gray-300">Edit</Link>
+                {userId == null ? 
+                <Link to="/app/profile/edit" className="block hover:text-gray-300">Edit</Link> 
+                :<Link to="/app/admin/profile/edit" search={{ userId: userId }} className="block hover:text-gray-300">Edit</Link> 
+                }
             </div>
         </div>
     );
