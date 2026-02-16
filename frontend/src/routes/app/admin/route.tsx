@@ -1,8 +1,19 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import { useAuthStore } from '../../../AuthState';
 
 export const Route = createFileRoute('/app/admin')({
   component: RouteComponent,
-})// TODO redirect back to normal user /app index if not admin
+  beforeLoad: async () => {
+    const authStore = useAuthStore.getState();
+    if (!authStore.user) {
+      throw redirect({ to: "/auth/login" });
+    }
+
+    if (authStore.user.role !== "Admin") {
+      throw redirect({ to: "/app/notauthorized" });
+    }
+  },
+})
 
 function RouteComponent() {
   return <Outlet />

@@ -1,17 +1,22 @@
 import { create } from "zustand";
 
-type AuthState = {
-  isAuthenticated: boolean;
-  user: string | null;
-  setAuthenticated: (value: boolean) => void;
-  setUser: (user: string | null) => void;
-  reset: () => void;
+type UserRole = "Admin" | "User";
+
+type User = {
+  username: string;
+  role: UserRole;
 };
 
-export const useAuthStore = create<AuthState>((set) => ({
-  isAuthenticated: false,
+type AuthState = {
+  user: User | null;
+  setUser: (user: User | null) => void;
+  reset: () => void;
+  isAuthenticated: () => boolean; // computed
+};
+
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  setAuthenticated: (value) => set({ isAuthenticated: value }),
   setUser: (user) => set({ user }),
-  reset: () => set({ isAuthenticated: false, user: null }),
+  reset: () => set({ user: null }),
+  isAuthenticated: () => !!get().user,
 }));

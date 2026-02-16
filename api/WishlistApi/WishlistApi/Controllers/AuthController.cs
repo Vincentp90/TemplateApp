@@ -72,7 +72,10 @@ namespace WishlistApi.Controllers
         [HttpGet("me")]
         public IActionResult Me()
         {
-            return Ok(new { username = User.FindFirstValue(ClaimTypes.Name) });
+            return Ok(new { 
+                username = User.FindFirstValue(ClaimTypes.Name),
+                role = User.FindFirstValue(ClaimTypes.Role)
+            });
         }
 
         private string CreateToken(User user)

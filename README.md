@@ -58,8 +58,8 @@ Things I'm going to try/add later (my todo list):
 - Add admin role and admin section where admins can change any user profile's details
     - Add a form with optimistic concurrency to have a better example for merging an update
         - Hide admin links when user doesn't have admin role
-        - Add redirect on /app/admin route when role is not admin
         - Test that non-admins can not access any of the admin stuff.
+        - test optimistic concurrency
     - Add auditing: keep track who changed profile details
 - TODOs in code
 - dark mode

@@ -22,6 +22,6 @@ namespace DataAccess.Users
 
         public DateTime CreateDate { get; set; } = DateTime.UtcNow;
 
-        public string Role { get; set; } = "User";//User, Admin. Can only set Admin by manually editing in the DB. Temporary until role+permission system is implemented
+        public string Role { get; set; } = "User";//Possible values: User, Admin. Can only set Admin by manually editing in the DB. Temporary until role+permission system is implemented
     }
 }

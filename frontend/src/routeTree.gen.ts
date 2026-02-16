@@ -17,6 +17,7 @@ import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AuthLogoutRouteImport } from './routes/auth/logout'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AppOverviewRouteImport } from './routes/app/overview'
+import { Route as AppNotauthorizedRouteImport } from './routes/app/notauthorized'
 import { Route as AppLiveauctionRouteImport } from './routes/app/liveauction'
 import { Route as AppLessonsLearnedRouteImport } from './routes/app/lessonsLearned'
 import { Route as AppAuctionRouteImport } from './routes/app/auction'
@@ -68,6 +69,11 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
 const AppOverviewRoute = AppOverviewRouteImport.update({
   id: '/overview',
   path: '/overview',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppNotauthorizedRoute = AppNotauthorizedRouteImport.update({
+  id: '/notauthorized',
+  path: '/notauthorized',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppLiveauctionRoute = AppLiveauctionRouteImport.update({
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/app/auction': typeof AppAuctionRoute
   '/app/lessonsLearned': typeof AppLessonsLearnedRoute
   '/app/liveauction': typeof AppLiveauctionRoute
+  '/app/notauthorized': typeof AppNotauthorizedRoute
   '/app/overview': typeof AppOverviewRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/app/auction': typeof AppAuctionRoute
   '/app/lessonsLearned': typeof AppLessonsLearnedRoute
   '/app/liveauction': typeof AppLiveauctionRoute
+  '/app/notauthorized': typeof AppNotauthorizedRoute
   '/app/overview': typeof AppOverviewRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/app/auction': typeof AppAuctionRoute
   '/app/lessonsLearned': typeof AppLessonsLearnedRoute
   '/app/liveauction': typeof AppLiveauctionRoute
+  '/app/notauthorized': typeof AppNotauthorizedRoute
   '/app/overview': typeof AppOverviewRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
     | '/app/auction'
     | '/app/lessonsLearned'
     | '/app/liveauction'
+    | '/app/notauthorized'
     | '/app/overview'
     | '/auth/login'
     | '/auth/logout'
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/app/auction'
     | '/app/lessonsLearned'
     | '/app/liveauction'
+    | '/app/notauthorized'
     | '/app/overview'
     | '/auth/login'
     | '/auth/logout'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/app/auction'
     | '/app/lessonsLearned'
     | '/app/liveauction'
+    | '/app/notauthorized'
     | '/app/overview'
     | '/auth/login'
     | '/auth/logout'
@@ -319,6 +331,13 @@ declare module '@tanstack/react-router' {
       path: '/overview'
       fullPath: '/app/overview'
       preLoaderRoute: typeof AppOverviewRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/notauthorized': {
+      id: '/app/notauthorized'
+      path: '/notauthorized'
+      fullPath: '/app/notauthorized'
+      preLoaderRoute: typeof AppNotauthorizedRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/app/liveauction': {
@@ -456,6 +475,7 @@ interface AppRouteRouteChildren {
   AppAuctionRoute: typeof AppAuctionRoute
   AppLessonsLearnedRoute: typeof AppLessonsLearnedRoute
   AppLiveauctionRoute: typeof AppLiveauctionRoute
+  AppNotauthorizedRoute: typeof AppNotauthorizedRoute
   AppOverviewRoute: typeof AppOverviewRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -467,6 +487,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAuctionRoute: AppAuctionRoute,
   AppLessonsLearnedRoute: AppLessonsLearnedRoute,
   AppLiveauctionRoute: AppLiveauctionRoute,
+  AppNotauthorizedRoute: AppNotauthorizedRoute,
   AppOverviewRoute: AppOverviewRoute,
   AppIndexRoute: AppIndexRoute,
 }
