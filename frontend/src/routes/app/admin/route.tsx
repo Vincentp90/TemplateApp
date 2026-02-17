@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
-import { useAuthStore } from '../../../AuthState';
+import { useAuthStore, UserRole } from '../../../AuthState';
 
 export const Route = createFileRoute('/app/admin')({
   component: RouteComponent,
@@ -9,7 +9,7 @@ export const Route = createFileRoute('/app/admin')({
       throw redirect({ to: "/auth/login" });
     }
 
-    if (authStore.user.role !== "Admin") {
+    if (authStore.user.role !== UserRole.Admin) {
       throw redirect({ to: "/app/notauthorized" });
     }
   },

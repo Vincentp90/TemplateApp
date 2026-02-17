@@ -25,8 +25,7 @@ Installation steps:
 CRUD app template
 - React frontend
     - Tanstack Query, Router
-    - React Hook Form with Zod for validations
-    - TypeScript, ESLint, Tailwind CSS, Vite
+    - TypeScript, ESLint, Tailwind CSS, Vite, React Hook Form with Zod for validations, Zustand
     - Vitest (to run tests: npm run test)
 - ASP.NET Web Api backend
     - REST 
@@ -57,9 +56,7 @@ Adding new EF migration:
 Things I'm going to try/add later (my todo list):
 - Add admin role and admin section where admins can change any user profile's details
     - Add a form with optimistic concurrency to have a better example for merging an update
-        - Hide admin links when user doesn't have admin role
-        - Test that non-admins can not access any of the admin stuff.
-        - test optimistic concurrency
+        - implement and test optimistic concurrency on profile page
     - Add auditing: keep track who changed profile details
 - TODOs in code
 - dark mode
