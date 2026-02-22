@@ -70,46 +70,42 @@ export default function ProfileEdit({ userId }: ProfileEditProps) {
 
             // merge local changes with latest changes
             // If value was unchanged locally -> take latest value
-            // If value was changed locally set to local value and TODO show warning that data is unsubmitted (except when already same as new latest value)
+            // If value was changed locally set to local value and show warning that data is unsubmitted (except when already same as new latest value)
             const conflicts: (keyof UserDetails)[] = [];
-            const updatedUserDetails = {
-                ...latestUserDetails,
-            };
+            const updatedUserDetails = { ...latestUserDetails };
             for (const key of Object.keys(latestUserDetails) as (keyof UserDetails)[]) {
                 if (key === 'rowVersion') continue;
                 const originalValue = originalUserDetails[key];
                 const localValue = submittedUserDetails[key];
                 const latestValue = latestUserDetails[key];
 
-                const changedLocally = localValue !== originalValue;
-                const changedRemotely = latestValue !== originalValue;
-
-                if (changedLocally) {
-                    console.log("changed locally: ", key);
+                if (localValue !== originalValue && latestValue !== originalValue && localValue !== latestValue) {
                     updatedUserDetails[key] = localValue!;
-
-                    if (changedRemotely && localValue !== latestValue) {
-                        conflicts.push(key);
-                        console.log("conflict: ", key);
-                    }
-                } else {
-                    console.log("not changed: ", key);
-                    updatedUserDetails[key] = latestValue!;
+                    conflicts.push(key);
                 }
             }
-            updatedUserDetails.rowVersion = latestUserDetails.rowVersion;
-            queryClient.setQueryData(['userDetails', userId], updatedUserDetails);
-            reset(updatedUserDetails);
-            setConflicts(conflicts);
+
+            // if conflicts empty, redirect to view page since someone else made the exact same changes we wanted to make, no reason to stay in edit
+            if(conflicts.length === 0)
+                redirectToViewScreen();
+            else{
+                queryClient.setQueryData(['userDetails', userId], updatedUserDetails);
+                reset(updatedUserDetails);
+                setConflicts(conflicts);
+            }            
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey:['userDetails', userId] });
-            if(userId == null)
-                router.navigate({ to: "/app/profile" });
-            else
-                router.navigate({ to: "/app/admin/profile", search: { userId: userId } });
+            redirectToViewScreen();
         },
     });
+
+    const redirectToViewScreen = () => {
+        if(userId == null)
+            router.navigate({ to: "/app/profile" });
+        else
+            router.navigate({ to: "/app/admin/profile", search: { userId: userId } });
+    }
 
     const onSubmit = (data: UserDetails) => {mutation.mutate(data);};
 
