@@ -51,7 +51,7 @@ export default function ProfileEdit({ userId }: ProfileEditProps) {
         },
     });    
 
-    const { register, handleSubmit, formState: { errors } } = useForm<UserDetails>({
+    const { register, handleSubmit, reset, formState: { errors } } = useForm<UserDetails>({
         resolver: zodResolver(userSchema),
         defaultValues: userDetails,
     });
@@ -60,21 +60,20 @@ export default function ProfileEdit({ userId }: ProfileEditProps) {
         mutationFn: (data: UserDetails) => api.post("/users/" + (userId ?? "me"), data),
         onError: async (err: unknown, submittedUserDetails) => {            
             const axiosError = err as AxiosError;
-            if(axiosError.status !== 409) 
+            if(axiosError.status !== 409)
                 return;
 
             // Handle concurrency error
             const originalUserDetails = originalUserDetailsRef.current!;
             await queryClient.refetchQueries({ queryKey: ['userDetails', userId]});
             const latestUserDetails = queryClient.getQueryData<UserDetails>(['userDetails', userId])!;//TODO handle undefined
-            
-            // TODO merge local changes with latest changes
+
+            // merge local changes with latest changes
             // If value was unchanged locally -> take latest value
             // If value was changed locally set to local value and TODO show warning that data is unsubmitted (except when already same as new latest value)
             const conflicts: (keyof UserDetails)[] = [];
             const updatedUserDetails = {
                 ...latestUserDetails,
-                rowVersion: latestUserDetails!.rowVersion,
             };
             for (const key of Object.keys(latestUserDetails) as (keyof UserDetails)[]) {
                 if (key === 'rowVersion') continue;
@@ -98,14 +97,12 @@ export default function ProfileEdit({ userId }: ProfileEditProps) {
                     updatedUserDetails[key] = latestValue!;
                 }
             }
-            updatedUserDetails.rowVersion = latestUserDetails.rowVersion;//TODO fix wrong rowversion posted
-            console.log("RowVersion: ", updatedUserDetails.rowVersion);
+            updatedUserDetails.rowVersion = latestUserDetails.rowVersion;
             queryClient.setQueryData(['userDetails', userId], updatedUserDetails);
-            console.log("conflicts: ", conflicts.length);
+            reset(updatedUserDetails);
             setConflicts(conflicts);
         },
         onSuccess: () => {
-            console.log("RowVersion: ", originalUserDetailsRef.current!.rowVersion);
             queryClient.invalidateQueries({ queryKey:['userDetails', userId] });
             if(userId == null)
                 router.navigate({ to: "/app/profile" });
