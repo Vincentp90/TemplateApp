@@ -1,5 +1,7 @@
-﻿using DataAccess.Wishlist;
+﻿using DataAccess.Auctions;
+using DataAccess.Wishlist;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,16 +9,19 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace DataAccess.Users
 {
     public interface IUserDA
     {
         Task<int> GetInternalUserIdAsync(Guid guid);
+        //Task<User> GetUserAsync(int id);
+        Task<List<User>> GetUsersAsync();
         Task<bool> IsUsernameAvailableAsync(string username);
         Task AddUserAsync(string username, string password);
         Task<User?> LoginUserAsync(string username, string password);
+        Task<UserDetails> GetUserDetailsAsync(int userId);
+        Task UpdateUserDetailsAsync(UserDetails userDetails);
     }
 
     public class UserDA : IUserDA
@@ -38,8 +43,15 @@ namespace DataAccess.Users
             id = await _context.Users.Where(u => u.UUID == guid).Select(u => u.ID).FirstAsync();
 
             _cache.Set(guid, id, new MemoryCacheEntryOptions { Size = 1 });
-            return await _context.Users.Where(u => u.UUID == guid).Select(u => u.ID).FirstAsync();
+            return id;
         }
+
+        /*public async Task<User> GetUserAsync(int id)
+        {
+            return await _context.Users.Where(u => u.ID == id).FirstAsync();
+        }*/
+
+        public async Task<List<User>> GetUsersAsync() => await _context.Users.Take(200).OrderBy(x => x.ID).ToListAsync(); // TODO pageable
 
         public async Task<bool> IsUsernameAvailableAsync(string username)
         {
@@ -82,6 +94,30 @@ namespace DataAccess.Users
         {
             var computed = Rfc2898DeriveBytes.Pbkdf2(password, storedSalt, 100_000, HashAlgorithmName.SHA256, 32);
             return CryptographicOperations.FixedTimeEquals(computed, storedHash);
-        }        
+        }
+
+        public async Task<UserDetails> GetUserDetailsAsync(int userId)
+        {
+            var details = await _context.UserDetails.Include(u => u.User).FirstOrDefaultAsync(u => u.UserID == userId);
+            if (details != null)
+                return details;
+            else
+            {
+                var user = await _context.Users.FirstAsync(u => u.ID == userId);
+                var userDetails = new UserDetails { UserID = user.ID, User = user };
+                _context.UserDetails.Add(userDetails);
+                await _context.SaveChangesAsync();
+                return userDetails;
+            }
+        }
+
+        public async Task UpdateUserDetailsAsync(UserDetails userDetails)
+        {
+            // Optimistic concurrency check
+            _context.Entry(userDetails).Property(a => a.RowVersion).OriginalValue = userDetails.RowVersion;
+
+            _context.UserDetails.Update(userDetails);
+            await _context.SaveChangesAsync();
+        }
     }
 }

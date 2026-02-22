@@ -10,10 +10,12 @@ export const Route = createFileRoute('/app')({
   beforeLoad: async () => {
     try {      
       const authStore = useAuthStore.getState();
-      if(authStore.isAuthenticated) return;
+      if(authStore.isAuthenticated()) return;
       const res = await api.get("/auth/me");
-      authStore.setUser(res.data.username);
-      authStore.setAuthenticated(true);
+      authStore.setUser({
+        username: res.data.username,
+        role: res.data.role,
+      });
     } catch {
       throw redirect({ to: "/auth/login" });
     }

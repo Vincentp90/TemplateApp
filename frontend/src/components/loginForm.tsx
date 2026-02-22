@@ -47,14 +47,16 @@ export default function LoginForm() {
         setValue("password", "password123");
     };
 
+    const apiUrl = import.meta.env.VITE_API_URL;
+
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
             className="flex flex-col gap-3 max-w-sm mx-auto p-4"
         >
-            <div><span>APIURL: {import.meta.env.VITE_API_URL}</span></div>
             {isDev && (
                 <>
+                    <div><span>APIURL: <a href={`${apiUrl}/swagger/index.html`}>{apiUrl}/swagger/index.html</a></span></div>
                     <WlButton onClick={fillDevCreds} isPrimary={true}>
                         Login with test acc 1
                     </WlButton>

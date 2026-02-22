@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useAuthStore } from '../AuthState.ts'
 
 export default function Header() {
-  const username = useAuthStore((state) => state.user);
+  const username = useAuthStore((state) => state.user!.username);
 
   return (
     <header className="sticky top-0 bg-gray-900 text-white px-6 py-4 shadow-md flex justify-between items-center z-50">      
@@ -13,7 +13,7 @@ export default function Header() {
         <Link to="/app/about" className="hover:text-gray-300">About</Link>
         <Link to="/auth/logout" className="hover:text-gray-300">Logout</Link>
       </nav>
-      <div className="text-xl font-semibold">{username}</div>
+      <Link to="/app/profile" className="hover:text-gray-300 text-xl font-semibold">{username}</Link>
     </header>
   );
 }

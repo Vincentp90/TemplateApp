@@ -17,10 +17,19 @@ import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AuthLogoutRouteImport } from './routes/auth/logout'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AppOverviewRouteImport } from './routes/app/overview'
+import { Route as AppNotauthorizedRouteImport } from './routes/app/notauthorized'
 import { Route as AppLiveauctionRouteImport } from './routes/app/liveauction'
 import { Route as AppLessonsLearnedRouteImport } from './routes/app/lessonsLearned'
 import { Route as AppAuctionRouteImport } from './routes/app/auction'
 import { Route as AppAboutRouteImport } from './routes/app/about'
+import { Route as AppProfileRouteRouteImport } from './routes/app/profile/route'
+import { Route as AppAdminRouteRouteImport } from './routes/app/admin/route'
+import { Route as AppProfileIndexRouteImport } from './routes/app/profile/index'
+import { Route as AppAdminIndexRouteImport } from './routes/app/admin/index'
+import { Route as AppProfileEditRouteImport } from './routes/app/profile/edit'
+import { Route as AppAdminProfileRouteRouteImport } from './routes/app/admin/profile/route'
+import { Route as AppAdminProfileIndexRouteImport } from './routes/app/admin/profile/index'
+import { Route as AppAdminProfileEditRouteImport } from './routes/app/admin/profile/edit'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/auth',
@@ -62,6 +71,11 @@ const AppOverviewRoute = AppOverviewRouteImport.update({
   path: '/overview',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppNotauthorizedRoute = AppNotauthorizedRouteImport.update({
+  id: '/notauthorized',
+  path: '/notauthorized',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppLiveauctionRoute = AppLiveauctionRouteImport.update({
   id: '/liveauction',
   path: '/liveauction',
@@ -82,20 +96,69 @@ const AppAboutRoute = AppAboutRouteImport.update({
   path: '/about',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppProfileRouteRoute = AppProfileRouteRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppAdminRouteRoute = AppAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppProfileIndexRoute = AppProfileIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppProfileRouteRoute,
+} as any)
+const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppProfileEditRoute = AppProfileEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AppProfileRouteRoute,
+} as any)
+const AppAdminProfileRouteRoute = AppAdminProfileRouteRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminProfileIndexRoute = AppAdminProfileIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppAdminProfileRouteRoute,
+} as any)
+const AppAdminProfileEditRoute = AppAdminProfileEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AppAdminProfileRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
+  '/app/admin': typeof AppAdminRouteRouteWithChildren
+  '/app/profile': typeof AppProfileRouteRouteWithChildren
   '/app/about': typeof AppAboutRoute
   '/app/auction': typeof AppAuctionRoute
   '/app/lessonsLearned': typeof AppLessonsLearnedRoute
   '/app/liveauction': typeof AppLiveauctionRoute
+  '/app/notauthorized': typeof AppNotauthorizedRoute
   '/app/overview': typeof AppOverviewRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
   '/app/': typeof AppIndexRoute
   '/auth/': typeof AuthIndexRoute
+  '/app/admin/profile': typeof AppAdminProfileRouteRouteWithChildren
+  '/app/profile/edit': typeof AppProfileEditRoute
+  '/app/admin/': typeof AppAdminIndexRoute
+  '/app/profile/': typeof AppProfileIndexRoute
+  '/app/admin/profile/edit': typeof AppAdminProfileEditRoute
+  '/app/admin/profile/': typeof AppAdminProfileIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -103,26 +166,41 @@ export interface FileRoutesByTo {
   '/app/auction': typeof AppAuctionRoute
   '/app/lessonsLearned': typeof AppLessonsLearnedRoute
   '/app/liveauction': typeof AppLiveauctionRoute
+  '/app/notauthorized': typeof AppNotauthorizedRoute
   '/app/overview': typeof AppOverviewRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
   '/app': typeof AppIndexRoute
   '/auth': typeof AuthIndexRoute
+  '/app/profile/edit': typeof AppProfileEditRoute
+  '/app/admin': typeof AppAdminIndexRoute
+  '/app/profile': typeof AppProfileIndexRoute
+  '/app/admin/profile/edit': typeof AppAdminProfileEditRoute
+  '/app/admin/profile': typeof AppAdminProfileIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteRouteWithChildren
   '/auth': typeof AuthRouteRouteWithChildren
+  '/app/admin': typeof AppAdminRouteRouteWithChildren
+  '/app/profile': typeof AppProfileRouteRouteWithChildren
   '/app/about': typeof AppAboutRoute
   '/app/auction': typeof AppAuctionRoute
   '/app/lessonsLearned': typeof AppLessonsLearnedRoute
   '/app/liveauction': typeof AppLiveauctionRoute
+  '/app/notauthorized': typeof AppNotauthorizedRoute
   '/app/overview': typeof AppOverviewRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
   '/app/': typeof AppIndexRoute
   '/auth/': typeof AuthIndexRoute
+  '/app/admin/profile': typeof AppAdminProfileRouteRouteWithChildren
+  '/app/profile/edit': typeof AppProfileEditRoute
+  '/app/admin/': typeof AppAdminIndexRoute
+  '/app/profile/': typeof AppProfileIndexRoute
+  '/app/admin/profile/edit': typeof AppAdminProfileEditRoute
+  '/app/admin/profile/': typeof AppAdminProfileIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -130,15 +208,24 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/app/admin'
+    | '/app/profile'
     | '/app/about'
     | '/app/auction'
     | '/app/lessonsLearned'
     | '/app/liveauction'
+    | '/app/notauthorized'
     | '/app/overview'
     | '/auth/login'
     | '/auth/logout'
     | '/app/'
     | '/auth/'
+    | '/app/admin/profile'
+    | '/app/profile/edit'
+    | '/app/admin/'
+    | '/app/profile/'
+    | '/app/admin/profile/edit'
+    | '/app/admin/profile/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -146,25 +233,40 @@ export interface FileRouteTypes {
     | '/app/auction'
     | '/app/lessonsLearned'
     | '/app/liveauction'
+    | '/app/notauthorized'
     | '/app/overview'
     | '/auth/login'
     | '/auth/logout'
     | '/app'
     | '/auth'
+    | '/app/profile/edit'
+    | '/app/admin'
+    | '/app/profile'
+    | '/app/admin/profile/edit'
+    | '/app/admin/profile'
   id:
     | '__root__'
     | '/'
     | '/app'
     | '/auth'
+    | '/app/admin'
+    | '/app/profile'
     | '/app/about'
     | '/app/auction'
     | '/app/lessonsLearned'
     | '/app/liveauction'
+    | '/app/notauthorized'
     | '/app/overview'
     | '/auth/login'
     | '/auth/logout'
     | '/app/'
     | '/auth/'
+    | '/app/admin/profile'
+    | '/app/profile/edit'
+    | '/app/admin/'
+    | '/app/profile/'
+    | '/app/admin/profile/edit'
+    | '/app/admin/profile/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -231,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOverviewRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/notauthorized': {
+      id: '/app/notauthorized'
+      path: '/notauthorized'
+      fullPath: '/app/notauthorized'
+      preLoaderRoute: typeof AppNotauthorizedRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/app/liveauction': {
       id: '/app/liveauction'
       path: '/liveauction'
@@ -259,23 +368,126 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAboutRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/app/profile': {
+      id: '/app/profile'
+      path: '/profile'
+      fullPath: '/app/profile'
+      preLoaderRoute: typeof AppProfileRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/admin': {
+      id: '/app/admin'
+      path: '/admin'
+      fullPath: '/app/admin'
+      preLoaderRoute: typeof AppAdminRouteRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/profile/': {
+      id: '/app/profile/'
+      path: '/'
+      fullPath: '/app/profile/'
+      preLoaderRoute: typeof AppProfileIndexRouteImport
+      parentRoute: typeof AppProfileRouteRoute
+    }
+    '/app/admin/': {
+      id: '/app/admin/'
+      path: '/'
+      fullPath: '/app/admin/'
+      preLoaderRoute: typeof AppAdminIndexRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/app/profile/edit': {
+      id: '/app/profile/edit'
+      path: '/edit'
+      fullPath: '/app/profile/edit'
+      preLoaderRoute: typeof AppProfileEditRouteImport
+      parentRoute: typeof AppProfileRouteRoute
+    }
+    '/app/admin/profile': {
+      id: '/app/admin/profile'
+      path: '/profile'
+      fullPath: '/app/admin/profile'
+      preLoaderRoute: typeof AppAdminProfileRouteRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/app/admin/profile/': {
+      id: '/app/admin/profile/'
+      path: '/'
+      fullPath: '/app/admin/profile/'
+      preLoaderRoute: typeof AppAdminProfileIndexRouteImport
+      parentRoute: typeof AppAdminProfileRouteRoute
+    }
+    '/app/admin/profile/edit': {
+      id: '/app/admin/profile/edit'
+      path: '/edit'
+      fullPath: '/app/admin/profile/edit'
+      preLoaderRoute: typeof AppAdminProfileEditRouteImport
+      parentRoute: typeof AppAdminProfileRouteRoute
+    }
   }
 }
 
+interface AppAdminProfileRouteRouteChildren {
+  AppAdminProfileEditRoute: typeof AppAdminProfileEditRoute
+  AppAdminProfileIndexRoute: typeof AppAdminProfileIndexRoute
+}
+
+const AppAdminProfileRouteRouteChildren: AppAdminProfileRouteRouteChildren = {
+  AppAdminProfileEditRoute: AppAdminProfileEditRoute,
+  AppAdminProfileIndexRoute: AppAdminProfileIndexRoute,
+}
+
+const AppAdminProfileRouteRouteWithChildren =
+  AppAdminProfileRouteRoute._addFileChildren(AppAdminProfileRouteRouteChildren)
+
+interface AppAdminRouteRouteChildren {
+  AppAdminProfileRouteRoute: typeof AppAdminProfileRouteRouteWithChildren
+  AppAdminIndexRoute: typeof AppAdminIndexRoute
+}
+
+const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminProfileRouteRoute: AppAdminProfileRouteRouteWithChildren,
+  AppAdminIndexRoute: AppAdminIndexRoute,
+}
+
+const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
+  AppAdminRouteRouteChildren,
+)
+
+interface AppProfileRouteRouteChildren {
+  AppProfileEditRoute: typeof AppProfileEditRoute
+  AppProfileIndexRoute: typeof AppProfileIndexRoute
+}
+
+const AppProfileRouteRouteChildren: AppProfileRouteRouteChildren = {
+  AppProfileEditRoute: AppProfileEditRoute,
+  AppProfileIndexRoute: AppProfileIndexRoute,
+}
+
+const AppProfileRouteRouteWithChildren = AppProfileRouteRoute._addFileChildren(
+  AppProfileRouteRouteChildren,
+)
+
 interface AppRouteRouteChildren {
+  AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
+  AppProfileRouteRoute: typeof AppProfileRouteRouteWithChildren
   AppAboutRoute: typeof AppAboutRoute
   AppAuctionRoute: typeof AppAuctionRoute
   AppLessonsLearnedRoute: typeof AppLessonsLearnedRoute
   AppLiveauctionRoute: typeof AppLiveauctionRoute
+  AppNotauthorizedRoute: typeof AppNotauthorizedRoute
   AppOverviewRoute: typeof AppOverviewRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
+  AppProfileRouteRoute: AppProfileRouteRouteWithChildren,
   AppAboutRoute: AppAboutRoute,
   AppAuctionRoute: AppAuctionRoute,
   AppLessonsLearnedRoute: AppLessonsLearnedRoute,
   AppLiveauctionRoute: AppLiveauctionRoute,
+  AppNotauthorizedRoute: AppNotauthorizedRoute,
   AppOverviewRoute: AppOverviewRoute,
   AppIndexRoute: AppIndexRoute,
 }

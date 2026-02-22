@@ -16,7 +16,7 @@ Installation steps:
     - password example
 - cd api/WishlistApi
     - Get a steam API key: https://steamcommunity.com/dev/apikey
-    - For dev use dotnet user-secrets to store the apikey
+    - For dev use dotnet user-secrets to store the apikey with command: dotnet user-secrets set "SteamAPIKEY" "yourapikeyhere"
     - dotnet ef database update --project DataAccess --startup-project WishlistApi
 - Run backend API in VS (debug, any cpu, http) not https!
     - http://localhost:5186/swagger/index.html
@@ -25,8 +25,7 @@ Installation steps:
 CRUD app template
 - React frontend
     - Tanstack Query, Router
-    - React Hook Form with Zod for validations
-    - TypeScript, ESLint, Tailwind CSS, Vite
+    - TypeScript, ESLint, Tailwind CSS, Vite, React Hook Form with Zod for validations, Zustand
     - Vitest (to run tests: npm run test)
 - ASP.NET Web Api backend
     - REST 
@@ -51,21 +50,20 @@ Run for prod:
 
 Adding new EF migration:
 - cd api/WishlistApi
-- dotnet ef migrations add AuctionRowVersion --project DataAccess --startup-project WishlistApi
+- dotnet ef migrations add UserDetails --project DataAccess --startup-project WishlistApi
 
 
 Things I'm going to try/add later (my todo list):
-- search improvement:
-    - update test for improved search
 - Add admin role and admin section where admins can change any user profile's details
-    - Add a form with optimistic concurrency to have a better example for merging an update
     - Add auditing: keep track who changed profile details
 - TODOs in code
 - dark mode
 - Add BFF?
     - Explains why BFF is more secure than bearer+refresh tokens: https://www.pingidentity.com/en/resources/blog/post/refresh-token-rotation-spa.html
     - If we don't add BFF:
-        - Use refresh tokens for long sessions.
+        - Use refresh tokens for long sessions (and reducing the attack window when a token is stolen)
+- API base routes plural instead of singular to better fit REST
+- Permissions instead of just roles https://chatgpt.com/c/696517e7-c228-8327-961a-a6aebeff24e1
 - more unit tests
 - How to handle a very large application? Should i use more design patterns to ensure maintainability and extensibility?
     - Use DTOs
