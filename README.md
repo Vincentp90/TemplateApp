@@ -54,8 +54,6 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later (my todo list):
-- Add admin role and admin section where admins can change any user profile's details
-    - Add auditing: keep track who changed profile details
 - TODOs in code
 - dark mode
 - Add BFF?
@@ -75,6 +73,8 @@ Things I'm going to try/add later (my todo list):
 - steam openID integration
 - Add general functionality:
     - Delete profile (GDPR right to forget)
+- Add auditing: keep track who changed profile details https://chatgpt.com/c/699b338d-c0b0-8326-b440-035f78f30823
+    -Overview screen
 - host
     - where? Hetzner? Azure?
     - Configure https in nginx + app.UseForwardedHeaders(), app.UseHsts()  https://gemini.google.com/app/a3815289ab113d8c

@@ -25,12 +25,14 @@ namespace WishlistApi.Controllers
         private readonly IAuctionDA _auctionDA;
         private readonly IUserDA _userDA;
         private readonly IHubContext<AuctionHub> _hub;
+        private readonly IConfiguration _config;
 
-        public AuctionController(IAuctionDA auctionDA, IUserDA userDA, IHubContext<AuctionHub> hub)
+        public AuctionController(IAuctionDA auctionDA, IUserDA userDA, IHubContext<AuctionHub> hub, IConfiguration config)
         {
             _auctionDA = auctionDA;
             _userDA = userDA;
             _hub = hub;
+            _config = config;
         }
 
         [HttpGet()]
@@ -106,13 +108,13 @@ namespace WishlistApi.Controllers
 
         private async Task<User> GetSimulationUser()
         {
-            // TODO get psw from config
             const string username = "SimulateAuctionUser";
-            var user = await _userDA.LoginUserAsync(username, username);
+            string password = _config["SimUserPassword"]!;
+            var user = await _userDA.LoginUserAsync(username, password);
             if (user == null)
             {
-                await _userDA.AddUserAsync(username, username);
-                user = await _userDA.LoginUserAsync(username, username);
+                await _userDA.AddUserAsync(username, password);
+                user = await _userDA.LoginUserAsync(username, password);
             }
             return user!;
         }
