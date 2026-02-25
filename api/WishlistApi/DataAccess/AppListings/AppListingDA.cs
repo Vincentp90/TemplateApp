@@ -34,9 +34,11 @@ namespace DataAccess.AppListings
 
         public async Task<AppListing> GetRandomAppListingAsync()
         {
-            // TODO look into more optimal ways to do this
+            var count = await _context.AppListings.CountAsync();
+            var index = Random.Shared.Next(count);
             return await _context.AppListings
-                .OrderBy(x => Guid.NewGuid())
+                .OrderBy(x => x.appid)
+                .Skip(index)
                 .FirstAsync();
         }
 
