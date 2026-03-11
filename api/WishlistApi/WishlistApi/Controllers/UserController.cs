@@ -96,13 +96,20 @@ namespace WishlistApi.Controllers
 
         [HttpGet("")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> GetAllUsersAsync()
+        public async Task<ActionResult> GetAllUsersAsync(int page, int limit)
         {
-            var users = await _userDA.GetUsersAsync();
-            return Ok(users.Select(u => new {                
+            var users = await _userDA.GetUsersAsync(page, limit);
+            var hasNextPage = users.Count > limit;
+            var usersDTO = users.Take(limit).Select(u => new
+            {
                 uuid = u.UUID,
                 username = u.Username
-            }).ToList());
+            }).ToList();
+            return Ok(new
+            {
+                items = usersDTO,
+                hasNextPage = hasNextPage
+            });
         }
     }
 }

@@ -3,16 +3,24 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { api } from '../../api';
 import { Link } from '@tanstack/react-router';
+import { useState } from 'react';
 
 type User = { uuid: string; username: string; };
+type UsersData = { items: User[]; hasNextPage: boolean; };
+
+const PAGE_SIZE = 100;
 
 export default function UsersList() {
-  const { data: userItems = [] } = useSuspenseQuery<User[]>({
-    queryKey: ['users'],
+  const [page, setPage] = useState(1);
+  
+  const { data } = useSuspenseQuery<UsersData>({
+    queryKey: ['users', page],
     queryFn: async () => {
-      const res = await api.get("/users");
+      const res = await api.get('/users', {
+        params: { page, limit: PAGE_SIZE },
+      });
       return res.data;
-    },
+    }
   });
 
   return (
@@ -21,10 +29,10 @@ export default function UsersList() {
         {/* Header */}
         <div className="contents">
           <span className="bg-gray-100 text-gray-700 font-semibold px-4 py-3 border-b whitespace-nowrap">
-            Name
+            Public ID
           </span>
           <span className="bg-gray-100 text-gray-700 font-semibold px-4 py-3 border-b whitespace-nowrap">
-            Date Added
+            UserName
           </span>
           <span className="bg-gray-100 text-gray-700 font-semibold px-4 py-3 border-b text-right whitespace-nowrap">
             Edit
@@ -32,8 +40,8 @@ export default function UsersList() {
         </div>
 
         {/* Rows */}
-        {userItems.map((s, i) => (
-          <div key={i} className="contents">
+        {data.items.map((s, i) => (
+          <div key={s.uuid} className="contents">
             <span className={`px-4 py-3 whitespace-nowrap ${i % 2 ? "bg-gray-50" : "bg-white"}`}>
               {s.uuid}
             </span>
@@ -49,8 +57,29 @@ export default function UsersList() {
               Edit
             </Link>
           </div>
-        ))}
+        ))}        
       </div>
+
+      {/* Pagination */}
+        <div className="flex items-center gap-2 mt-4">
+          <button
+            className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={page === 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            Prev
+          </button>
+
+          <span className="px-3 py-1">Page {page}</span>
+
+          <button
+            className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!data.hasNextPage}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+          </button>
+        </div>
     </>
   );
 }

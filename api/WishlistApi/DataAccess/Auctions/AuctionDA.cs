@@ -46,7 +46,7 @@ namespace DataAccess.Auctions
                 throw new DbUpdateConcurrencyException("Auction is no longer open.");
 
             if(auction.StartingPrice >= auctionBid.CurrentPrice)
-                throw new DbUpdateConcurrencyException("Bid is not higher than starting price.");// TODO give more appropriate error type
+                throw new DbUpdateConcurrencyException("Bid is not higher than starting price.");
             // If detached (different object), check new price is higher
             if (auctionBid != auction && auction.CurrentPrice >= auctionBid.CurrentPrice)
                 throw new DbUpdateConcurrencyException("Bid is not higher than current price.");
