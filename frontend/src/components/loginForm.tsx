@@ -8,6 +8,7 @@ import { router } from '../router';
 import { queryClient } from '../queryClient';
 import WlButton from './tiny/wlButton';
 import { api } from '../api';
+import type { AxiosError } from 'axios';
 
 const schema = z.object({
     email: z.email('Invalid email'),
@@ -21,20 +22,35 @@ const isDev = import.meta.env.MODE === "development";
 export default function LoginForm() {
     const [action, setAction] = useState<string>("login");
     const [isRegistered, setIsRegistered] = useState<boolean>(false);
-    const { register, handleSubmit, formState: { errors, isSubmitting }, setValue } = useForm<FormData>({
+    const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, setError } = useForm<FormData>({
         resolver: zodResolver(schema),
         mode: 'onBlur',
     })
 
     const onSubmit = async (data: FormData) => {
-        const res = await api.post(`/auth/${action}`, { username: data.email, password: data.password });
-        if (res.status !== 200) throw new Error("Login failed");// TODO show nice error in UI, hook form has something for this?
-        if (action === "login") {
-            router.navigate({ to: "/app" });
-            queryClient.clear();
-        }
-        else if (action === "register") {
-            setIsRegistered(true);//TODO show in nicer way or make separate register screen
+        try {
+            await api.post(`/auth/${action}`, { username: data.email, password: data.password });
+            if (action === "login") {
+                router.navigate({ to: "/app" });
+                queryClient.clear();
+            }
+            else if (action === "register") {
+                setIsRegistered(true);//TODO show in nicer way or make separate register screen
+            }
+        } catch (err: unknown) {
+            const axiosError = err as AxiosError;
+            if (axiosError.status === 401) {
+                setError("root", {
+                    type: "manual",
+                    message: "Incorrect email or password"
+                });
+            } else {
+                setError("root", {
+                    type: "manual",
+                    message: "Unknown error"
+                });
+                console.error('Other error:', err);
+            }
         }
     }
 
@@ -106,6 +122,7 @@ export default function LoginForm() {
                 {isSubmitting ? 'Submitting...' : 'Register'}
             </WlButton>
             {isRegistered && <div>Registered, now you can click login</div>}
+            {errors.root && <p style={{ color: "red" }}>{errors.root.message}</p>}
         </form>
     )
 }
