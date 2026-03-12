@@ -16,7 +16,7 @@ namespace WishlistApi.HostedServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            
+            Auction.Duration = TimeUntilNextHalfHour();
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -55,9 +55,19 @@ namespace WishlistApi.HostedServices
                     _logger.LogError(ex, "AuctionService encountered an error.");
                 }
 
-                //TODO instead of wait 30 minutes, wait until next half or full hour
                 await Task.Delay(Auction.Duration, stoppingToken);
+                Auction.Duration = TimeUntilNextHalfHour();
             }
+        }
+
+        private TimeSpan TimeUntilNextHalfHour()
+        {
+            DateTime now = DateTime.Now;
+            int minutesToWait = 30 - (now.Minute % 30);
+            DateTime target = now.AddMinutes(minutesToWait)
+                                 .AddSeconds(-now.Second)
+                                 .AddMilliseconds(-now.Millisecond);
+            return target - now;
         }
     }
 }
