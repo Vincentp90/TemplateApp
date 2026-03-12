@@ -57,7 +57,7 @@ export default function ProfileEdit({ userId }: ProfileEditProps) {
     });
 
     const mutation = useMutation({
-        mutationFn: (data: UserDetails) => api.post("/users/" + (userId ?? "me"), data),
+        mutationFn: (data: UserDetails) => api.patch("/users/" + (userId ?? "me"), data),
         onError: async (err: unknown, submittedUserDetails) => {            
             const axiosError = err as AxiosError;
             if(axiosError.status !== 409)

@@ -55,23 +55,23 @@ namespace WishlistApi.Controllers
             ));
         }
 
-        [HttpPost("me")]//TODO should be patch
-        public async Task<ActionResult> PostUserAsync(UserDTOs.UserDetails userDetailsDTO)
+        [HttpPatch("me")]
+        public async Task<ActionResult> PatchUserAsync(UserDTOs.UserDetails userDetailsDTO)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
                 return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
-            return await PostUserDetailsDTO(userDetailsDTO, userId);
+            return await UpdateUserDetails(userDetailsDTO, userId);
         }
 
-        [HttpPost("{UserId}")]//TODO should be patch
+        [HttpPatch("{UserId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<UserDTOs.UserDetails>> PostUserAsync(UserDTOs.UserDetails userDetailsDTO, [FromRoute] string UserId)
+        public async Task<ActionResult<UserDTOs.UserDetails>> PatchUserAsync(UserDTOs.UserDetails userDetailsDTO, [FromRoute] string UserId)
         {
-            return await PostUserDetailsDTO(userDetailsDTO, UserId);
+            return await UpdateUserDetails(userDetailsDTO, UserId);
         }
 
-        private async Task<ActionResult> PostUserDetailsDTO(UserDTOs.UserDetails userDetailsDTO, string userId)
+        private async Task<ActionResult> UpdateUserDetails(UserDTOs.UserDetails userDetailsDTO, string userId)
         {
             int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
             var userDetailsEntity = await _userDA.GetUserDetailsAsync(internalUserId);
