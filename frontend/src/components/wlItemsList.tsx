@@ -18,6 +18,14 @@ export default function WLItemsList() {
     },
   });
 
+  const toLocalTime = (date: string) => new Date(date).toLocaleString(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   return (
     <>
       <div className="flex flex-col gap-2">
@@ -38,7 +46,7 @@ export default function WLItemsList() {
               } hover:bg-gray-100 transition-colors duration-200`}
             >
               <span className="min-w-0 truncate">{s.name}</span>
-              <span className="min-w-0 truncate text-right">{s.dateadded}</span>
+              <span className="min-w-0 truncate text-right">{toLocalTime(s.dateadded)}</span>
             </div>
           ))}
         </div>

@@ -55,7 +55,7 @@ namespace WishlistApi.Controllers
             ));
         }
 
-        [HttpPost("me")]
+        [HttpPost("me")]//TODO should be patch
         public async Task<ActionResult> PostUserAsync(UserDTOs.UserDetails userDetailsDTO)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -64,7 +64,7 @@ namespace WishlistApi.Controllers
             return await PostUserDetailsDTO(userDetailsDTO, userId);
         }
 
-        [HttpPost("{UserId}")]
+        [HttpPost("{UserId}")]//TODO should be patch
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<UserDTOs.UserDetails>> PostUserAsync(UserDTOs.UserDetails userDetailsDTO, [FromRoute] string UserId)
         {

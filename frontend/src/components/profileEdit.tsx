@@ -70,7 +70,7 @@ export default function ProfileEdit({ userId }: ProfileEditProps) {
 
             // merge local changes with latest changes
             // If value was unchanged locally -> take latest value
-            // If value was changed locally set to local value and show warning that data is unsubmitted (except when already same as new latest value)
+            // If value was changed locally -> set to local value and show warning that data is unsubmitted (except when already same as new latest value)
             const conflicts: (keyof UserDetails)[] = [];
             const updatedUserDetails = { ...latestUserDetails };
             for (const key of Object.keys(latestUserDetails) as (keyof UserDetails)[]) {

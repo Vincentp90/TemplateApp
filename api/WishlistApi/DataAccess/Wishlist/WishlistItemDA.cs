@@ -31,7 +31,7 @@ namespace DataAccess.Wishlist
 
         public async Task AddWishlistItemAsync(WishlistItem item)
         {
-            item.DateAdded = DateTimeOffset.UtcNow;//TODO pass client timezone and set in datetimeoffset DateTimeOffset.UtcNow.ToOffset(clientOffset);
+            item.DateAdded = DateTimeOffset.UtcNow;
             var itemOnListAlready = _context.WishlistItems.Where(i => i.UserID == item.UserID && i.appid == item.appid).Any();
             if (itemOnListAlready)
                 throw new DuplicateNameException("Item already on wishlist");
