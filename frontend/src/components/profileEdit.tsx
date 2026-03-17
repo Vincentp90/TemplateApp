@@ -65,8 +65,7 @@ export default function ProfileEdit({ userId }: ProfileEditProps) {
 
             // Handle concurrency error
             const originalUserDetails = originalUserDetailsRef.current!;
-            await queryClient.refetchQueries({ queryKey: ['userDetails', userId]});
-            const latestUserDetails = queryClient.getQueryData<UserDetails>(['userDetails', userId])!;//TODO handle undefined
+            const latestUserDetails = await queryClient.fetchQuery<UserDetails>({ queryKey: ['userDetails', userId]});
 
             // merge local changes with latest changes
             // If value was unchanged locally -> take latest value
