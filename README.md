@@ -3,7 +3,7 @@
 This is a template for a typical business CRUD app. The goal is to have a template using technologies that are modern, stable, popular and technologies I had good success with in my career(C#) or that seem worth learning(React). Reasons for focusing on those points:
 - Modern: To not fall behind with my experience and learn new technologies
 - Stable: An app made from this template should still be easy to run and maintain 10 years from now
-- Popular: Popular doesn't mean best in my opinion, but it greatly helps with development and diagnosing issues when you are googling/asking an LLM about a popular technology because there is a lot more information about it
+- Popular: Popular doesn't mean best in my opinion, but it greatly helps with development and diagnosing issues when you are googling/asking an LLM about a popular technology because there is a lot more information about it, people who encountered the same issues
 
 Installation steps:
 - Install Node.js v22
