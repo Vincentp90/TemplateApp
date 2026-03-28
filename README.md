@@ -54,7 +54,6 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later (my todo list):
-- TODOs in code
 - dark mode
 - Add BFF?
     - Explains why BFF is more secure than bearer+refresh tokens: https://www.pingidentity.com/en/resources/blog/post/refresh-token-rotation-spa.html
@@ -75,6 +74,7 @@ Things I'm going to try/add later (my todo list):
     - Delete profile (GDPR right to forget)
 - Add auditing: keep track who changed profile details https://chatgpt.com/c/699b338d-c0b0-8326-b440-035f78f30823
     -Overview screen
+- TODOs in code
 - host
     - where? Hetzner? Azure?
     - Configure https in nginx + app.UseForwardedHeaders(), app.UseHsts()  https://gemini.google.com/app/a3815289ab113d8c
