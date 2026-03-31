@@ -1,7 +1,7 @@
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 import Header from '../../layout/header.tsx'
 import Sidebar from '../../layout/sidebar.tsx'
-import Footer from '../../layout/footer.tsx'
+//import Footer from '../../layout/footer.tsx'
 import { api } from '../../api.ts'
 import { useAuthStore } from '../../AuthState.ts'
 
@@ -32,7 +32,8 @@ function AppLayout() {
           <Outlet />
         </main>
       </div>
-      <Footer />
+      {/* No footer for now */}
+      {/* <Footer /> */}
     </div>
   )
 }

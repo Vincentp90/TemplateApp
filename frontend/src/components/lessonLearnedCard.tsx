@@ -62,7 +62,7 @@ export default function LessonLearnedCard({ card }: LessonLearnedCardProps) {
     <div className={`relative p-4 shadow rounded-2xl ${color}`}>
       <div className="absolute top-3 right-3">{icon}</div>
       <h2 className="text-lg font-semibold mb-2">{card.title}</h2>
-      <div className="text-sm text-gray-600" dangerouslySetInnerHTML={{ __html: cardInfo }} />
+      <div className="text-sm text-gray-600 dark:text-gray-300" dangerouslySetInnerHTML={{ __html: cardInfo }} />
     </div>
   )
 }

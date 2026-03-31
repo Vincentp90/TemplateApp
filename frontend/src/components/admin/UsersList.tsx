@@ -25,16 +25,16 @@ export default function UsersList() {
 
   return (
     <>
-      <div className="inline-grid grid-cols-[auto_auto_min-content] rounded-lg bg-white shadow border border-gray-200 overflow-hidden">
+      <div className="inline-grid grid-cols-[auto_auto_min-content] rounded-lg shadow border border-gray-200 dark:border-gray-400 overflow-hidden">
         {/* Header */}
         <div className="contents">
-          <span className="bg-gray-100 text-gray-700 font-semibold px-4 py-3 border-b whitespace-nowrap">
+          <span className="bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-semibold px-4 py-3 border-b whitespace-nowrap">
             Public ID
           </span>
-          <span className="bg-gray-100 text-gray-700 font-semibold px-4 py-3 border-b whitespace-nowrap">
+          <span className="bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-semibold px-4 py-3 border-b whitespace-nowrap">
             UserName
           </span>
-          <span className="bg-gray-100 text-gray-700 font-semibold px-4 py-3 border-b text-right whitespace-nowrap">
+          <span className="bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-semibold px-4 py-3 border-b text-right whitespace-nowrap">
             Edit
           </span>
         </div>
@@ -42,16 +42,16 @@ export default function UsersList() {
         {/* Rows */}
         {data.items.map((s, i) => (
           <div key={s.uuid} className="contents">
-            <span className={`px-4 py-3 whitespace-nowrap ${i % 2 ? "bg-gray-50" : "bg-white"}`}>
+            <span className={`px-4 py-3 whitespace-nowrap ${i % 2 ? "bg-gray-50 dark:bg-gray-800" : "bg-white dark:bg-gray-700"}`}>
               {s.uuid}
             </span>
-            <span className={`px-4 py-3 whitespace-nowrap ${i % 2 ? "bg-gray-50" : "bg-white"}`}>
+            <span className={`px-4 py-3 whitespace-nowrap ${i % 2 ? "bg-gray-50 dark:bg-gray-800" : "bg-white dark:bg-gray-700"}`}>
               {s.username}
             </span>
             <Link
               to="/app/admin/profile" search={{ userId: s.uuid }}
               className={`px-4 py-3 text-right text-blue-600 hover:underline whitespace-nowrap ${
-                i % 2 ? "bg-gray-50" : "bg-white"
+                i % 2 ? "bg-gray-50 dark:bg-gray-800" : "bg-white dark:bg-gray-700"
               }`}
             >
               Edit

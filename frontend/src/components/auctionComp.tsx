@@ -152,12 +152,12 @@ export function AuctionComp() {
             Simulate higher bid from other user
             </WlButton>
 
-            <div className={`relative p-4 shadow rounded-2xl bg-[#53C1DE]/20`}>
+            <div className={`relative p-4 shadow rounded-2xl bg-[#53C1DE]/20 dark:bg-[#285b69]`}>
                 <div className="absolute top-3 right-3">
                     <svg width="36px" height="36px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z" stroke="#1C274C" strokeWidth="1.5"></path> <path d="M10.125 8.875C10.125 7.83947 10.9645 7 12 7C13.0355 7 13.875 7.83947 13.875 8.875C13.875 9.56245 13.505 10.1635 12.9534 10.4899C12.478 10.7711 12 11.1977 12 11.75V13" stroke="#1C274C" strokeWidth="1.5" strokeLinecap="round"></path> <circle cx="12" cy="16" r="1" fill="#1C274C"></circle> </g></svg>
                 </div>
                 <h2 className="text-lg font-semibold mb-2">Concurrency error and handling</h2>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 dark:text-gray-300">
                     This page demonstrates a concurrency error and how to handle it. Use the simulate button to simulate a higher bid (current bid + 10) from another user. 
                     If you then submit a new bid, it will trigger a concurrency error (Because submitted RowVersion will be different from the RowVersion in the DB.).
                     In the client side error handling, we refetch the auction to get up-to-date price. If our submitted price was higher, we automaticly resubmit. If our price was lower you get an error message.

@@ -120,12 +120,13 @@ export default function ProfileEdit({ userId }: ProfileEditProps) {
                 <InputField label="Address" {...register("address")} error={errors.address?.message} />
                 {conflicts.length > 0 && <h3 className="text-lg font-semibold mb-4">Conflicts</h3>}
                 {conflicts.map((key) => (
-                    <div key={key as string} className="flex flex-col bg-white shadow rounded-xl p-4 border border-gray-200">
+                    <div key={key as string} className="flex flex-col shadow rounded-xl p-4 border border-gray-200">
                         <span className="text-sm font-medium text-gray-600">{key}</span>
                         <span className="mt-1 text-gray-900">{userDetails[key]}</span>
                     </div>
                 ))}
                 <div className="sm:col-span-2 flex justify-end mt-4">
+                    {/* TODO change to wlButton */}
                     <button
                         type="submit"
                         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
@@ -141,10 +142,10 @@ export default function ProfileEdit({ userId }: ProfileEditProps) {
 
 function InputField({ label, error, ...props }: { label: string; error?: string } & React.ComponentProps<'input'>) {
     return (
-        <div className="flex flex-col bg-white shadow rounded-xl p-4 border border-gray-200">
-            <label className="text-sm font-medium text-gray-600">{label}</label>
+        <div className="flex flex-col shadow rounded-xl p-4 border border-gray-200">
+            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">{label}</label>
             <input
-                className={`mt-1 border rounded px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 ${error ? "border-red-500" : ""}`}
+                className={`mt-1 border rounded px-3 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${error ? "border-red-500" : ""}`}
                 {...props}
             />
             {error && <span className="text-red-500 text-sm mt-1">{error}</span>}
@@ -154,9 +155,9 @@ function InputField({ label, error, ...props }: { label: string; error?: string 
 
 function Field({ label, value }: { label: string; value: string | null }) {
     return (
-        <div className="flex flex-col bg-white shadow rounded-xl p-4 border border-gray-200">
-            <span className="text-sm font-medium text-gray-600">{label}</span>
-            <span className="mt-1 text-gray-900">{value ?? ""}</span>
+        <div className="flex flex-col shadow rounded-xl p-4 border border-gray-200">
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{label}</span>
+            <span className="mt-1 text-gray-900 dark:text-gray-100">{value ?? ""}</span>
         </div>
     );
 }

@@ -54,9 +54,9 @@ export default function Profile({ userId }: ProfileProps) {
 
 function Field({ label, value }: { label: string; value: string | null }) {
     return (
-        <div className="flex flex-col bg-white shadow rounded-xl p-4 border border-gray-200">
-            <span className="text-sm font-medium text-gray-600">{label}</span>
-            <span className="mt-1 text-gray-900">{value ?? ""}</span>
+        <div className="flex flex-col shadow rounded-xl p-4 border border-gray-200">
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{label}</span>
+            <span className="mt-1 text-gray-900 dark:text-gray-100">{value ?? ""}</span>
         </div>
     );
 }

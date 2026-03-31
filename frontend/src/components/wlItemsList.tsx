@@ -30,9 +30,9 @@ export default function WLItemsList() {
     <>
       <div className="flex flex-col gap-2">
         <h2 className="text-xl font-semibold">Wishlist</h2>
-        <div className="inline-block rounded-lg bg-white shadow overflow-hidden border border-gray-200">
+        <div className="inline-block rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-800">
           {/* Header */}
-          <div className="grid grid-cols-[auto_auto] bg-gray-100 text-gray-700 font-semibold px-6 py-3 border-b border-gray-200">
+          <div className="grid grid-cols-[auto_auto] bg-gray-100 dark:bg-gray-900 font-semibold px-6 py-3 border-b border-gray-200 dark:border-gray-800">
             <span className="whitespace-nowrap">Name</span>
             <span className="whitespace-nowrap text-right">Date Added</span>
           </div>
@@ -42,8 +42,8 @@ export default function WLItemsList() {
             <div
               key={i}
               className={`grid grid-cols-[auto_auto] px-6 py-3 items-center ${
-                i % 2 === 0 ? "bg-white" : "bg-gray-50"
-              } hover:bg-gray-100 transition-colors duration-200`}
+                i % 2 === 0 ? "bg-white dark:bg-gray-700" : "bg-gray-50 dark:bg-gray-600"
+              } hover:bg-gray-400 transition-colors duration-200`}
             >
               <span className="min-w-0 truncate">{s.name}</span>
               <span className="min-w-0 truncate text-right">{toLocalTime(s.dateadded)}</span>

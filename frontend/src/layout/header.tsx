@@ -19,8 +19,6 @@ export default function Header() {
     }
   }, [])
 
-
-
   return (
     <header className="sticky top-0 bg-gray-300 text-black dark:bg-gray-900 dark:text-white px-6 h-14 shadow-md flex justify-between items-center z-50">
       <nav className="space-x-4">

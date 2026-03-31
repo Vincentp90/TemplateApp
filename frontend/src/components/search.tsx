@@ -117,10 +117,10 @@ export default function Search() {
           className="p-2 border rounded shadow-sm"
         />
         {filteredSearchResults(searchResults, wishlistItems).length > 0 && (
-          <ul className="border rounded p-2 bg-white shadow">
+          <ul className="border rounded p-2 shadow">
             {filteredSearchResults(searchResults, wishlistItems).map((item: AppListing, idx) => (
               <li key={idx} value={item.appid} className="p-0">
-                <button onClick={() => addToWishlist(item)} className="w-full text-left cursor-pointer hover:bg-gray-100 p-1">
+                <button onClick={() => addToWishlist(item)} className="w-full text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 p-1">
                   {item.name}
                 </button>
               </li>
@@ -132,7 +132,7 @@ export default function Search() {
 
       <div className="flex flex-col gap-2">
         <h2 className="text-xl font-semibold">Wishlist</h2>
-        <ul className="border rounded p-2 bg-white shadow divide-y">
+        <ul className="border rounded p-2 shadow divide-y">
           {wishlistItemsPending ? (<Loading02Icon size={48} />) :
             wishlistItems.map((s, i) => (
               <li key={i} className="flex items-center justify-between py-2 px-1">
