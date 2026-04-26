@@ -25,7 +25,7 @@ export function AuctionComp() {
     const { data: currentAuction } = useSuspenseQuery<Auction>({
         queryKey: ['currentauction'],
         queryFn: async () => {
-            const res = await api.get("/auction");
+            const res = await api.get("/auctions/current");
             const data = res.data;
             //setSecondsLeft((new Date(data.endDate).getTime() - Date.now()) / 1000);
             return data;
@@ -42,7 +42,7 @@ export function AuctionComp() {
     const addMutation = useMutation({
         mutationFn: async (auction: Auction) => {
             setIsSubmitting(true);
-            await api.post(`/auction`, auction);
+            await api.post(`/auctions/current`, auction);
             return auction;
         },
         onMutate: async (auction) => {
@@ -92,7 +92,7 @@ export function AuctionComp() {
     const currentPriceMult = (mult: number) => (Math.max(currentAuction?.currentPrice, currentAuction?.startingPrice) * mult)?.toFixed(2);
 
     const simulateBid = async () => {
-        api.get('auction/simulatebid');
+        api.get('auctions/current/simulatebid');
     }
 
     return (

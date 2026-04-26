@@ -7,12 +7,12 @@ namespace WishlistApi.Controllers
     [ApiController]
     [Authorize]
     [Route("[controller]")]
-    public class AppListingController : ControllerBase
+    public class AppListingsController : ControllerBase
     {
-        private readonly ILogger<AppListingController> _logger;
+        private readonly ILogger<AppListingsController> _logger;
         private readonly IAppListingDA _appListingDA;
 
-        public AppListingController(ILogger<AppListingController> logger, IAppListingDA appListingDA)
+        public AppListingsController(ILogger<AppListingsController> logger, IAppListingDA appListingDA)
         {
             _logger = logger;
             _appListingDA = appListingDA;

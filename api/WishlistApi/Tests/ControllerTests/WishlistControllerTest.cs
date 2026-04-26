@@ -13,6 +13,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using WishlistApi.Controllers;
+using WishlistApi.DTOs;
 
 namespace Tests.ControllerTests
 {
@@ -57,18 +58,22 @@ namespace Tests.ControllerTests
 
 
             // Act
-            var actionResult = await controller.GetWishlistAsync() as OkObjectResult;
+            ActionResult<WishlistDTOs.Wishlist> actionResult = await controller.GetWishlistAsync();
 
             // Assert
-            actionResult.Should().NotBeNull();
+            
+            // Check data access calls were only called once
             wlDAMock.Verify(x => x.GetWishlistItemsAsync(3), Times.Once);
             userDAMock.Verify(x => x.GetInternalUserIdAsync(externalID), Times.Once);
 
-            var wl = actionResult.Value as IEnumerable<ExpandoObject>;
+            actionResult.Should().NotBeNull();
+            var okResult = actionResult.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            var wl = okResult!.Value as WishlistDTOs.Wishlist;
             wl.Should().NotBeNull();
-            wl.Count().Should().Be(1);
+            wl.Items.Count().Should().Be(1);
 
-            var item = wl.First() as IDictionary<string, object>;
+            var item = wl.Items.First() as IDictionary<string, object>;
             item.Should().Contain("appid", 1);
             item["appid"].Should().Be(1);
 
@@ -80,13 +85,15 @@ namespace Tests.ControllerTests
 
 
             // Act
-            actionResult = await controller.GetWishlistAsync("appid,name") as OkObjectResult; // Simulate fields=appid,name query param
+            actionResult = await controller.GetWishlistAsync("appid,name"); // Simulate fields=appid,name query param
 
             // Assert
             actionResult.Should().NotBeNull();
-            wl = actionResult.Value as IEnumerable<ExpandoObject>;
+            okResult = actionResult.Result as OkObjectResult;
+            okResult.Should().NotBeNull();
+            wl = okResult!.Value as WishlistDTOs.Wishlist;
             wl.Should().NotBeNull();
-            item = wl.First() as IDictionary<string, object>;
+            item = wl.Items.First() as IDictionary<string, object>;
 
             // Verify that only the specified fields are returned
             item.Should().ContainKey("appid");

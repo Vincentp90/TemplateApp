@@ -35,7 +35,7 @@ const renderWithClient = (ui: React.ReactNode) => {
 describe('Search component', () => {
   it('renders input and wishlist header', async () => {
     // Even though the following returns empty data, we still need it otherwise the suspense will wait forever for the Search useSuspsenseQuery to finish
-    mockedApiGet.mockResolvedValueOnce({ data: [] });
+    mockedApiGet.mockResolvedValueOnce({ data: { items: [] }});
     renderWithClient(<Search />);
 
     // We need to use find here because it will wait until the input is rendered (if we await)
@@ -49,10 +49,12 @@ describe('Search component', () => {
 
   it('calls API when user types more than 2 chars', async () => {
     mockedApiGet.mockResolvedValueOnce({
-      data: [
-        { appid: 1, name: 'Half-Life' },
-        { appid: 2, name: 'Portal' },
-      ],
+      data: {
+        items: [
+          { appid: 1, name: 'Half-Life' },
+          { appid: 2, name: 'Portal' },
+        ],
+      },
     });
     renderWithClient(<Search />);
 
@@ -64,18 +66,20 @@ describe('Search component', () => {
 
     await userEvent.type(input, 'hal');
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledWith('/applisting/search/hal');
+      expect(api.get).toHaveBeenCalledWith('/applistings/search/hal');
     });
 
     await userEvent.type(input, 'f');
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledWith('/applisting/search/half');
+      expect(api.get).toHaveBeenCalledWith('/applistings/search/half');
     });
   });
 
   it('renders fetched results', async () => {
     mockedApiGet.mockResolvedValueOnce({
-      data: [{ appid: 1, name: 'Half-Life' }],
+      data: {
+        items: [{ appid: 1, name: 'Half-Life' }]
+      }
     });
 
     renderWithClient(<Search />);

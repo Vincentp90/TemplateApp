@@ -13,7 +13,7 @@ const wlQueryKey = ['wishlist'];
 
 
 const fetchSearchResults = async (query: string): Promise<AppListing[]> => {
-  const res = await api.get(`/applisting/search/${encodeURIComponent(query)}`);
+  const res = await api.get(`/applistings/search/${encodeURIComponent(query)}`);
   const data = res.data;
   return data;
 };
@@ -47,7 +47,7 @@ export default function Search() {
     queryKey: wlQueryKey,
     queryFn: async () => {
       const res = await api.get(`/wishlist?fields=appid,name`);
-      const data = res.data;
+      const data = res.data.items;
       return data.map((item: AppListing) => ({
         appid: item.appid,
         name: item.name,

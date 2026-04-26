@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Dynamic;
 using System.Security.Claims;
+using WishlistApi.DTOs;
 
 namespace WishlistApi.Controllers
 {
@@ -24,7 +25,7 @@ namespace WishlistApi.Controllers
         }
 
         [HttpGet()]
-        public async Task<ActionResult> GetWishlistAsync([FromQuery] string? fields = null)
+        public async Task<ActionResult<WishlistDTOs.Wishlist>> GetWishlistAsync([FromQuery] string? fields = null)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -36,8 +37,10 @@ namespace WishlistApi.Controllers
                                 .Select(f => f.ToLower())
                                 .ToHashSet();
             bool includeAll = fieldList.Count == 0;
+            
             var result = (await _wishlistItemDA.GetWishlistItemsAsync(internalUserId)).Select(x => 
             {
+                //TODO better way to do this? DTO and leave fields empty when not included?
                 var obj = new ExpandoObject();
                 var item = obj as IDictionary<string, object>;
                 if (includeAll || fieldList.Contains("appid"))
@@ -48,7 +51,7 @@ namespace WishlistApi.Controllers
                     item["name"] = x.AppListing.name;
                 return obj;
             });
-            return Ok(result);
+            return Ok(new WishlistDTOs.Wishlist( Items: result ));
         }
 
         [HttpPost("{appId}")]

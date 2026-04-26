@@ -20,14 +20,14 @@ namespace WishlistApi.Controllers
     [ApiController]
     [Authorize]
     [Route("[controller]")]
-    public class AuctionController : ControllerBase
+    public class AuctionsController : ControllerBase
     {
         private readonly IAuctionDA _auctionDA;
         private readonly IUserDA _userDA;
         private readonly IHubContext<AuctionHub> _hub;
         private readonly IConfiguration _config;
 
-        public AuctionController(IAuctionDA auctionDA, IUserDA userDA, IHubContext<AuctionHub> hub, IConfiguration config)
+        public AuctionsController(IAuctionDA auctionDA, IUserDA userDA, IHubContext<AuctionHub> hub, IConfiguration config)
         {
             _auctionDA = auctionDA;
             _userDA = userDA;
@@ -35,7 +35,7 @@ namespace WishlistApi.Controllers
             _config = config;
         }
 
-        [HttpGet()]
+        [HttpGet("current")]
         public async Task<ActionResult<AuctionDTOs.Auction>> GetCurrentAuctionAsync()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -59,7 +59,7 @@ namespace WishlistApi.Controllers
             ));
         }
 
-        [HttpPost()]
+        [HttpPost("current")]
         public async Task<ActionResult> PostAuctionAsync(AuctionDTOs.Auction auction)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -85,7 +85,7 @@ namespace WishlistApi.Controllers
             }
         }
 
-        [HttpGet("SimulateBid")]
+        [HttpGet("current/SimulateBid")]
         public async Task<ActionResult> PostSimulateBidAsync()
         {
             var user = await GetSimulationUser();

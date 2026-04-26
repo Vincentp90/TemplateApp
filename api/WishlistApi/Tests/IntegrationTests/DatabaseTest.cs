@@ -13,6 +13,7 @@ namespace Tests.IntegrationTests
         [Fact]
         public async Task CompareRandomStrategies()
         {
+            // Dev DB docker should be running!
             var options = new DbContextOptionsBuilder<WishlistDbContext>().
                 UseNpgsql("Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=example").
                 UseSnakeCaseNamingConvention().

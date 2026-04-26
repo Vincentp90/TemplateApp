@@ -10,7 +10,7 @@ export default function WLItemsList() {
     queryKey: ['wishlistOverview'],
     queryFn: async () => {
       const res = await api.get("/wishlist?fields=name,dateadded");
-      const data = res.data;
+      const data = res.data.items;
       return data.map((item: AppListingDetailed) => ({
         name: item.name,
         dateadded: item.dateadded,

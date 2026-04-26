@@ -54,27 +54,30 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later (my todo list):
-- dark mode
-- Add BFF?
-    - Explains why BFF is more secure than bearer+refresh tokens: https://www.pingidentity.com/en/resources/blog/post/refresh-token-rotation-spa.html
-    - If we don't add BFF:
-        - Use refresh tokens for long sessions (and reducing the attack window when a token is stolen)
-- API base routes plural instead of singular to better fit REST
+- End-to-end test with WebApplicationFactory and Testcontainers
+- Auctions unit tests
+- Add general functionality:
+    - Delete profile (GDPR right to forget)
+- Add auditing: keep track who changed profile details https://chatgpt.com/c/699b338d-c0b0-8326-b440-035f78f30823
+    -Overview screen
 - Permissions instead of just roles https://chatgpt.com/c/696517e7-c228-8327-961a-a6aebeff24e1
-- more unit tests
-- How to handle a very large application? Should i use more design patterns to ensure maintainability and extensibility?
-    - Use DTOs
 - pgvector
 - Add jenkinsfile for CI/CD
     - scan container (Anchore ?)
     - scan code (SonarQube,Semgrep?)
 - OAuth https://chatgpt.com/c/69039540-1818-832e-88ef-20605eba31c7
-- steam openID integration
-- Add general functionality:
-    - Delete profile (GDPR right to forget)
-- Add auditing: keep track who changed profile details https://chatgpt.com/c/699b338d-c0b0-8326-b440-035f78f30823
-    -Overview screen
+    - Add BFF?
+    - Explains why BFF is more secure than bearer+refresh tokens: https://www.pingidentity.com/en/resources/blog/post/refresh-token-rotation-spa.html
+    - If we don't add BFF:
+        - Use refresh tokens for long sessions (and reducing the attack window when a token is stolen)
+    - steam openID integration
 - TODOs in code
+- Alternative frontends
+    - Vue
+    - Blazor
+    - Angular
+- ops dashboard grafana?
+- elasticsearch instead of postgres fuzzy search
 - host
     - where? Hetzner? Azure?
     - Configure https in nginx + app.UseForwardedHeaders(), app.UseHsts()  https://gemini.google.com/app/a3815289ab113d8c

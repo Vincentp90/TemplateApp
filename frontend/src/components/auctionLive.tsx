@@ -26,7 +26,7 @@ export function AuctionLive() {
     const { data: currentAuction } = useSuspenseQuery<Auction>({
         queryKey: ['currentauction'],
         queryFn: async () => {
-            const res = await api.get("/auction");
+            const res = await api.get("/auctions/current");
             const data = res.data;
             //setSecondsLeft((new Date(data.endDate).getTime() - Date.now()) / 1000);
             return data;
@@ -43,7 +43,7 @@ export function AuctionLive() {
     const addMutation = useMutation({
         mutationFn: async (auction: Auction) => {
             setIsSubmitting(true);
-            await api.post(`/auction`, auction);
+            await api.post(`/auctions/current`, auction);
             return auction;
         },
         onMutate: async (auction) => {
@@ -112,7 +112,7 @@ export function AuctionLive() {
 
     const currentPriceMult = (mult: number) => (Math.max(currentAuction?.currentPrice, currentAuction?.startingPrice) * mult)?.toFixed(2);
 
-    const simulateBid = async () => api.get('auction/simulatebid');
+    const simulateBid = async () => api.get('auctions/current/simulatebid');
 
     return (
         <div className={`max-w-md mx-auto p-4 rounded-2xl shadow-md border ${currentAuction.userHasBid ? "border-green-500" : "border-gray-300"}`}>
