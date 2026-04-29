@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WishlistMauiApp.Pages.LoginPage"
+             Title="LoginPage">
+    <VerticalStackLayout
+        Padding="24"
+        Spacing="12"
+        VerticalOptions="Center">
+
+        <Label Text="Login"
+               FontSize="24"
+               HorizontalOptions="Center" />
+
+        <Entry
+            Placeholder="Username"
+            Text="{Binding Username}" />
+
+        <Entry
+            Placeholder="Password"
+            IsPassword="True"
+            Text="{Binding Password}" />
+
+        <Button
+            Text="Login"
+            Command="{Binding LoginCommand}"
+            IsEnabled="{Binding IsNotBusy}" />
+
+        <ActivityIndicator
+            IsRunning="{Binding IsBusy}"
+            IsVisible="{Binding IsBusy}" />
+
+    </VerticalStackLayout>
+</ContentPage>
