@@ -5,8 +5,6 @@ using DataAccess.Users;
 using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System;
@@ -114,11 +112,10 @@ using (var scope = app.Services.CreateScope())
 
 app.UseCors("RestrictedCORS");
 app.MapOpenApi();
+
 app.UseSwagger();
 app.UseSwaggerUI();
-
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
 
 app.MapControllers();
