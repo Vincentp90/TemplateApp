@@ -12,6 +12,6 @@ namespace WishlistMauiApp.Services
     public class NavigationService : INavigationService
     {
         public Task GoToAsync(string route)
-            => Shell.Current.GoToAsync(route);
+            => Shell.Current.GoToAsync(route);// TODO review is navigation service pointless? just use shell directly
     }
 }
