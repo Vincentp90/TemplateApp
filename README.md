@@ -54,7 +54,11 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later (my todo list):
-- End-to-end test with WebApplicationFactory and Testcontainers
+- Stats page with TDD
+    - Stats: average time since added to wishlist, average time between item added to wishlist, Oldest item, most common character in app titles
+    - Next step: integration test
+- Apply DDD https://chatgpt.com/c/69f73138-654c-83eb-9d6d-71c580be4b5e, https://chatgpt.com/c/69f758ba-6b6c-83eb-aa9f-2c476025d909
+- CQRS learn more and apply?
 - Auctions unit tests
 - Add general functionality:
     - Delete profile (GDPR right to forget)

@@ -8,6 +8,7 @@ using System.Text;
 
 namespace Tests.IntegrationTests
 {
+    // For doing load test on the applistings table (the apps we got from the steam API, so we can't test it with a Testcontainer)
     public class DatabaseTest
     {
         [Fact]
