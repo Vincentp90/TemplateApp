@@ -53,7 +53,7 @@ namespace Tests.ApplicationTests
             var WishlistService = new WishlistService(wlDAMock.Object);
 
             // Act
-            var result = await WishlistService.GetWishlistStats(USERID);
+            var result = await WishlistService.GetWishlistStatsAsync(USERID);
 
             // Assert
             result.Should().NotBeNull();
@@ -76,7 +76,7 @@ namespace Tests.ApplicationTests
             var WishlistService = new WishlistService(wlDAMock.Object);
 
             // Act
-            var result = await WishlistService.GetWishlistStats(USERID);
+            var result = await WishlistService.GetWishlistStatsAsync(USERID);
 
             // Assert
             result.Should().NotBeNull();
@@ -108,7 +108,7 @@ namespace Tests.ApplicationTests
             var WishlistService = new WishlistService(wlDAMock.Object);
 
             // Act
-            var result = await WishlistService.GetWishlistStats(USERID);
+            var result = await WishlistService.GetWishlistStatsAsync(USERID);
 
             // Assert
             result.Should().NotBeNull();
@@ -152,7 +152,7 @@ namespace Tests.ApplicationTests
             var WishlistService = new WishlistService(wlDAMock.Object);
 
             // Act
-            var result = await WishlistService.GetWishlistStats(USERID);
+            var result = await WishlistService.GetWishlistStatsAsync(USERID);
 
             // Assert
             result.Should().NotBeNull();
@@ -182,7 +182,7 @@ namespace Tests.ApplicationTests
             var WishlistService = new WishlistService(wlDAMock.Object);
 
             // Act
-            var result = await WishlistService.GetWishlistStats(USERID);
+            var result = await WishlistService.GetWishlistStatsAsync(USERID);
 
             // Assert
             result.Should().NotBeNull();
