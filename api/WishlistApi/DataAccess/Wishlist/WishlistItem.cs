@@ -13,7 +13,7 @@ namespace DataAccess.Wishlist
 
         [ForeignKey("AppListing")]
         public int appid { get; set; }
-        public AppListing? AppListing { get; set; }
+        public AppListing? AppListing { get; set; } // TODO this shouldn't be nullable?
 
         [ForeignKey("User")]
         public int UserID { get; set; }
