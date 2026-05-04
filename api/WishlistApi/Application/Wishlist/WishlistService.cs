@@ -8,7 +8,7 @@ namespace Application.Wishlist
 {
     public interface IWishlistService
     {
-        WishlistStats GetWishlistStats(int userID);
+        Task<WishlistStats> GetWishlistStats(int userID);
     }
 
     public class WishlistService
@@ -21,8 +21,9 @@ namespace Application.Wishlist
             _wishlistItemDA = wishlistItemDA;
         }
 
-        public WishlistStats GetWishlistStats(int userID)
+        public async Task<WishlistStats> GetWishlistStats(int userID)
         {
+            var items = await _wishlistItemDA.GetWishlistItemsAsync(userID);
             throw new NotImplementedException();
             return new WishlistStats();
         }

@@ -17,7 +17,7 @@ namespace Tests.ApplicationTests
     public class WishlistServiceTests
     {
         [Fact]
-        public void WishlistStatsAreCorrect()
+        public async Task WishlistStatsAreCorrect()
         {
             // Arrange
             const int USERID = 1;
@@ -53,7 +53,7 @@ namespace Tests.ApplicationTests
             var WishlistService = new WishlistService(wlDAMock.Object);
 
             // Act
-            var result = WishlistService.GetWishlistStats(USERID);
+            var result = await WishlistService.GetWishlistStats(USERID);
 
             // Assert
             result.Should().NotBeNull();
@@ -64,7 +64,7 @@ namespace Tests.ApplicationTests
         }
 
         [Fact]
-        public void WishlistStatsCanHandleEmptyWishlist()
+        public async Task WishlistStatsCanHandleEmptyWishlist()
         {
             // Arrange
             const int USERID = 1;
@@ -76,7 +76,7 @@ namespace Tests.ApplicationTests
             var WishlistService = new WishlistService(wlDAMock.Object);
 
             // Act
-            var result = WishlistService.GetWishlistStats(USERID);
+            var result = await WishlistService.GetWishlistStats(USERID);
 
             // Assert
             result.Should().NotBeNull();
@@ -87,7 +87,7 @@ namespace Tests.ApplicationTests
         }
 
         [Fact]
-        public void WishlistStatsEqualCharacterCountPicksOneOfTheMostCommon()
+        public async Task WishlistStatsEqualCharacterCountPicksOneOfTheMostCommon()
         {
             // Arrange
             const int USERID = 1;
@@ -122,7 +122,7 @@ namespace Tests.ApplicationTests
             var WishlistService = new WishlistService(wlDAMock.Object);
 
             // Act
-            var result = WishlistService.GetWishlistStats(USERID);
+            var result = await WishlistService.GetWishlistStats(USERID);
 
             // Assert
             result.Should().NotBeNull();
