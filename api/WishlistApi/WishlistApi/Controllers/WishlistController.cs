@@ -72,6 +72,7 @@ namespace WishlistApi.Controllers
                 ));
         }
 
+        // TODO route doesn't make that much sense, /wishlist/apps/{appId} would be better
         [HttpPost("{appId}")]
         public async Task<ActionResult> AddWishlistItemAsync(int appId)
         {
@@ -96,6 +97,7 @@ namespace WishlistApi.Controllers
             return Ok();
         }
 
+        // TODO route, see above
         [HttpDelete("{appId}")]
         public async Task<ActionResult> DeleteAppFromWishlistAsync(int appId)
         {

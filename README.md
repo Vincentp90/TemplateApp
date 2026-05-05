@@ -54,8 +54,7 @@ Adding new EF migration:
 
 
 Things I'm going to try/add later (my todo list):
-- Stats page with TDD
-    - Next step: integration test
+- Refactor ApiTests
 - UserContext instead of repeated code in asp.net actions https://gemini.google.com/app/6aec8fb27b1a8e96
 - Apply DDD https://chatgpt.com/c/69f73138-654c-83eb-9d6d-71c580be4b5e, https://chatgpt.com/c/69f758ba-6b6c-83eb-aa9f-2c476025d909
     - first add more ApiTests

@@ -45,5 +45,13 @@ namespace Tests.Helpers
 
         public async Task InitializeAsync() => await _db.StartAsync();
         public async Task DisposeAsync() => await _db.DisposeAsync();//TODO warning
+
+        public async Task SeedAsync(Func<IServiceProvider, Task> seed)
+        {
+            using var scope = Services.CreateScope();
+            var sp = scope.ServiceProvider;
+
+            await seed(sp);
+        }
     }
 }
