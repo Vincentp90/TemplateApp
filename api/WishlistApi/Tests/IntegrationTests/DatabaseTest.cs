@@ -1,6 +1,7 @@
 ﻿using DataAccess;
 using DataAccess.AppListings;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,6 +9,7 @@ using System.Text;
 
 namespace Tests.IntegrationTests
 {
+    // For doing load test on the applistings table (the apps we got from the steam API, so we can't test it with a Testcontainer)
     public class DatabaseTest
     {
         [Fact]
@@ -22,7 +24,17 @@ namespace Tests.IntegrationTests
             var da = new AppListingDA(_context);
 
             // warmup
-            await da.GetRandomAppListingAsync();
+            try
+            {
+                await da.GetRandomAppListingAsync();
+            }
+            catch (InvalidOperationException e) 
+            {
+                if (e.InnerException != null && e.InnerException.Message.Contains("Failed to connect"))
+                    throw new Exception("Dev DB docker should be running!");
+                else
+                    throw;
+            }
 
             var sw = new Stopwatch();
             

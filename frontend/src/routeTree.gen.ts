@@ -16,6 +16,7 @@ import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AuthLogoutRouteImport } from './routes/auth/logout'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AppStatsRouteImport } from './routes/app/stats'
 import { Route as AppOverviewRouteImport } from './routes/app/overview'
 import { Route as AppNotauthorizedRouteImport } from './routes/app/notauthorized'
 import { Route as AppLiveauctionRouteImport } from './routes/app/liveauction'
@@ -65,6 +66,11 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => AuthRouteRoute,
+} as any)
+const AppStatsRoute = AppStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppOverviewRoute = AppOverviewRouteImport.update({
   id: '/overview',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/app/liveauction': typeof AppLiveauctionRoute
   '/app/notauthorized': typeof AppNotauthorizedRoute
   '/app/overview': typeof AppOverviewRoute
+  '/app/stats': typeof AppStatsRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
   '/app/': typeof AppIndexRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/app/liveauction': typeof AppLiveauctionRoute
   '/app/notauthorized': typeof AppNotauthorizedRoute
   '/app/overview': typeof AppOverviewRoute
+  '/app/stats': typeof AppStatsRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
   '/app': typeof AppIndexRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/app/liveauction': typeof AppLiveauctionRoute
   '/app/notauthorized': typeof AppNotauthorizedRoute
   '/app/overview': typeof AppOverviewRoute
+  '/app/stats': typeof AppStatsRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/logout': typeof AuthLogoutRoute
   '/app/': typeof AppIndexRoute
@@ -216,6 +225,7 @@ export interface FileRouteTypes {
     | '/app/liveauction'
     | '/app/notauthorized'
     | '/app/overview'
+    | '/app/stats'
     | '/auth/login'
     | '/auth/logout'
     | '/app/'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/app/liveauction'
     | '/app/notauthorized'
     | '/app/overview'
+    | '/app/stats'
     | '/auth/login'
     | '/auth/logout'
     | '/app'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/app/liveauction'
     | '/app/notauthorized'
     | '/app/overview'
+    | '/app/stats'
     | '/auth/login'
     | '/auth/logout'
     | '/app/'
@@ -325,6 +337,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/login'
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof AuthRouteRoute
+    }
+    '/app/stats': {
+      id: '/app/stats'
+      path: '/stats'
+      fullPath: '/app/stats'
+      preLoaderRoute: typeof AppStatsRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/app/overview': {
       id: '/app/overview'
@@ -477,6 +496,7 @@ interface AppRouteRouteChildren {
   AppLiveauctionRoute: typeof AppLiveauctionRoute
   AppNotauthorizedRoute: typeof AppNotauthorizedRoute
   AppOverviewRoute: typeof AppOverviewRoute
+  AppStatsRoute: typeof AppStatsRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -489,6 +509,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppLiveauctionRoute: AppLiveauctionRoute,
   AppNotauthorizedRoute: AppNotauthorizedRoute,
   AppOverviewRoute: AppOverviewRoute,
+  AppStatsRoute: AppStatsRoute,
   AppIndexRoute: AppIndexRoute,
 }
 

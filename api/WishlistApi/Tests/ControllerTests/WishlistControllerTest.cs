@@ -42,7 +42,7 @@ namespace Tests.ControllerTests
             var userDAMock = new Mock<IUserDA>(MockBehavior.Strict);
             userDAMock.Setup(x => x.GetInternalUserIdAsync(externalID)).ReturnsAsync(3);
 
-            var controller = new WishlistController(wlDAMock.Object, userDAMock.Object);
+            var controller = new WishlistController(wlDAMock.Object, userDAMock.Object, null);
 
             // Mock authenticated user
             var claims = new List<Claim>

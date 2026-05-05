@@ -1,4 +1,5 @@
-﻿using DataAccess.AppListings;
+﻿using Application.Wishlist;
+using DataAccess.AppListings;
 using DataAccess.Users;
 using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Authorization;
@@ -17,11 +18,13 @@ namespace WishlistApi.Controllers
     {
         private readonly IWishlistItemDA _wishlistItemDA;
         private readonly IUserDA _userDA;
+        private readonly IWishlistService _wishlistService;
 
-        public WishlistController(IWishlistItemDA wishlistItemDA, IUserDA userDA)
+        public WishlistController(IWishlistItemDA wishlistItemDA, IUserDA userDA, IWishlistService wishlistService)
         {
             _wishlistItemDA = wishlistItemDA;
             _userDA = userDA;
+            _wishlistService = wishlistService;
         }
 
         [HttpGet()]
@@ -54,6 +57,22 @@ namespace WishlistApi.Controllers
             return Ok(new WishlistDTOs.Wishlist( Items: result ));
         }
 
+        [HttpGet("stats")]
+        public async Task<ActionResult<WishlistDTOs.Stats>> GetWishlistStatsAsync()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
+
+            var stats = await _wishlistService.GetWishlistStatsAsync(internalUserId);
+            return Ok(new WishlistDTOs.Stats(
+                AvgTimeAdded: stats.AvgTimeAdded,
+                AvgTimeBetweenAdded: stats.AvgTimeBetweenAdded,
+                OldestItem: stats.OldestItem,
+                MostCommonCharacter: stats.MostCommonCharacter
+                ));
+        }
+
+        // TODO route doesn't make that much sense, /wishlist/apps/{appId} would be better
         [HttpPost("{appId}")]
         public async Task<ActionResult> AddWishlistItemAsync(int appId)
         {
@@ -78,6 +97,7 @@ namespace WishlistApi.Controllers
             return Ok();
         }
 
+        // TODO route, see above
         [HttpDelete("{appId}")]
         public async Task<ActionResult> DeleteAppFromWishlistAsync(int appId)
         {
