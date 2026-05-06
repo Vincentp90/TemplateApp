@@ -14,12 +14,10 @@ namespace Tests.IntegrationTests
 {
     public class ApiAuthorizedTests : IClassFixture<ApiFactory>
     {
-        private readonly HttpClient _client;
         private readonly ApiFactory _apiFactory;
 
         public ApiAuthorizedTests(ApiFactory factory)
         {
-            _client = factory.CreateClient();
             _apiFactory = factory;
         }
 
@@ -27,17 +25,16 @@ namespace Tests.IntegrationTests
         public async Task MeTest()
         {
             // Arrange
-            var userAndCookie = await CreateNewUser();
-            var secureClient = await GetSecureClient(userAndCookie);
+            var (client, username) = await _apiFactory.CreateAuthenticatedClientWithUserAsync();
 
             // Act
-            var response = await secureClient.GetAsync("/auth/me");
+            var response = await client.GetAsync("/auth/me");
 
             // Assert
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadFromJsonAsync<JsonElement>();
 
-            Assert.Equal(userAndCookie.Username, content.GetProperty("username").GetString());
+            Assert.Equal(username, content.GetProperty("username").GetString());
         }
 
         [Fact]
@@ -46,7 +43,8 @@ namespace Tests.IntegrationTests
             // Arrange
             string OLDESTAPPNAME = "Old";
 
-            var secureClient = await CreateNewAnonymousUserAndGetSecureClient();
+            var client = await _apiFactory.CreateAuthenticatedClientAsync();
+            // Random offset to make it less likely that unit tests interfere with each other, without manually setting different offsets in different unit tests. Not ideal way to do this. TODO better way?
             int appIdRandomOffset = Random.Shared.Next(0, Int32.MaxValue / 4);
             await _apiFactory.SeedAsync(async sp =>
             {
@@ -63,13 +61,13 @@ namespace Tests.IntegrationTests
                 await dbContext.SaveChangesAsync();
             });
 
-            // Add some items to wishlist. Does this count as arrange or act?
-            await secureClient.PostAsync($"/wishlist/{appIdRandomOffset + 3}", null);// Oldest item
-            await secureClient.PostAsync($"/wishlist/{appIdRandomOffset + 2}", null);
-            await secureClient.PostAsync($"/wishlist/{appIdRandomOffset + 1}", null);
+            // Add apps to wishlist
+            await client.PostAsync($"/wishlist/{appIdRandomOffset + 3}", null);// Oldest item
+            await client.PostAsync($"/wishlist/{appIdRandomOffset + 2}", null);
+            await client.PostAsync($"/wishlist/{appIdRandomOffset + 1}", null);
 
             // Act
-            var response = await secureClient.GetAsync("/wishlist/stats");
+            var response = await client.GetAsync("/wishlist/stats");
 
             // Assert
             response.EnsureSuccessStatusCode();
@@ -79,41 +77,6 @@ namespace Tests.IntegrationTests
             content.AvgTimeBetweenAdded.Days.Should().Be(0);
             content.OldestItem.Should().Be(OLDESTAPPNAME);
             content.MostCommonCharacter.Should().Be("b");
-        }
-
-        private class UserAndCookie
-        {
-            public required string Username { get; set; }
-            public required string Password { get; set; }
-            public required string Cookie { get; set; }
-        }
-
-        private async Task<HttpClient> CreateNewAnonymousUserAndGetSecureClient()
-        {
-            var userAndCookie = await CreateNewUser();
-            var secureClient = await GetSecureClient(userAndCookie);
-            return secureClient;
-        }
-
-        private async Task<UserAndCookie> CreateNewUser()
-        {
-            var userName = Guid.NewGuid().ToString();
-            var password = Guid.NewGuid().ToString();
-            var login = new { Username = userName, Password = password };
-
-            await _client.PostAsJsonAsync("/auth/register", login);
-
-            var response = await _client.PostAsJsonAsync("/auth/login", login);
-            var authCookie = response.Headers.GetValues("Set-Cookie").First(c => c.StartsWith("auth_token"));
-
-            return new UserAndCookie { Username = userName, Password = password, Cookie = authCookie };
-        }
-
-        private async Task<HttpClient> GetSecureClient(UserAndCookie userAndCookie)
-        {
-            var client = _apiFactory.CreateClient();
-            client.DefaultRequestHeaders.Add("Cookie", userAndCookie.Cookie);
-            return client;
         }
     }
 }
