@@ -8,6 +8,7 @@ using System.Data;
 using System.Dynamic;
 using System.Security.Claims;
 using WishlistApi.DTOs;
+using WishlistApi.Helpers;
 
 namespace WishlistApi.Controllers
 {
@@ -16,25 +17,21 @@ namespace WishlistApi.Controllers
     [Route("[controller]")]
     public class WishlistController : ControllerBase
     {
+        private readonly IUserContext _userContext;
         private readonly IWishlistItemDA _wishlistItemDA;
-        private readonly IUserDA _userDA;
-        private readonly IWishlistService _wishlistService;
+        private readonly IWishlistService _wishlistService;        
 
-        public WishlistController(IWishlistItemDA wishlistItemDA, IUserDA userDA, IWishlistService wishlistService)
+        public WishlistController(IUserContext userContext, IWishlistItemDA wishlistItemDA, IWishlistService wishlistService)
         {
+            _userContext = userContext;
             _wishlistItemDA = wishlistItemDA;
-            _userDA = userDA;
-            _wishlistService = wishlistService;
+            _wishlistService = wishlistService;            
         }
 
         [HttpGet()]
         public async Task<ActionResult<WishlistDTOs.Wishlist>> GetWishlistAsync([FromQuery] string? fields = null)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
-
-            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
+            int internalUserId = await _userContext.GetIdAsync();
 
             var fieldList = (fields ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                                 .Select(f => f.ToLower())
@@ -60,8 +57,7 @@ namespace WishlistApi.Controllers
         [HttpGet("stats")]
         public async Task<ActionResult<WishlistDTOs.Stats>> GetWishlistStatsAsync()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
+            int internalUserId = await _userContext.GetIdAsync();
 
             var stats = await _wishlistService.GetWishlistStatsAsync(internalUserId);
             return Ok(new WishlistDTOs.Stats(
@@ -76,11 +72,7 @@ namespace WishlistApi.Controllers
         [HttpPost("{appId}")]
         public async Task<ActionResult> AddWishlistItemAsync(int appId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
-
-            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
+            int internalUserId = await _userContext.GetIdAsync();
             try
             {
                 await _wishlistItemDA.AddWishlistItemAsync(new WishlistItem()
@@ -101,13 +93,8 @@ namespace WishlistApi.Controllers
         [HttpDelete("{appId}")]
         public async Task<ActionResult> DeleteAppFromWishlistAsync(int appId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
-
-            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
+            int internalUserId = await _userContext.GetIdAsync();
             await _wishlistItemDA.DeleteWishlistItemAsync(internalUserId, appId);
-
             return Ok();
         }
     }

@@ -10,6 +10,7 @@ using System.Data;
 using System.Dynamic;
 using System.Security.Claims;
 using WishlistApi.DTOs;
+using WishlistApi.Helpers;
 
 namespace WishlistApi.Controllers
 {
@@ -22,13 +23,15 @@ namespace WishlistApi.Controllers
     [Route("[controller]")]
     public class AuctionsController : ControllerBase
     {
-        private readonly IAuctionDA _auctionDA;
+        private readonly IUserContext _userContext;
         private readonly IUserDA _userDA;
+        private readonly IAuctionDA _auctionDA;        
         private readonly IHubContext<AuctionHub> _hub;
         private readonly IConfiguration _config;
 
-        public AuctionsController(IAuctionDA auctionDA, IUserDA userDA, IHubContext<AuctionHub> hub, IConfiguration config)
+        public AuctionsController(IUserContext userContext, IAuctionDA auctionDA, IUserDA userDA, IHubContext<AuctionHub> hub, IConfiguration config)
         {
+            _userContext = userContext;
             _auctionDA = auctionDA;
             _userDA = userDA;
             _hub = hub;
@@ -38,10 +41,6 @@ namespace WishlistApi.Controllers
         [HttpGet("current")]
         public async Task<ActionResult<AuctionDTOs.Auction>> GetCurrentAuctionAsync()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
-
             var auction = await _auctionDA.GetLatestAuctionAsync();
             if(auction == null)
                 return NoContent();
@@ -50,7 +49,7 @@ namespace WishlistApi.Controllers
                 ID: auction.ID,
                 StartDate: auction.DateAdded,
                 EndDate: auction.DateAdded + Auction.Duration,
-                UserHasBid: (auction.User?.UUID.ToString() == userId),
+                UserHasBid: (auction.User?.UUID.ToString() == User.FindFirstValue(ClaimTypes.NameIdentifier)),
                 StartingPrice: auction.StartingPrice,
                 CurrentPrice: auction.CurrentPrice,
                 AppID: auction.appid,
@@ -62,11 +61,7 @@ namespace WishlistApi.Controllers
         [HttpPost("current")]
         public async Task<ActionResult> PostAuctionAsync(AuctionDTOs.Auction auction)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
-
-            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
+            int internalUserId = await _userContext.GetIdAsync();
 
             try
             {

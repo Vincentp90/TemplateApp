@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WishlistApi.Controllers;
 using WishlistApi.DTOs;
+using WishlistApi.Helpers;
 
 namespace Tests.ControllerTests
 {
@@ -25,6 +26,18 @@ namespace Tests.ControllerTests
             // Arrange
             Guid externalID = Guid.NewGuid();
             const string APPNAME = "MockAppName";
+
+            // Mock authenticated user
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, externalID.ToString())
+            };
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var user = new ClaimsPrincipal(identity);
+            var httpContext = new DefaultHttpContext { User = user };
+
+            var mockAccessor = new Mock<IHttpContextAccessor>();
+            mockAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
             var wlDAMock = new Mock<IWishlistItemDA>(MockBehavior.Strict);
             wlDAMock.Setup(x => x.GetWishlistItemsAsync(3)).ReturnsAsync(
@@ -42,20 +55,13 @@ namespace Tests.ControllerTests
             var userDAMock = new Mock<IUserDA>(MockBehavior.Strict);
             userDAMock.Setup(x => x.GetInternalUserIdAsync(externalID)).ReturnsAsync(3);
 
-            var controller = new WishlistController(wlDAMock.Object, userDAMock.Object, null);
+            IUserContext userContextMock = new UserContext(mockAccessor.Object, userDAMock.Object);
 
-            // Mock authenticated user
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, externalID.ToString())
-            };
-            var identity = new ClaimsIdentity(claims, "TestAuthType");
-            var user = new ClaimsPrincipal(identity);
+            var controller = new WishlistController(userContextMock, wlDAMock.Object, null);
             controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = user }
+                HttpContext = httpContext
             };
-
 
             // Act
             ActionResult<WishlistDTOs.Wishlist> actionResult = await controller.GetWishlistAsync();

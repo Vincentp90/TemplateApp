@@ -11,6 +11,7 @@ using Microsoft.OpenApi;
 using System;
 using System.Text;
 using WishlistApi.Controllers;
+using WishlistApi.Helpers;
 using WishlistApi.HostedServices;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -70,6 +71,9 @@ builder.Services.AddScoped<IUserDA, UserDA>();
 builder.Services.AddScoped<IAuctionDA, AuctionDA>();
 
 builder.Services.AddScoped<IWishlistService, WishlistService>();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUserContext, UserContext>();
 
 builder.Services.AddHostedService<AuctionService>();
 

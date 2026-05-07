@@ -1,0 +1,33 @@
+Things I'm going to try/add/learn more about later :
+- Apply DDD https://chatgpt.com/c/69f73138-654c-83eb-9d6d-71c580be4b5e, https://chatgpt.com/c/69f758ba-6b6c-83eb-aa9f-2c476025d909
+    - first add more ApiTests
+- CQRS learn more and apply?
+- Auctions unit tests
+- Add general functionality:
+    - Delete profile (GDPR right to forget)
+- Add auditing: keep track who changed profile details https://chatgpt.com/c/699b338d-c0b0-8326-b440-035f78f30823
+    -Overview screen
+- Permissions instead of just roles https://chatgpt.com/c/696517e7-c228-8327-961a-a6aebeff24e1
+- pgvector
+- Add jenkinsfile for CI/CD
+    - scan container (Anchore ?)
+    - scan code (SonarQube,Semgrep?)
+- OAuth https://chatgpt.com/c/69039540-1818-832e-88ef-20605eba31c7
+    - Add BFF?
+    - Explains why BFF is more secure than bearer+refresh tokens: https://www.pingidentity.com/en/resources/blog/post/refresh-token-rotation-spa.html
+    - If we don't add BFF:
+        - Use refresh tokens for long sessions (and reducing the attack window when a token is stolen)
+    - steam openID integration
+- TODOs in code
+- Alternative frontends
+    - Vue
+    - Blazor
+    - Angular
+- ops dashboard grafana?
+- elasticsearch instead of postgres fuzzy search
+- logging in controllers
+- host
+    - where? Hetzner? Azure?
+    - Configure https in nginx + app.UseForwardedHeaders(), app.UseHsts()  https://gemini.google.com/app/a3815289ab113d8c
+    - prod JWT/steam api key set with env var instead of commited to git
+    - configure urls, still using localhost in prod config
