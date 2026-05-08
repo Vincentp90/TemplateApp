@@ -1,6 +1,6 @@
 Things I'm going to try/add/learn more about later :
-- Apply DDD https://chatgpt.com/c/69f73138-654c-83eb-9d6d-71c580be4b5e, https://chatgpt.com/c/69f758ba-6b6c-83eb-aa9f-2c476025d909
-    - first add more ApiTests
+- Apply DDD https://chatgpt.com/c/69f73138-654c-83eb-9d6d-71c580be4b5e, https://chatgpt.com/c/69f758ba-6b6c-83eb-aa9f-2c476025d909 https://gemini.google.com/app/65bf18af82a25e99
+
 - CQRS learn more and apply?
 - Auctions unit tests
 - Add general functionality:

@@ -21,6 +21,7 @@ namespace WishlistApi.HostedServices
             {
                 try
                 {
+                    // TODO move to Application layer AuctionService as StartNextAuctionAsync method
                     using var scope = _scopeFactory.CreateScope();
                     var _auctionDA = scope.ServiceProvider.GetRequiredService<IAuctionDA>();
                     var _appListingDA = scope.ServiceProvider.GetRequiredService<IAppListingDA>();

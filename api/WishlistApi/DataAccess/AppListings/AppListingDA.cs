@@ -28,7 +28,7 @@ namespace DataAccess.AppListings
             if(string.IsNullOrEmpty(term) || term.Length < 3)
                 return new List<AppListing>();
             return await _context.AppListings
-                .FromSqlRaw("SELECT * FROM app_listings WHERE similarity(name, {0}) > 0.3 ORDER BY similarity(name, {0}) DESC", term)
+                .FromSqlRaw("SELECT * FROM app_listings WHERE name % {0} ORDER BY similarity(name, {0}) DESC", term)
                 .ToListAsync();
         }
 
