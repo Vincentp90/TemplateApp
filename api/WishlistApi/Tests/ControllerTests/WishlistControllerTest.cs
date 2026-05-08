@@ -1,4 +1,5 @@
-﻿using DataAccess.AppListings;
+﻿using Application;
+using DataAccess.AppListings;
 using DataAccess.Users;
 using DataAccess.Wishlist;
 using FluentAssertions;
@@ -57,7 +58,7 @@ namespace Tests.ControllerTests
 
             IUserContext userContextMock = new UserContext(mockAccessor.Object, userDAMock.Object);
 
-            var controller = new WishlistController(userContextMock, wlDAMock.Object, null);
+            var controller = new WishlistController(userContextMock, new WishlistService(wlDAMock.Object));
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = httpContext

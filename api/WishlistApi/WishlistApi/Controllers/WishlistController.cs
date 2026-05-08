@@ -1,4 +1,4 @@
-﻿using Application.Wishlist;
+﻿using Application;
 using DataAccess.AppListings;
 using DataAccess.Users;
 using DataAccess.Wishlist;
@@ -18,13 +18,11 @@ namespace WishlistApi.Controllers
     public class WishlistController : ControllerBase
     {
         private readonly IUserContext _userContext;
-        private readonly IWishlistItemDA _wishlistItemDA;
         private readonly IWishlistService _wishlistService;        
 
-        public WishlistController(IUserContext userContext, IWishlistItemDA wishlistItemDA, IWishlistService wishlistService)
+        public WishlistController(IUserContext userContext, IWishlistService wishlistService)
         {
             _userContext = userContext;
-            _wishlistItemDA = wishlistItemDA;
             _wishlistService = wishlistService;            
         }
 
@@ -38,7 +36,7 @@ namespace WishlistApi.Controllers
                                 .ToHashSet();
             bool includeAll = fieldList.Count == 0;
             
-            var result = (await _wishlistItemDA.GetWishlistItemsAsync(internalUserId)).Select(x => 
+            var result = (await _wishlistService.GetWishlistItemsAsync(internalUserId)).Select(x => 
             {
                 //TODO better way to do this? DTO and leave fields empty when not included?
                 var obj = new ExpandoObject();
@@ -75,7 +73,7 @@ namespace WishlistApi.Controllers
             int internalUserId = await _userContext.GetIdAsync();
             try
             {
-                await _wishlistItemDA.AddWishlistItemAsync(new WishlistItem()
+                await _wishlistService.AddWishlistItemAsync(new WishlistItem()
                 {
                     UserID = internalUserId,
                     appid = appId
@@ -94,7 +92,7 @@ namespace WishlistApi.Controllers
         public async Task<ActionResult> DeleteAppFromWishlistAsync(int appId)
         {
             int internalUserId = await _userContext.GetIdAsync();
-            await _wishlistItemDA.DeleteWishlistItemAsync(internalUserId, appId);
+            await _wishlistService.DeleteWishlistItemAsync(internalUserId, appId);
             return Ok();
         }
     }

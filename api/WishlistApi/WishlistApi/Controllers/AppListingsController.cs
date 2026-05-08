@@ -1,4 +1,5 @@
-﻿using DataAccess.AppListings;
+﻿using Application;
+using DataAccess.AppListings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,19 +10,17 @@ namespace WishlistApi.Controllers
     [Route("[controller]")]
     public class AppListingsController : ControllerBase
     {
-        private readonly ILogger<AppListingsController> _logger;
-        private readonly IAppListingDA _appListingDA;
+        private readonly IAppListingService _appListingService;
 
-        public AppListingsController(ILogger<AppListingsController> logger, IAppListingDA appListingDA)
+        public AppListingsController(IAppListingService appListingService)
         {
-            _logger = logger;
-            _appListingDA = appListingDA;
+            _appListingService = appListingService;
         }
 
         [HttpGet("search/{term}")]
         public async Task<ActionResult> SearchAsync(string term)
         {
-            return Ok(await _appListingDA.SearchAppListingsAsync(term));
+            return Ok(await _appListingService.SearchAppListingsAsync(term));
         }
     }
 }

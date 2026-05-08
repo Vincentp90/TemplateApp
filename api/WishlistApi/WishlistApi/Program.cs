@@ -1,4 +1,4 @@
-using Application.Wishlist;
+using Application;
 using DataAccess;
 using DataAccess.AppListings;
 using DataAccess.Auctions;
@@ -70,12 +70,15 @@ builder.Services.AddScoped<IWishlistItemDA, WishlistItemDA>();
 builder.Services.AddScoped<IUserDA, UserDA>();
 builder.Services.AddScoped<IAuctionDA, AuctionDA>();
 
+builder.Services.AddScoped<IAppListingService, AppListingService>();
 builder.Services.AddScoped<IWishlistService, WishlistService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuctionService, AuctionService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, UserContext>();
 
-builder.Services.AddHostedService<AuctionService>();
+builder.Services.AddHostedService<AuctionBackgroundService>();
 
 string jwtKey = builder.Configuration.GetValue<string>("Jwt:Key") ?? throw new Exception("Missing Jwt:Key in appsettings.json");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

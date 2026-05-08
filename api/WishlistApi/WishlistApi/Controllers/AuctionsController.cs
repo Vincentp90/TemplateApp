@@ -1,4 +1,5 @@
-﻿using DataAccess.Auctions;
+﻿using Application;
+using DataAccess.Auctions;
 using DataAccess.Users;
 using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Authorization;
@@ -24,16 +25,16 @@ namespace WishlistApi.Controllers
     public class AuctionsController : ControllerBase
     {
         private readonly IUserContext _userContext;
-        private readonly IUserDA _userDA;
-        private readonly IAuctionDA _auctionDA;        
+        private readonly IUserService _userService;
+        private readonly IAuctionService _auctionService;        
         private readonly IHubContext<AuctionHub> _hub;
         private readonly IConfiguration _config;
 
-        public AuctionsController(IUserContext userContext, IAuctionDA auctionDA, IUserDA userDA, IHubContext<AuctionHub> hub, IConfiguration config)
+        public AuctionsController(IUserContext userContext, IAuctionService auctionService, IUserService userService, IHubContext<AuctionHub> hub, IConfiguration config)
         {
             _userContext = userContext;
-            _auctionDA = auctionDA;
-            _userDA = userDA;
+            _auctionService = auctionService;
+            _userService = userService;
             _hub = hub;
             _config = config;
         }
@@ -41,7 +42,7 @@ namespace WishlistApi.Controllers
         [HttpGet("current")]
         public async Task<ActionResult<AuctionDTOs.Auction>> GetCurrentAuctionAsync()
         {
-            var auction = await _auctionDA.GetLatestAuctionAsync();
+            var auction = await _auctionService.GetLatestAuctionAsync();
             if(auction == null)
                 return NoContent();
 
@@ -65,7 +66,7 @@ namespace WishlistApi.Controllers
 
             try
             {
-                await _auctionDA.UpdateAuctionBidAsync(new Auction { 
+                await _auctionService.UpdateAuctionBidAsync(new Auction { 
                     ID = auction.ID, 
                     CurrentPrice = auction.CurrentPrice, 
                     RowVersion = auction.RowVersion,
@@ -87,11 +88,11 @@ namespace WishlistApi.Controllers
 
             try
             {
-                Auction auction = (await _auctionDA.GetLatestAuctionAsync())!;
+                Auction auction = (await _auctionService.GetLatestAuctionAsync())!;
                 var newPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
                 auction.CurrentPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
                 auction.UserID = user.ID;
-                await _auctionDA.UpdateAuctionBidAsync(auction);
+                await _auctionService.UpdateAuctionBidAsync(auction);
                 _ = _hub.Clients.All.SendAsync("AuctionUpdated");
                 return Ok();
             }
@@ -105,11 +106,11 @@ namespace WishlistApi.Controllers
         {
             const string username = "SimulateAuctionUser";
             string password = _config["SimUserPassword"]!;
-            var user = await _userDA.LoginUserAsync(username, password);
+            var user = await _userService.LoginUserAsync(username, password);
             if (user == null)
             {
-                await _userDA.AddUserAsync(username, password);
-                user = await _userDA.LoginUserAsync(username, password);
+                await _userService.AddUserAsync(username, password);
+                user = await _userService.LoginUserAsync(username, password);
             }
             return user!;
         }

@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
 using WishlistApi.Controllers;
-using Application.Wishlist;
+using Application;
 using FluentAssertions;
 
 namespace Tests.ApplicationTests

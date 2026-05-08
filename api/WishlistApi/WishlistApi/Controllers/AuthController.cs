@@ -1,4 +1,5 @@
-﻿using DataAccess.AppListings;
+﻿using Application;
+using DataAccess.AppListings;
 using DataAccess.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,23 +17,23 @@ namespace WishlistApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ILogger<AuthController> _logger;
-        private readonly IUserDA _userDA;
+        private readonly IUserService _userService;
         private readonly IConfiguration _config;
 
-        public AuthController(ILogger<AuthController> logger, IConfiguration config, IUserDA userDA)
+        public AuthController(ILogger<AuthController> logger, IConfiguration config, IUserService userService)
         {
             _logger = logger;
-            _userDA = userDA;
             _config = config;
+            _userService = userService;
         }
 
         [HttpPost("register")]
         public async Task<ActionResult> RegisterAsync(RegisterRequest request)
         {
-            if (!await _userDA.IsUsernameAvailableAsync(request.Username))
+            if (!await _userService.IsUsernameAvailableAsync(request.Username))
                 return BadRequest("Username already taken");
 
-            await _userDA.AddUserAsync(request.Username, request.Password);            
+            await _userService.AddUserAsync(request.Username, request.Password);            
             return Ok();
         }
 
@@ -40,7 +41,7 @@ namespace WishlistApi.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponse>> LoginAsync(LoginRequest request)
         {
-            var user = await _userDA.LoginUserAsync(request.Username, request.Password);
+            var user = await _userService.LoginUserAsync(request.Username, request.Password);
             if(user == null)
                 return Unauthorized();
 
@@ -65,7 +66,7 @@ namespace WishlistApi.Controllers
         [HttpGet("check")]
         public async Task<ActionResult<bool>> CheckUsernameAvailableAsync([FromQuery] string username)
         {
-            return Ok(await _userDA.IsUsernameAvailableAsync(username));
+            return Ok(await _userService.IsUsernameAvailableAsync(username));
         }
 
         [Authorize]

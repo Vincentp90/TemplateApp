@@ -1,4 +1,5 @@
-﻿using DataAccess.Users;
+﻿using Application;
+using DataAccess.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -15,11 +16,11 @@ namespace WishlistApi.Controllers
     [Route("[controller]")]
     public class UsersController : ControllerBase
     {
-        private readonly IUserDA _userDA;
+        private readonly IUserService _userService;
 
-        public UsersController(IUserDA userDA)
+        public UsersController(IUserService userService)
         {
-            _userDA = userDA;
+            _userService = userService;
         }
 
         [HttpGet("me")]
@@ -41,9 +42,9 @@ namespace WishlistApi.Controllers
 
         private async Task<ActionResult<UserDTOs.UserDetails>> GetUserDetailsDTO(string UserId)
         {
-            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(UserId));
+            int internalUserId = await _userService.GetInternalUserIdAsync(new Guid(UserId));
 
-            var userWithDetails = await _userDA.GetUserDetailsAsync(internalUserId);
+            var userWithDetails = await _userService.GetUserDetailsAsync(internalUserId);
             return Ok(new UserDTOs.UserDetails(
                 RowVersion: userWithDetails.RowVersion,
                 Email: userWithDetails.User.Username,
@@ -73,8 +74,8 @@ namespace WishlistApi.Controllers
 
         private async Task<ActionResult> UpdateUserDetails(UserDTOs.UserDetails userDetailsDTO, string userId)
         {
-            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
-            var userDetailsEntity = await _userDA.GetUserDetailsAsync(internalUserId);
+            int internalUserId = await _userService.GetInternalUserIdAsync(new Guid(userId));
+            var userDetailsEntity = await _userService.GetUserDetailsAsync(internalUserId);
             try
             {
                 userDetailsEntity.RowVersion = userDetailsDTO.RowVersion;
@@ -85,7 +86,7 @@ namespace WishlistApi.Controllers
                 userDetailsEntity.City = userDetailsDTO.City;
                 userDetailsEntity.Address = userDetailsDTO.Address;
 
-                await _userDA.UpdateUserDetailsAsync(userDetailsEntity);
+                await _userService.UpdateUserDetailsAsync(userDetailsEntity);
                 return Ok();
             }
             catch (DbUpdateConcurrencyException)
@@ -98,7 +99,7 @@ namespace WishlistApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult> GetAllUsersAsync(int page, int limit)
         {
-            var users = await _userDA.GetUsersAsync(page, limit);
+            var users = await _userService.GetUsersAsync(page, limit);
             var hasNextPage = users.Count > limit;
             var usersDTO = users.Take(limit).Select(u => new
             {

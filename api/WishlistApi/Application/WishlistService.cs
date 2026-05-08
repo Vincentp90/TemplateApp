@@ -1,14 +1,19 @@
 ﻿using Application.Domain;
 using DataAccess.Wishlist;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Wishlist
+namespace Application
 {
     public interface IWishlistService
     {
+        Task<List<WishlistItem>> GetWishlistItemsAsync(int userID);
+        Task AddWishlistItemAsync(WishlistItem item);
+        Task DeleteWishlistItemAsync(int userID, int appid);
         Task<WishlistStats> GetWishlistStatsAsync(int userID);
+        
     }
 
     public class WishlistService : IWishlistService
@@ -19,6 +24,21 @@ namespace Application.Wishlist
         public WishlistService(IWishlistItemDA wishlistItemDA)
         {
             _wishlistItemDA = wishlistItemDA;
+        }        
+
+        public async Task<List<WishlistItem>> GetWishlistItemsAsync(int userID)
+        {
+            return await _wishlistItemDA.GetWishlistItemsAsync(userID);
+        }
+
+        public async Task AddWishlistItemAsync(WishlistItem item)
+        {
+            await _wishlistItemDA.AddWishlistItemAsync(item);
+        }
+
+        public async Task DeleteWishlistItemAsync(int userID, int appid)
+        {
+            await _wishlistItemDA.DeleteWishlistItemAsync(userID, appid);
         }
 
         public async Task<WishlistStats> GetWishlistStatsAsync(int userID)

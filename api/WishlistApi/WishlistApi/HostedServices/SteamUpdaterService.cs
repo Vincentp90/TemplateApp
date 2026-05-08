@@ -37,7 +37,7 @@ namespace WishlistApi.HostedServices
         private async Task UpdateAppListingsIfEmptyAsync(CancellationToken stoppingToken)
         {
             using var scope = _serviceProvider.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<WishlistDbContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<WishlistDbContext>();// TODO only direct reference to DA layer left, nice way to fix?
             var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
             if (!await dbContext.AppListings.AnyAsync(stoppingToken))

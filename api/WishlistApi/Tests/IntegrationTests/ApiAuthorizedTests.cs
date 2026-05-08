@@ -161,8 +161,8 @@ namespace Tests.IntegrationTests
                 // Restart auction service so that it starts an auction with one of the apps
                 // TODO once auctionservice is refactored, directly call StartNextAuctionAsync
                 var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
-                var logger = sp.GetRequiredService<ILogger<AuctionService>>();
-                var service = new AuctionService(scopeFactory, logger);
+                var logger = sp.GetRequiredService<ILogger<AuctionBackgroundService>>();
+                var service = new AuctionBackgroundService(scopeFactory, logger);
                 await service.StartAsync(CancellationToken.None);
                 // Wait for auction service to initialize
                 await Task.Delay(200);
