@@ -1,4 +1,6 @@
 ﻿using DataAccess.Auctions;
+using DataAccess.Users;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,17 +13,11 @@ namespace Application
         Task AddAuctionAsync(Auction auction);
         Task UpdateAuctionBidAsync(Auction auction);
         Task CloseAuctionAndAddNewAsync(Auction oldAuction, Auction newAuction);
+        Task SimulateBid();
     }
 
-    public class AuctionService : IAuctionService
+    public class AuctionService(IAuctionDA _auctionDA, IUserService _userService, IConfiguration _config) : IAuctionService
     {
-        private readonly IAuctionDA _auctionDA;
-
-        public AuctionService(IAuctionDA auctionDA)
-        {
-            _auctionDA = auctionDA;
-        }
-
         public async Task AddAuctionAsync(Auction auction)
         {
             await _auctionDA.AddAuctionAsync(auction);
@@ -40,6 +36,29 @@ namespace Application
         public async Task UpdateAuctionBidAsync(Auction auction)
         {
             await _auctionDA.UpdateAuctionBidAsync(auction);
+        }
+
+        public async Task SimulateBid()
+        {
+            var user = await GetSimulationUser();
+            Auction auction = (await GetLatestAuctionAsync())!;
+            var newPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
+            auction.CurrentPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
+            auction.UserID = user.ID;
+            await UpdateAuctionBidAsync(auction);
+        }
+
+        private async Task<User> GetSimulationUser()
+        {
+            const string username = "SimulateAuctionUser";
+            string password = _config["SimUserPassword"]!;
+            var user = await _userService.LoginUserAsync(username, password);
+            if (user == null)
+            {
+                await _userService.AddUserAsync(username, password);
+                user = await _userService.LoginUserAsync(username, password);
+            }
+            return user!;
         }
     }
 }

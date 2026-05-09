@@ -1,12 +1,9 @@
 ﻿using Application;
 using DataAccess.Auctions;
-using DataAccess.Users;
-using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
 using System.Data;
 using System.Dynamic;
 using System.Security.Claims;
@@ -22,23 +19,8 @@ namespace WishlistApi.Controllers
     [ApiController]
     [Authorize]
     [Route("[controller]")]
-    public class AuctionsController : ControllerBase
+    public class AuctionsController(IUserContext _userContext, IAuctionService _auctionService, IHubContext<AuctionHub> _hub) : ControllerBase
     {
-        private readonly IUserContext _userContext;
-        private readonly IUserService _userService;
-        private readonly IAuctionService _auctionService;        
-        private readonly IHubContext<AuctionHub> _hub;
-        private readonly IConfiguration _config;
-
-        public AuctionsController(IUserContext userContext, IAuctionService auctionService, IUserService userService, IHubContext<AuctionHub> hub, IConfiguration config)
-        {
-            _userContext = userContext;
-            _auctionService = auctionService;
-            _userService = userService;
-            _hub = hub;
-            _config = config;
-        }
-
         [HttpGet("current")]
         public async Task<ActionResult<AuctionDTOs.Auction>> GetCurrentAuctionAsync()
         {
@@ -81,18 +63,16 @@ namespace WishlistApi.Controllers
             }
         }
 
+        /// <summary>
+        /// Simulate another user bidding, to more easily demonstrate optimistic concurrency
+        /// </summary>
+        /// <returns>Ok(200)</returns>
         [HttpGet("current/SimulateBid")]
         public async Task<ActionResult> PostSimulateBidAsync()
         {
-            var user = await GetSimulationUser();
-
             try
             {
-                Auction auction = (await _auctionService.GetLatestAuctionAsync())!;
-                var newPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
-                auction.CurrentPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
-                auction.UserID = user.ID;
-                await _auctionService.UpdateAuctionBidAsync(auction);
+                await _auctionService.SimulateBid();
                 _ = _hub.Clients.All.SendAsync("AuctionUpdated");
                 return Ok();
             }
@@ -100,19 +80,6 @@ namespace WishlistApi.Controllers
             {
                 return StatusCode(StatusCodes.Status409Conflict);
             }
-        }
-
-        private async Task<User> GetSimulationUser()
-        {
-            const string username = "SimulateAuctionUser";
-            string password = _config["SimUserPassword"]!;
-            var user = await _userService.LoginUserAsync(username, password);
-            if (user == null)
-            {
-                await _userService.AddUserAsync(username, password);
-                user = await _userService.LoginUserAsync(username, password);
-            }
-            return user!;
         }
     }
 }
