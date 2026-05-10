@@ -71,10 +71,13 @@ builder.Services.AddScoped<IUserDA, UserDA>();
 builder.Services.AddScoped<IAuctionDA, AuctionDA>();
 
 builder.Services.AddScoped<IAppListingService, AppListingService>();
-builder.Services.AddScoped<IWishlistService, WishlistService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IWishlistService, WishlistService>();
 builder.Services.AddScoped<IAuctionService, AuctionService>();
 
+
+builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, UserContext>();
 

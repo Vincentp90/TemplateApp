@@ -1,39 +1,25 @@
 ﻿using Application;
-using DataAccess.AppListings;
-using DataAccess.Users;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
+using WishlistApi.Helpers;
 using static WishlistApi.DTOs.AuthDTOs;
 
 namespace WishlistApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AuthController : ControllerBase
+    public class AuthController(IUserService userService, IAuthService authService, IJwtTokenGenerator jwtTokenGenerator) : ControllerBase
     {
-        private readonly ILogger<AuthController> _logger;
-        private readonly IUserService _userService;
-        private readonly IConfiguration _config;
-
-        public AuthController(ILogger<AuthController> logger, IConfiguration config, IUserService userService)
-        {
-            _logger = logger;
-            _config = config;
-            _userService = userService;
-        }
-
         [HttpPost("register")]
         public async Task<ActionResult> RegisterAsync(RegisterRequest request)
         {
-            if (!await _userService.IsUsernameAvailableAsync(request.Username))
+            if (!await userService.IsUsernameAvailableAsync(request.Username))
                 return BadRequest("Username already taken");
 
-            await _userService.AddUserAsync(request.Username, request.Password);            
+            await authService.AddUserAsync(request.Username, request.Password);            
             return Ok();
         }
 
@@ -41,18 +27,19 @@ namespace WishlistApi.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponse>> LoginAsync(LoginRequest request)
         {
-            var user = await _userService.LoginUserAsync(request.Username, request.Password);
-            if(user == null)
+            var user = await authService.LoginAsync(request.Username, request.Password);
+
+            if (user == null)
                 return Unauthorized();
 
-            var token = CreateToken(user);
-            Response.Cookies.Append("auth_token", token, new CookieOptions
+            Response.Cookies.Append("auth_token", jwtTokenGenerator.Generate(user), new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTimeOffset.UtcNow.AddHours(2)
             });
+
             return Ok();
         }
 
@@ -66,7 +53,7 @@ namespace WishlistApi.Controllers
         [HttpGet("check")]
         public async Task<ActionResult<bool>> CheckUsernameAvailableAsync([FromQuery] string username)
         {
-            return Ok(await _userService.IsUsernameAvailableAsync(username));
+            return Ok(await userService.IsUsernameAvailableAsync(username));
         }
 
         [Authorize]
@@ -77,28 +64,6 @@ namespace WishlistApi.Controllers
                 username = User.FindFirstValue(ClaimTypes.Name),
                 role = User.FindFirstValue(ClaimTypes.Role)
             });
-        }
-
-        private string CreateToken(User user)
-        {
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.UUID.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role)
-            };
-
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddHours(2),
-                signingCredentials: creds);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
