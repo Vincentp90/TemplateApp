@@ -19,7 +19,7 @@ namespace WishlistApi.Controllers
             if (!await userService.IsUsernameAvailableAsync(request.Username))
                 return BadRequest("Username already taken");
 
-            await authService.AddUserAsync(request.Username, request.Password);            
+            await authService.AddUserAsync(request.Username, request.Password);
             return Ok();
         }
 

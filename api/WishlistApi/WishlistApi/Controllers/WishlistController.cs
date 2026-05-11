@@ -36,20 +36,16 @@ namespace WishlistApi.Controllers
                                 .ToHashSet();
             bool includeAll = fieldList.Count == 0;
             
-            var result = (await _wishlistService.GetWishlistItemsAsync(internalUserId)).Select(x => 
-            {
-                //TODO better way to do this? DTO and leave fields empty when not included?
-                var obj = new ExpandoObject();
-                var item = obj as IDictionary<string, object>;
-                if (includeAll || fieldList.Contains("appid"))
-                    item["appid"] = x.appid;
-                if(includeAll || fieldList.Contains("dateadded"))
-                    item["dateadded"] = x.DateAdded;
-                if (x.AppListing != null && (includeAll || fieldList.Contains("name")))
-                    item["name"] = x.AppListing.name;
-                return obj;
-            });
-            return Ok(new WishlistDTOs.Wishlist( Items: result ));
+            bool Has(string field) => includeAll || fieldList.Contains(field);
+
+            var result = (await _wishlistService.GetWishlistItemsAsync(internalUserId))
+                .Select(x => new WishlistDTOs.WishlistItemDto(
+                    AppId: Has("appid") ? x.appid : null,
+                    DateAdded: Has("dateadded") ? x.DateAdded : null,
+                    Name: Has("name") ? x.AppListing?.name : null
+                ));
+
+            return Ok(new WishlistDTOs.Wishlist(result));
         }
 
         [HttpGet("stats")]

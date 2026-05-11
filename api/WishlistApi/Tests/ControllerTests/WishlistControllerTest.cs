@@ -80,15 +80,10 @@ namespace Tests.ControllerTests
             wl.Should().NotBeNull();
             wl.Items.Count().Should().Be(1);
 
-            var item = wl.Items.First() as IDictionary<string, object>;
-            item.Should().Contain("appid", 1);
-            item["appid"].Should().Be(1);
-
-            item.Should().ContainKey("dateadded");
-
-            item.Should().Contain("name", APPNAME);
-
-            item.Should().NotContainKey("UserID");// Don't return the internal user id
+            var item = wl.Items.First();
+            item.AppId.Should().Be(1);
+            item.DateAdded.Should().NotBeNull();
+            item.Name.Should().Be(APPNAME);
 
 
             // Act
@@ -100,12 +95,12 @@ namespace Tests.ControllerTests
             okResult.Should().NotBeNull();
             wl = okResult!.Value as WishlistDTOs.Wishlist;
             wl.Should().NotBeNull();
-            item = wl.Items.First() as IDictionary<string, object>;
+            item = wl.Items.First();
 
             // Verify that only the specified fields are returned
-            item.Should().ContainKey("appid");
-            item.Should().ContainKey("name");
-            item.Should().NotContainKey("dateadded");
+            item.AppId.Should().NotBeNull();            
+            item.Name.Should().NotBeNull();
+            item.DateAdded.Should().BeNull();
         }
     }
 }
