@@ -10,6 +10,12 @@ namespace Application
     {
         Task<int> GetInternalUserIdAsync(Guid guid);
         //Task<User> GetUserAsync(int id);
+        /// <summary>
+        /// Get a page of users
+        /// </summary>
+        /// <param name="page">Which page</param>
+        /// <param name="limit">How much users in one page</param>
+        /// <returns>Limit + 1 users</returns>
         Task<List<User>> GetUsersAsync(int page, int limit);
         Task<bool> IsUsernameAvailableAsync(string username);
         Task<UserDetails> GetUserDetailsAsync(int userId);

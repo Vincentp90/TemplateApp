@@ -37,7 +37,6 @@ export default function StatsCard() {
     queryKey: ['wishlistStats'],
     queryFn: async () => {
       const res = await api.get("/wishlist/stats");
-      console.log(res.data);
       return res.data;
     },
   });
