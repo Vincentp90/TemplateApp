@@ -36,35 +36,17 @@ namespace Tests.DataAccessTests
 
             await da.AddAuctionAsync(existing);
 
-            var bid = new Auction
-            {
-                ID = existing.ID,
-                CurrentPrice = 200,
-                UserID = 3,
-                RowVersion = existing.RowVersion
-            };
+            var bid = await da.GetLatestAuctionAsync();
+            bid.Should().NotBeNull();
+            bid.CurrentPrice = 200;
+            bid.UserID = 3;
 
-            await da.UpdateAuctionBidAsync(bid);
+            await da.SaveChangesAsync();
 
             var updated = await ctx.Auctions.FindAsync(1);
             updated.Should().NotBeNull();
             updated.CurrentPrice.Should().Be(200);
             updated.UserID.Should().Be(3);
-        }
-
-        [Fact]
-        public async Task UpdateAuctionBidAsync_Throws_When_NoOpenAuction()
-        {
-            using var ctx = CreateContext();
-            var da = new AuctionDA(ctx);
-
-            var bid = new Auction { ID = 1, CurrentPrice = 200 };
-
-            Func<Task> act = () => da.UpdateAuctionBidAsync(bid);
-
-            await act.Should()
-                .ThrowAsync<DbUpdateConcurrencyException>()
-                .WithMessage("No open auction found.");
         }
 
         private WishlistDbContext CreateContext()

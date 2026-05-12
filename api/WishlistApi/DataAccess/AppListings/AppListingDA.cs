@@ -10,7 +10,6 @@ namespace DataAccess.AppListings
     public interface IAppListingDA
     {
         Task<List<AppListing>> SearchAppListingsAsync(string term);
-        Task<List<AppListing>> GetAppListingsAsync();
         Task<AppListing> GetRandomAppListingAsync();
     }
 
@@ -25,8 +24,6 @@ namespace DataAccess.AppListings
 
         public async Task<List<AppListing>> SearchAppListingsAsync(string term)
         {
-            if(string.IsNullOrEmpty(term) || term.Length < 3)
-                return new List<AppListing>();
             return await _context.AppListings
                 .FromSqlRaw("SELECT * FROM app_listings WHERE name % {0} ORDER BY similarity(name, {0}) DESC", term)
                 .ToListAsync();
@@ -41,13 +38,5 @@ namespace DataAccess.AppListings
                 .Skip(index)
                 .FirstAsync();
         }
-
-        public async Task<List<AppListing>> GetAppListingsAsync()
-        {
-            return await _context.AppListings.Take(100).ToListAsync();
-        }
-
-
     }
-
 }

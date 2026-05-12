@@ -1,4 +1,4 @@
-﻿using Application.Domain;
+﻿using Domain;
 using DataAccess.Wishlist;
 using Microsoft.EntityFrameworkCore;
 using System;

@@ -1,4 +1,5 @@
-﻿using DataAccess.Wishlist;
+﻿using DataAccess.Helpers;
+using DataAccess.Wishlist;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -13,11 +14,13 @@ namespace DataAccess.Auctions
     {
         Task<Auction?> GetLatestAuctionAsync();
         Task AddAuctionAsync(Auction auction);
-        Task UpdateAuctionBidAsync(Auction auction);
         Task CloseAuctionAndAddNewAsync(Auction oldAuction, Auction newAuction);
+        Task<Auction?> GetOpenAuction(int id);
+        void SetOriginalRowVersion(Auction auction, uint rowVersion);
+
     }
 
-    public class AuctionDA : IAuctionDA
+    public class AuctionDA : IAuctionDA, IUnitOfWork
     {
         private readonly WishlistDbContext _context;
 
@@ -37,28 +40,21 @@ namespace DataAccess.Auctions
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAuctionBidAsync(Auction auctionBid)
+        public async Task<Auction?> GetOpenAuction(int id)
         {
-            var auction = await GetLatestAuctionAsync();
-            if(auction == null)
-                throw new DbUpdateConcurrencyException("No open auction found.");
-            if(auction.ID != auctionBid.ID)
-                throw new DbUpdateConcurrencyException("Auction is no longer open.");
+            var latestAuction = await GetLatestAuctionAsync();
+            return latestAuction?.ID == id ? latestAuction : null;
+        }
 
-            if(auction.StartingPrice >= auctionBid.CurrentPrice)
-                throw new DbUpdateConcurrencyException("Bid is not higher than starting price.");
-            // If detached (different object), check new price is higher
-            if (auctionBid != auction && auction.CurrentPrice >= auctionBid.CurrentPrice)
-                throw new DbUpdateConcurrencyException("Bid is not higher than current price.");
-            
+        public void SetOriginalRowVersion(Auction auction, uint rowVersion)
+        {
+            _context.Entry(auction)
+                .Property(x => x.RowVersion)
+                .OriginalValue = rowVersion;
+        }
 
-            auction.CurrentPrice = auctionBid.CurrentPrice;
-            auction.UserID = auctionBid.UserID;
-
-            // Setting RowVersion to make EF check for optimistic concurrency
-            _context.Entry(auction).Property(a => a.RowVersion).OriginalValue = auctionBid.RowVersion;
-
-            _context.Auctions.Update(auction);
+        public async Task SaveChangesAsync()
+        {
             await _context.SaveChangesAsync();
         }
 

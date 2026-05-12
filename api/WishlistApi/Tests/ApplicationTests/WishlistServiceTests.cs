@@ -50,10 +50,10 @@ namespace Tests.ApplicationTests
                     },
                 });
 
-            var WishlistService = new WishlistService(wlDAMock.Object);
+            var wishlistService = new WishlistService(wlDAMock.Object);
 
             // Act
-            var result = await WishlistService.GetWishlistStatsAsync(USERID);
+            var result = await wishlistService.GetWishlistStatsAsync(USERID);
 
             // Assert
             result.Should().NotBeNull();

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Domain
+namespace Domain
 {
     public class WishlistStats
     {

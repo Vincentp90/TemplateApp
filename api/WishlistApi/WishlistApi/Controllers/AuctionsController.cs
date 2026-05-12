@@ -1,5 +1,6 @@
 ﻿using Application;
 using DataAccess.Auctions;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -48,7 +49,7 @@ namespace WishlistApi.Controllers
 
             try
             {
-                await _auctionService.UpdateAuctionBidAsync(new Auction { 
+                await _auctionService.PlaceBidAsync(new Auction { 
                     ID = auction.ID, 
                     CurrentPrice = auction.CurrentPrice, 
                     RowVersion = auction.RowVersion,
@@ -57,7 +58,12 @@ namespace WishlistApi.Controllers
                 _ = _hub.Clients.All.SendAsync("AuctionUpdated");
                 return Ok();
             }
-            catch(DbUpdateConcurrencyException)
+            catch (DomainException)
+            {
+                // We could later do something more intelligent with this instead of handling it the same as a concurrency issue
+                return StatusCode(StatusCodes.Status409Conflict);
+            }
+            catch (DbUpdateConcurrencyException)
             {
                 return StatusCode(StatusCodes.Status409Conflict);
             }
@@ -75,6 +81,10 @@ namespace WishlistApi.Controllers
                 await _auctionService.SimulateBid();
                 _ = _hub.Clients.All.SendAsync("AuctionUpdated");
                 return Ok();
+            }
+            catch (DomainException)
+            {
+                return StatusCode(StatusCodes.Status409Conflict);
             }
             catch (DbUpdateConcurrencyException)
             {
