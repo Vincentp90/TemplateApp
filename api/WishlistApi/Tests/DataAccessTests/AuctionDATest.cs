@@ -1,6 +1,7 @@
 ﻿using DataAccess;
 using DataAccess.AppListings;
 using DataAccess.Auctions;
+using Domain.Helpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -18,6 +19,7 @@ namespace Tests.DataAccessTests
         public async Task UpdateAuctionBidAsync_Updates_WhenValid()
         {
             using var ctx = CreateContext();
+            var uow = ctx as IUnitOfWork;
             var da = new AuctionDA(ctx);
 
             ctx.AppListings.Add(new AppListing { 
@@ -41,7 +43,7 @@ namespace Tests.DataAccessTests
             bid.CurrentPrice = 200;
             bid.UserID = 3;
 
-            await da.SaveChangesAsync();
+            await uow.SaveChangesAsync();
 
             var updated = await ctx.Auctions.FindAsync(1);
             updated.Should().NotBeNull();

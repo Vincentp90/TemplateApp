@@ -4,6 +4,7 @@ using DataAccess.AppListings;
 using DataAccess.Auctions;
 using DataAccess.Users;
 using DataAccess.Wishlist;
+using Domain.Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -62,7 +63,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddDbContext<WishlistDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseSnakeCaseNamingConvention());
-
+builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<WishlistDbContext>());
 builder.Services.AddHostedService<SteamUpdaterService>();
 
 builder.Services.AddScoped<IAppListingDA, AppListingDA>();

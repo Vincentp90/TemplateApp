@@ -1,7 +1,7 @@
 ﻿using DataAccess.Auctions;
-using DataAccess.Helpers;
 using DataAccess.Users;
 using Domain.Exceptions;
+using Domain.Helpers;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ namespace Application
         Task SimulateBid();
     }
 
-    public class AuctionService(IAuctionDA auctionDA, IAuthService authService, IConfiguration config) : IAuctionService
+    public class AuctionService(IAuctionDA auctionDA, IUnitOfWork unitOfWork,IAuthService authService, IConfiguration config) : IAuctionService
     {
         public async Task AddAuctionAsync(Auction auction)
         {
@@ -57,8 +57,7 @@ namespace Application
 
             auctionDA.SetOriginalRowVersion(auctionEF, auctionCommand.RowVersion);
 
-            await ((IUnitOfWork)auctionDA).SaveChangesAsync();// TODO messy solution until we have proper UnitOfWork
-            //await _unitOfWork.SaveChangesAsync(); TODO
+            await unitOfWork.SaveChangesAsync();
         }
 
         public async Task SimulateBid()

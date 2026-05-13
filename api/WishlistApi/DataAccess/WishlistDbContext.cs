@@ -6,10 +6,11 @@ using DataAccess.AppListings;
 using DataAccess.Wishlist;
 using DataAccess.Users;
 using DataAccess.Auctions;
+using Domain.Helpers;
 
 namespace DataAccess
 {
-    public class WishlistDbContext : DbContext
+    public class WishlistDbContext : DbContext, IUnitOfWork
     {
         public DbSet<AppListing> AppListings { get; set; }
         public DbSet<WishlistItem> WishlistItems { get; set; }

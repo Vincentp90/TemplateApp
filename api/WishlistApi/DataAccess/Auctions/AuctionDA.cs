@@ -1,5 +1,4 @@
-﻿using DataAccess.Helpers;
-using DataAccess.Wishlist;
+﻿using DataAccess.Wishlist;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -20,24 +19,17 @@ namespace DataAccess.Auctions
 
     }
 
-    public class AuctionDA : IAuctionDA, IUnitOfWork
+    public class AuctionDA(WishlistDbContext context) : IAuctionDA
     {
-        private readonly WishlistDbContext _context;
-
-        public AuctionDA(WishlistDbContext dbContext)
-        {
-            _context = dbContext;
-        }
-
         public async Task<Auction?> GetLatestAuctionAsync()
         {
-            return await _context.Auctions.Include(a => a.User).Include(a => a.AppListing).OrderByDescending(x => x.ID).FirstOrDefaultAsync();
+            return await context.Auctions.Include(a => a.User).Include(a => a.AppListing).OrderByDescending(x => x.ID).FirstOrDefaultAsync();
         }
 
         public async Task AddAuctionAsync(Auction auction)
         {
-            _context.Auctions.Add(auction);
-            await _context.SaveChangesAsync();
+            context.Auctions.Add(auction);
+            await context.SaveChangesAsync();
         }
 
         public async Task<Auction?> GetOpenAuction(int id)
@@ -48,22 +40,17 @@ namespace DataAccess.Auctions
 
         public void SetOriginalRowVersion(Auction auction, uint rowVersion)
         {
-            _context.Entry(auction)
+            context.Entry(auction)
                 .Property(x => x.RowVersion)
                 .OriginalValue = rowVersion;
-        }
-
-        public async Task SaveChangesAsync()
-        {
-            await _context.SaveChangesAsync();
         }
 
         public async Task CloseAuctionAndAddNewAsync(Auction oldAuction, Auction newAuction)
         {
             oldAuction.Status = AuctionStatus.Closed;
-            _context.Auctions.Update(oldAuction);            
-            _context.Auctions.Add(newAuction);
-            await _context.SaveChangesAsync();
+            context.Auctions.Update(oldAuction);            
+            context.Auctions.Add(newAuction);
+            await context.SaveChangesAsync();
         }
 
         // Get user auctions (so user can see which auctions he won)

@@ -1,9 +1,9 @@
 ﻿using Application;
 using DataAccess.AppListings;
 using DataAccess.Auctions;
-using DataAccess.Helpers;
 using DataAccess.Wishlist;
 using Domain.Exceptions;
+using Domain.Helpers;
 using FluentAssertions;
 using Moq;
 using System;
@@ -13,16 +13,14 @@ using System.Text;
 
 namespace Tests.ApplicationTests
 {
-    public interface IAuctionDAForTests : IAuctionDA, IUnitOfWork
-    { }
-
     public class AuctionTests
     {        
         [Fact]
         public async Task PlaceBidTest()
         {
             // Arrange
-            var auctionDAMock = new Mock<IAuctionDAForTests>(MockBehavior.Strict);
+            var auctionDAMock = new Mock<IAuctionDA>(MockBehavior.Strict);
+            var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             var currentAuction = new Auction()
             {
                 ID = 1,
@@ -35,7 +33,7 @@ namespace Tests.ApplicationTests
             auctionDAMock.Setup(x => x.GetLatestAuctionAsync()).ReturnsAsync(currentAuction);
             auctionDAMock.Setup(x => x.GetOpenAuction(1)).ReturnsAsync(currentAuction);
             auctionDAMock.Setup(x => x.SetOriginalRowVersion(It.IsAny<Auction>(), 1));
-            auctionDAMock.Setup(x => x.SaveChangesAsync()).Returns(Task.CompletedTask);
+            uowMock.Setup(x => x.SaveChangesAsync(default)).ReturnsAsync(1);
 
             var auctionCommand = new Auction()
             {
@@ -46,7 +44,7 @@ namespace Tests.ApplicationTests
                 RowVersion = 1
             };
 
-            var auctionService = new AuctionService(auctionDAMock.Object, null, null);
+            var auctionService = new AuctionService(auctionDAMock.Object, uowMock.Object, null, null);
 
             // Act
             await auctionService.PlaceBidAsync(auctionCommand);
@@ -56,14 +54,15 @@ namespace Tests.ApplicationTests
             currentAuction.UserID.Should().Be(2);
             auctionDAMock.Verify(x => x.GetOpenAuction(1), Times.Once);
             auctionDAMock.Verify(x => x.SetOriginalRowVersion(It.IsAny<Auction>(), 1), Times.Once);
-            auctionDAMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+            uowMock.Verify(x => x.SaveChangesAsync(), Times.Once);
         }
 
         [Fact]
         public async Task PlaceBidOnOldAuction_ReturnsNotFoundException_Test()
         {
             // Arrange
-            var auctionDAMock = new Mock<IAuctionDAForTests>(MockBehavior.Strict);
+            var auctionDAMock = new Mock<IAuctionDA>(MockBehavior.Strict);
+            var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             var currentAuction = new Auction()
             {
                 ID = 2,
@@ -77,7 +76,7 @@ namespace Tests.ApplicationTests
             auctionDAMock.Setup(x => x.GetOpenAuction(2)).ReturnsAsync(currentAuction);
             auctionDAMock.Setup(x => x.GetOpenAuction(1)).ReturnsAsync((Auction?)null);
             auctionDAMock.Setup(x => x.SetOriginalRowVersion(It.IsAny<Auction>(), 1));
-            auctionDAMock.Setup(x => x.SaveChangesAsync()).Returns(Task.CompletedTask);
+            uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
             var auctionCommand = new Auction()
             {
@@ -88,7 +87,7 @@ namespace Tests.ApplicationTests
                 RowVersion = 1
             };
 
-            var auctionService = new AuctionService(auctionDAMock.Object, null, null);
+            var auctionService = new AuctionService(auctionDAMock.Object, uowMock.Object, null, null);
 
             // Act & assert
             Func<Task> act = () => auctionService.PlaceBidAsync(auctionCommand);
@@ -97,14 +96,15 @@ namespace Tests.ApplicationTests
             // Assert
             auctionDAMock.Verify(x => x.GetOpenAuction(1), Times.Once);
             auctionDAMock.Verify(x => x.SetOriginalRowVersion(It.IsAny<Auction>(), 1), Times.Never);
-            auctionDAMock.Verify(x => x.SaveChangesAsync(), Times.Never);
+            uowMock.Verify(x => x.SaveChangesAsync(), Times.Never);
         }
 
         [Fact]
         public async Task PlaceLowerBid_ReturnsDomainException_Test()
         {
             // Arrange
-            var auctionDAMock = new Mock<IAuctionDAForTests>(MockBehavior.Strict);
+            var auctionDAMock = new Mock<IAuctionDA>(MockBehavior.Strict);
+            var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             var currentAuction = new Auction()
             {
                 ID = 2,
@@ -118,7 +118,7 @@ namespace Tests.ApplicationTests
             auctionDAMock.Setup(x => x.GetLatestAuctionAsync()).ReturnsAsync(currentAuction);
             auctionDAMock.Setup(x => x.GetOpenAuction(1)).ReturnsAsync(currentAuction);
             auctionDAMock.Setup(x => x.SetOriginalRowVersion(It.IsAny<Auction>(), 1));
-            auctionDAMock.Setup(x => x.SaveChangesAsync()).Returns(Task.CompletedTask);
+            uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
             var auctionCommand = new Auction()
             {
@@ -129,7 +129,7 @@ namespace Tests.ApplicationTests
                 RowVersion = 1
             };
 
-            var auctionService = new AuctionService(auctionDAMock.Object, null, null);
+            var auctionService = new AuctionService(auctionDAMock.Object, uowMock.Object, null, null);
 
             // Act & assert
             Func<Task> act = () => auctionService.PlaceBidAsync(auctionCommand);
@@ -138,7 +138,7 @@ namespace Tests.ApplicationTests
             // Assert
             auctionDAMock.Verify(x => x.GetOpenAuction(1), Times.Once);
             auctionDAMock.Verify(x => x.SetOriginalRowVersion(It.IsAny<Auction>(), 1), Times.Never);
-            auctionDAMock.Verify(x => x.SaveChangesAsync(), Times.Never);
+            uowMock.Verify(x => x.SaveChangesAsync(), Times.Never);
         }
     }
 }
