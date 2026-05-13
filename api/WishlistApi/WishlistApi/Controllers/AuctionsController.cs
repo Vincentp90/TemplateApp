@@ -31,10 +31,10 @@ namespace WishlistApi.Controllers
                 return NoContent();
 
             return Ok(new AuctionDTOs.Auction(
-                ID: auction.ID,
+                ID: auction.Id,
                 StartDate: auction.DateAdded,
                 EndDate: auction.DateAdded + Auction.Duration,
-                UserHasBid: (auction.User?.UUID.ToString() == User.FindFirstValue(ClaimTypes.NameIdentifier)),
+                UserHasBid: (auction.UserUUID?.ToString() == User.FindFirstValue(ClaimTypes.NameIdentifier)),
                 StartingPrice: auction.StartingPrice,
                 CurrentPrice: auction.CurrentPrice,
                 AppID: auction.appid,

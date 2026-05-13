@@ -179,7 +179,7 @@ namespace Tests.IntegrationTests
 
             // Act
             var updatedAuction = auction with { CurrentPrice = 15.0m };
-            await client.PostAsJsonAsync($"/auctions/current", updatedAuction);
+            response = await client.PostAsJsonAsync($"/auctions/current", updatedAuction);
 
             // Assert
             response.EnsureSuccessStatusCode();

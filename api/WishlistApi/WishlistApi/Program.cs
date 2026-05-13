@@ -1,10 +1,11 @@
 using Application;
 using DataAccess;
 using DataAccess.AppListings;
-using DataAccess.Auctions;
+using DataAccess.Repository;
 using DataAccess.Users;
 using DataAccess.Wishlist;
 using Domain.Helpers;
+using Domain.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -69,7 +70,7 @@ builder.Services.AddHostedService<SteamUpdaterService>();
 builder.Services.AddScoped<IAppListingDA, AppListingDA>();
 builder.Services.AddScoped<IWishlistItemDA, WishlistItemDA>();
 builder.Services.AddScoped<IUserDA, UserDA>();
-builder.Services.AddScoped<IAuctionDA, AuctionDA>();
+builder.Services.AddScoped<IAuctionRepository, AuctionRepository>();
 
 builder.Services.AddScoped<IAppListingService, AppListingService>();
 builder.Services.AddScoped<IUserService, UserService>();

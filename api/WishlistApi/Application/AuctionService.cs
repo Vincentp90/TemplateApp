@@ -1,8 +1,9 @@
 ﻿using Application.Commands;
-using DataAccess.Auctions;
 using DataAccess.Users;
+using Domain;
 using Domain.Exceptions;
 using Domain.Helpers;
+using Domain.Repositories;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -14,50 +15,53 @@ namespace Application
     public interface IAuctionService
     {
         Task<Auction?> GetLatestAuctionAsync();
-        Task AddAuctionAsync(Auction auction);
         Task PlaceBidAsync(PlaceBidCommand command);
-        Task CloseAuctionAndAddNewAsync(Auction oldAuction, Auction newAuction);
+        Task StartNextAuctionAsync();
         Task SimulateBid();
     }
 
-    public class AuctionService(IAuctionDA auctionDA, IUnitOfWork unitOfWork,IAuthService authService, IConfiguration config) : IAuctionService
+    public class AuctionService(IAuctionRepository repository, IUnitOfWork unitOfWork, IAuthService authService, IAppListingService appListingService, IConfiguration config) : IAuctionService
     {
-        public async Task AddAuctionAsync(Auction auction)
+        public async Task StartNextAuctionAsync()
         {
-            await auctionDA.AddAuctionAsync(auction);
+            var app = await appListingService.GetRandomAppListingAsync();
+
+            var newAuction = new Domain.Auction()
+            {
+                DateAdded = DateTimeOffset.UtcNow,
+                Status = AuctionStatus.Open,
+                RowVersion = 0,
+                //AppListing = app,
+                appid = app.appid,
+                StartingPrice = 1.0m,
+            };
+
+            var latestAuction = await GetLatestAuctionAsync();
+            if (latestAuction != null)
+            {
+                await repository.CloseAuctionAndAddNewAsync(newAuction);
+            }
+            else
+            {
+                await repository.AddAuctionAsync(newAuction);
+            }
         }
 
-        public async Task CloseAuctionAndAddNewAsync(Auction oldAuction, Auction newAuction)
+        public async Task<Domain.Auction?> GetLatestAuctionAsync()
         {
-            await auctionDA.CloseAuctionAndAddNewAsync(oldAuction, newAuction);
-        }
-
-        public async Task<Auction?> GetLatestAuctionAsync()
-        {
-            return await auctionDA.GetLatestAuctionAsync();
+            return await repository.GetLatestAuctionAsync();
         }
 
         public async Task PlaceBidAsync(PlaceBidCommand command)
         {
-            var auctionEF = await auctionDA.GetOpenAuction(command.AuctionId);
+            var auction = await repository.GetOpenAuction(command.AuctionId);
 
-            if (auctionEF == null)
+            if (auction == null)
                 throw new NotFoundException("Auction not found.");
 
-            // TODO implement repository so we don't need this mapping here
-            var auctionDomain = new Domain.Auction
-            {
-                CurrentPrice = auctionEF.CurrentPrice,
-                StartingPrice = auctionEF.StartingPrice,
-                UserId = auctionEF.UserID,
-            };
+            auction.PlaceBid(command.UserId, command.Amount);
 
-            auctionDomain.PlaceBid(command.UserId, command.Amount);
-
-            auctionEF.CurrentPrice = auctionDomain.CurrentPrice;
-            auctionEF.UserID = auctionDomain.UserId;
-
-            auctionDA.SetOriginalRowVersion(auctionEF, command.RowVersion);
+            repository.Update(auction, command.RowVersion);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -67,7 +71,7 @@ namespace Application
             var user = await GetSimulationUser();
             Auction auction = (await GetLatestAuctionAsync())!;
             var newPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
-            await PlaceBidAsync(new PlaceBidCommand(AuctionId: auction.ID, Amount: newPrice, UserId: user.ID, RowVersion: auction.RowVersion ));
+            await PlaceBidAsync(new PlaceBidCommand(AuctionId: auction.Id, Amount: newPrice, UserId: user.ID, RowVersion: auction.RowVersion ));
         }
 
         private async Task<User> GetSimulationUser()

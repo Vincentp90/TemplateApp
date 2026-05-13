@@ -22,33 +22,11 @@ namespace WishlistApi.HostedServices
             {
                 try
                 {
-                    // TODO move to Application layer AuctionService as StartNextAuctionAsync method
                     using var scope = _scopeFactory.CreateScope();
                     var auctionService = scope.ServiceProvider.GetRequiredService<IAuctionService>();
                     var appListingService = scope.ServiceProvider.GetRequiredService<IAppListingService>();
 
-                    var app = await appListingService.GetRandomAppListingAsync();
-
-                    var newAuction = new Auction()
-                    {
-                        DateAdded = DateTimeOffset.UtcNow,
-                        Status = AuctionStatus.Open,
-                        AppListing = app,
-                        appid = app.appid,
-                        StartingPrice = 1.0m,
-                    };
-
-                    var latestAuction = await auctionService.GetLatestAuctionAsync();
-                    if (latestAuction != null)
-                    {
-                        await auctionService.CloseAuctionAndAddNewAsync(latestAuction, newAuction);
-                        _logger.LogInformation("Closed auction ID={ID} appName={AppName}. New auction ID={ID} appName={NewAppName}", latestAuction.ID, latestAuction.AppListing.name, newAuction.ID, app.name);
-                    }
-                    else
-                    {
-                        await auctionService.AddAuctionAsync(newAuction);
-                        _logger.LogInformation("New auction ID={ID} appName={AppName}", newAuction.ID, app.name);
-                    }
+                    await auctionService.StartNextAuctionAsync();
                 }
                 catch (Exception ex)
                 {

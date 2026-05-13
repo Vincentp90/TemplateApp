@@ -1,6 +1,7 @@
 ﻿using DataAccess;
 using DataAccess.AppListings;
 using DataAccess.Auctions;
+using DataAccess.Repository;
 using Domain.Helpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -13,14 +14,14 @@ using WishlistApi.HostedServices;
 
 namespace Tests.DataAccessTests
 {
-    public class AuctionDATest
+    public class AuctionRepoTest
     {
         [Fact]
         public async Task UpdateAuctionBidAsync_Updates_WhenValid()
         {
             using var ctx = CreateContext();
             var uow = ctx as IUnitOfWork;
-            var da = new AuctionDA(ctx);
+            var repo = new AuctionRepository(ctx);
 
             ctx.AppListings.Add(new AppListing { 
                 appid = 4,
@@ -28,7 +29,7 @@ namespace Tests.DataAccessTests
             });
             ctx.SaveChanges();
 
-            var existing = new Auction
+            var existing = new Domain.Auction
             {
                 StartingPrice = 100,
                 CurrentPrice = 150,
@@ -36,13 +37,13 @@ namespace Tests.DataAccessTests
                 appid = 4
             };
 
-            await da.AddAuctionAsync(existing);
+            await repo.AddAuctionAsync(existing);
 
-            var bid = await da.GetLatestAuctionAsync();
+            var bid = await repo.GetLatestAuctionAsync();
             bid.Should().NotBeNull();
             bid.CurrentPrice = 200;
-            bid.UserID = 3;
-
+            bid.UserId = 3;
+            repo.Update(bid, bid.RowVersion);
             await uow.SaveChangesAsync();
 
             var updated = await ctx.Auctions.FindAsync(1);
