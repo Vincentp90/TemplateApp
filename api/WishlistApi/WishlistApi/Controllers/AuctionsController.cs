@@ -1,4 +1,5 @@
 ﻿using Application;
+using Application.Commands;
 using DataAccess.Auctions;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
@@ -47,14 +48,17 @@ namespace WishlistApi.Controllers
         {
             int internalUserId = await _userContext.GetIdAsync();
 
+            if(auction.CurrentPrice == null)
+                return BadRequest("CurrentPrice is required");
+
             try
             {
-                await _auctionService.PlaceBidAsync(new Auction { 
-                    ID = auction.ID, 
-                    CurrentPrice = auction.CurrentPrice, 
-                    RowVersion = auction.RowVersion,
-                    UserID = internalUserId
-                });
+                await _auctionService.PlaceBidAsync(new PlaceBidCommand(
+                    AuctionId: auction.ID, 
+                    Amount: auction.CurrentPrice.Value, 
+                    RowVersion: auction.RowVersion,
+                    UserId: internalUserId
+                ));
                 _ = _hub.Clients.All.SendAsync("AuctionUpdated");
                 return Ok();
             }

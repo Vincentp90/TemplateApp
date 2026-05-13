@@ -1,4 +1,5 @@
-﻿using DataAccess.Auctions;
+﻿using Application.Commands;
+using DataAccess.Auctions;
 using DataAccess.Users;
 using Domain.Exceptions;
 using Domain.Helpers;
@@ -14,7 +15,7 @@ namespace Application
     {
         Task<Auction?> GetLatestAuctionAsync();
         Task AddAuctionAsync(Auction auction);
-        Task PlaceBidAsync(Auction auction);
+        Task PlaceBidAsync(PlaceBidCommand command);
         Task CloseAuctionAndAddNewAsync(Auction oldAuction, Auction newAuction);
         Task SimulateBid();
     }
@@ -36,13 +37,14 @@ namespace Application
             return await auctionDA.GetLatestAuctionAsync();
         }
 
-        public async Task PlaceBidAsync(Auction auctionCommand)// TODO PlaceBidCommand command
+        public async Task PlaceBidAsync(PlaceBidCommand command)
         {
-            var auctionEF = await auctionDA.GetOpenAuction(auctionCommand.ID);
+            var auctionEF = await auctionDA.GetOpenAuction(command.AuctionId);
 
             if (auctionEF == null)
                 throw new NotFoundException("Auction not found.");
 
+            // TODO implement repository so we don't need this mapping here
             var auctionDomain = new Domain.Auction
             {
                 CurrentPrice = auctionEF.CurrentPrice,
@@ -50,12 +52,12 @@ namespace Application
                 UserId = auctionEF.UserID,
             };
 
-            auctionDomain.PlaceBid(auctionCommand.UserID.Value, auctionCommand.CurrentPrice.Value);
+            auctionDomain.PlaceBid(command.UserId, command.Amount);
 
             auctionEF.CurrentPrice = auctionDomain.CurrentPrice;
             auctionEF.UserID = auctionDomain.UserId;
 
-            auctionDA.SetOriginalRowVersion(auctionEF, auctionCommand.RowVersion);
+            auctionDA.SetOriginalRowVersion(auctionEF, command.RowVersion);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -65,7 +67,7 @@ namespace Application
             var user = await GetSimulationUser();
             Auction auction = (await GetLatestAuctionAsync())!;
             var newPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
-            await PlaceBidAsync(new Auction { ID = auction.ID, CurrentPrice = newPrice, UserID = user.ID, RowVersion = auction.RowVersion });
+            await PlaceBidAsync(new PlaceBidCommand(AuctionId: auction.ID, Amount: newPrice, UserId: user.ID, RowVersion: auction.RowVersion ));
         }
 
         private async Task<User> GetSimulationUser()

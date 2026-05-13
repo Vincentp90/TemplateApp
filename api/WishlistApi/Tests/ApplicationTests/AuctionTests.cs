@@ -1,4 +1,5 @@
 ﻿using Application;
+using Application.Commands;
 using DataAccess.AppListings;
 using DataAccess.Auctions;
 using DataAccess.Wishlist;
@@ -35,19 +36,17 @@ namespace Tests.ApplicationTests
             auctionDAMock.Setup(x => x.SetOriginalRowVersion(It.IsAny<Auction>(), 1));
             uowMock.Setup(x => x.SaveChangesAsync(default)).ReturnsAsync(1);
 
-            var auctionCommand = new Auction()
-            {
-                ID = 1,
-                CurrentPrice = 30,
-                StartingPrice = 10,
-                UserID = 2,
-                RowVersion = 1
-            };
+            var command = new PlaceBidCommand(
+                AuctionId: 1,
+                Amount: 30,
+                UserId: 2,
+                RowVersion: 1
+            );
 
             var auctionService = new AuctionService(auctionDAMock.Object, uowMock.Object, null, null);
 
             // Act
-            await auctionService.PlaceBidAsync(auctionCommand);
+            await auctionService.PlaceBidAsync(command);
 
             // Assert
             currentAuction.CurrentPrice.Should().Be(30);
@@ -78,19 +77,17 @@ namespace Tests.ApplicationTests
             auctionDAMock.Setup(x => x.SetOriginalRowVersion(It.IsAny<Auction>(), 1));
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
-            var auctionCommand = new Auction()
-            {
-                ID = 1,
-                CurrentPrice = 30,
-                StartingPrice = 10,
-                UserID = 2,
-                RowVersion = 1
-            };
+            var command = new PlaceBidCommand(
+                AuctionId: 1,
+                Amount: 30,
+                UserId: 2,
+                RowVersion: 1
+            );
 
             var auctionService = new AuctionService(auctionDAMock.Object, uowMock.Object, null, null);
 
             // Act & assert
-            Func<Task> act = () => auctionService.PlaceBidAsync(auctionCommand);
+            Func<Task> act = () => auctionService.PlaceBidAsync(command);
             await act.Should().ThrowAsync<NotFoundException>();
 
             // Assert
@@ -120,19 +117,17 @@ namespace Tests.ApplicationTests
             auctionDAMock.Setup(x => x.SetOriginalRowVersion(It.IsAny<Auction>(), 1));
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
-            var auctionCommand = new Auction()
-            {
-                ID = 1,
-                CurrentPrice = 15,
-                StartingPrice = 10,
-                UserID = 2,
-                RowVersion = 1
-            };
+            var command = new PlaceBidCommand(
+                AuctionId: 1,
+                Amount: 15,
+                UserId: 2,
+                RowVersion: 1
+            );
 
             var auctionService = new AuctionService(auctionDAMock.Object, uowMock.Object, null, null);
 
             // Act & assert
-            Func<Task> act = () => auctionService.PlaceBidAsync(auctionCommand);
+            Func<Task> act = () => auctionService.PlaceBidAsync(command);
             await act.Should().ThrowAsync<DomainException>();
 
             // Assert
