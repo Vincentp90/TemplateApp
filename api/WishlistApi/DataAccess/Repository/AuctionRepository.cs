@@ -11,7 +11,6 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace DataAccess.Repository
 {
-    // AuctionDA is temporary, in future move all auctionDA methods here
     public class AuctionRepository(WishlistDbContext context) : IAuctionRepository
     {
         public async Task<Domain.Auction?> GetOpenAuction(int id)
@@ -54,17 +53,16 @@ namespace DataAccess.Repository
             };
         }
 
-        public async Task AddAuctionAsync(Domain.Auction auction)
+        public void AddAuction(Domain.Auction auction)
         {
             var entity = new Auctions.Auction
             {
                 DateAdded = auction.DateAdded,
-                Status = (Auctions.AuctionStatus)auction.Status,// TODO how to deal with enums in DDD + EF
+                Status = auction.Status,
                 StartingPrice = auction.StartingPrice,
                 appid = auction.appid,
             };
             context.Auctions.Add(entity);
-            await context.SaveChangesAsync();//TODO eow
         }
 
         public async Task CloseAuctionAndAddNewAsync(Domain.Auction newAuction)
@@ -72,16 +70,15 @@ namespace DataAccess.Repository
             var entity = new Auctions.Auction
             {
                 DateAdded = newAuction.DateAdded,
-                Status = (Auctions.AuctionStatus)newAuction.Status,// TODO how to deal with enums in DDD + EF
+                Status = newAuction.Status,
                 StartingPrice = newAuction.StartingPrice,
                 appid = newAuction.appid,
             };
 
             var oldAuction = await context.Auctions.OrderByDescending(x => x.ID).FirstAsync();
-            oldAuction.Status = Auctions.AuctionStatus.Closed;
+            oldAuction.Status = AuctionStatus.Closed;
             context.Auctions.Update(oldAuction);
             context.Auctions.Add(entity);
-            await context.SaveChangesAsync();//TODO eow
         }
     }
 }

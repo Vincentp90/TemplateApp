@@ -1,5 +1,6 @@
 ﻿using DataAccess.AppListings;
 using DataAccess.Users;
+using Domain;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -27,16 +28,10 @@ namespace DataAccess.Auctions
 
         [ForeignKey("AppListing")]
         public int appid { get; set; }
-        public AppListing AppListing { get; set; }
+        public AppListings.AppListing AppListing { get; set; }
 
         [ForeignKey("User")]
         public int? UserID { get; set; }
         public User? User { get; set; }
-    }
-
-    public enum AuctionStatus
-    {
-        Open,
-        Closed
     }
 }

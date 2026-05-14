@@ -37,7 +37,8 @@ namespace Tests.DataAccessTests
                 appid = 4
             };
 
-            await repo.AddAuctionAsync(existing);
+            repo.AddAuction(existing);
+            await uow.SaveChangesAsync();
 
             var bid = await repo.GetLatestAuctionAsync();
             bid.Should().NotBeNull();

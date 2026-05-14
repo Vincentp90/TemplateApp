@@ -31,7 +31,6 @@ namespace Application
                 DateAdded = DateTimeOffset.UtcNow,
                 Status = AuctionStatus.Open,
                 RowVersion = 0,
-                //AppListing = app,
                 appid = app.appid,
                 StartingPrice = 1.0m,
             };
@@ -43,8 +42,9 @@ namespace Application
             }
             else
             {
-                await repository.AddAuctionAsync(newAuction);
+                repository.AddAuction(newAuction);
             }
+            await unitOfWork.SaveChangesAsync();
         }
 
         public async Task<Domain.Auction?> GetLatestAuctionAsync()

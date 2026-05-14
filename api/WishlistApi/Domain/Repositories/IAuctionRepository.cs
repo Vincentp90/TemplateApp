@@ -11,7 +11,7 @@ namespace Domain.Repositories
 
 
         Task<Auction?> GetLatestAuctionAsync();
-        Task AddAuctionAsync(Auction auction);
+        void AddAuction(Auction auction);
         Task CloseAuctionAndAddNewAsync(Auction newAuction);
     }
 }
