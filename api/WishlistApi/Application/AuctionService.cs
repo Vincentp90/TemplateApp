@@ -8,13 +8,11 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Application
 {
     public interface IAuctionService
     {
-        Task<Auction?> GetLatestAuctionAsync();
         Task PlaceBidAsync(PlaceBidCommand command);
         Task StartNextAuctionAsync();
         Task SimulateBid();
@@ -31,11 +29,11 @@ namespace Application
                 DateAdded = DateTimeOffset.UtcNow,
                 Status = AuctionStatus.Open,
                 RowVersion = 0,
-                appid = app.appid,
+                AppListingId = app.appid,
                 StartingPrice = 1.0m,
             };
 
-            var latestAuction = await GetLatestAuctionAsync();
+            var latestAuction = await repository.GetLatestAuctionAsync();
             if (latestAuction != null)
             {
                 await repository.CloseAuctionAndAddNewAsync(newAuction);
@@ -45,11 +43,6 @@ namespace Application
                 repository.AddAuction(newAuction);
             }
             await unitOfWork.SaveChangesAsync();
-        }
-
-        public async Task<Domain.Auction?> GetLatestAuctionAsync()
-        {
-            return await repository.GetLatestAuctionAsync();
         }
 
         public async Task PlaceBidAsync(PlaceBidCommand command)
@@ -69,7 +62,7 @@ namespace Application
         public async Task SimulateBid()
         {
             var user = await GetSimulationUser();
-            Auction auction = (await GetLatestAuctionAsync())!;
+            Auction auction = (await repository.GetLatestAuctionAsync())!;
             var newPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
             await PlaceBidAsync(new PlaceBidCommand(AuctionId: auction.Id, Amount: newPrice, UserId: user.ID, RowVersion: auction.RowVersion ));
         }

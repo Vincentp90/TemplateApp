@@ -34,7 +34,7 @@ namespace Tests.DataAccessTests
                 StartingPrice = 100,
                 CurrentPrice = 150,
                 RowVersion = 2,
-                appid = 4
+                AppListingId = 4
             };
 
             repo.AddAuction(existing);

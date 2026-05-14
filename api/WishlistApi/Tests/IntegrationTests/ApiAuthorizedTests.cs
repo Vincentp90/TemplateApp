@@ -1,4 +1,5 @@
-﻿using DataAccess;
+﻿using Application.Contracts;
+using DataAccess;
 using DataAccess.AppListings;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -173,7 +174,7 @@ namespace Tests.IntegrationTests
 
             // Assert
             response.EnsureSuccessStatusCode();
-            var auction = await response.Content.ReadFromJsonAsync<AuctionDTOs.Auction>();
+            var auction = await response.Content.ReadFromJsonAsync<AuctionDto>();
             auction.Should().NotBeNull();
             auction.AppName.Should().BeOneOf("App1", "App2", "App3");
 
@@ -188,7 +189,7 @@ namespace Tests.IntegrationTests
             response = await client.GetAsync("/auctions/current");
 
             // Assert
-            var updatedAuctionResponse = await response.Content.ReadFromJsonAsync<AuctionDTOs.Auction>();
+            var updatedAuctionResponse = await response.Content.ReadFromJsonAsync<AuctionDto>();
             updatedAuctionResponse.Should().NotBeNull();
             updatedAuctionResponse.CurrentPrice.Should().Be(15.0m);
             var rowVersionIncrement = updatedAuctionResponse.RowVersion - auction.RowVersion;

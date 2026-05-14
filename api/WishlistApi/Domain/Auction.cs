@@ -14,7 +14,8 @@ namespace Domain
         public DateTimeOffset DateAdded { get; set; }
         public AuctionStatus Status { get; set; }
         public int? UserId { get; set; }
-        
+        public int AppListingId { get; set; }
+
         public void PlaceBid(int userId, decimal amount)
         {
             if (amount <= StartingPrice)
@@ -27,21 +28,9 @@ namespace Domain
             UserId = userId;
         }
 
-        //TODO this probably should be different with aggregate root
-        public int appid { get; set; }
-        public AppListing AppListing { get; set; }
-        public Guid? UserUUID { get; set; }
         // To be removed once we stop doing client side OCC
         public required uint RowVersion { get; set; }
     }
-
-    // Temporary until we learned how aggregate root works
-    public class AppListing
-    {
-        public int appid { get; set; }
-        public required string name { get; set; }
-
-    }  
 
     public enum AuctionStatus
     {

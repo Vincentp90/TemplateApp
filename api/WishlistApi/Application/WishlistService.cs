@@ -44,21 +44,23 @@ namespace Application
         public async Task<WishlistStats> GetWishlistStatsAsync(int userID)
         {
             var items = await _wishlistItemDA.GetWishlistItemsAsync(userID);
-            WishlistStats stats = new WishlistStats();
 
             if (!items.Any())
             {
-                stats.AvgTimeAdded = TimeSpan.Zero;
-                stats.AvgTimeBetweenAdded = TimeSpan.Zero;
-                stats.OldestItem = "";
-                stats.MostCommonCharacter = "";
-                return stats;
+                return new WishlistStats
+                {
+                    AvgTimeAdded = TimeSpan.Zero,
+                    AvgTimeBetweenAdded = TimeSpan.Zero,
+                    OldestItem = "",
+                    MostCommonCharacter = ""
+                };
             }
 
             var avgTicksAdded = items.Average(x => (DateTimeOffset.Now - x.DateAdded).Ticks);
-            stats.AvgTimeAdded = TimeSpan.FromTicks(Convert.ToInt64(avgTicksAdded));
+            var avgTimeAdded = TimeSpan.FromTicks(Convert.ToInt64(avgTicksAdded));
 
             var orderedItems = items.OrderBy(x => x.ID);
+            TimeSpan avgTimeBetweenAdded;
             if (items.Count() > 1)
             {
                 // Overcomplicated original calculation
@@ -66,19 +68,25 @@ namespace Application
                 // Much more simple and faster calculation:
                 var totalSpanTicks = (orderedItems.Last().DateAdded - orderedItems.First().DateAdded).Ticks;
                 var avgTicksBetween = totalSpanTicks / (orderedItems.Count() - 1);
-                stats.AvgTimeBetweenAdded = TimeSpan.FromTicks(Convert.ToInt64(avgTicksBetween));
+                avgTimeBetweenAdded = TimeSpan.FromTicks(Convert.ToInt64(avgTicksBetween));
             }
             else
             {
-                stats.AvgTimeBetweenAdded = TimeSpan.Zero;
+                avgTimeBetweenAdded = TimeSpan.Zero;
             }            
 
-            stats.OldestItem = orderedItems.FirstOrDefault()?.AppListing!.name ?? "";
+            var oldestItem = orderedItems.FirstOrDefault()?.AppListing!.name ?? "";
 
             var appNamesConcatenated = items.SelectMany(x => x.AppListing!.name).Where(c => c != ' ');
-            stats.MostCommonCharacter = appNamesConcatenated.GroupBy(x => x).MaxBy(x => x.Count())?.Key.ToString() ?? "";
+            var mostCommonCharacter = appNamesConcatenated.GroupBy(x => x).MaxBy(x => x.Count())?.Key.ToString() ?? "";
 
-            return stats;
+            return new WishlistStats
+            {
+                AvgTimeAdded = avgTimeAdded,
+                AvgTimeBetweenAdded = avgTimeBetweenAdded,
+                OldestItem = oldestItem,
+                MostCommonCharacter = mostCommonCharacter
+            };
         }
     }
 }

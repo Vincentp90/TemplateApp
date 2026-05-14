@@ -5,6 +5,7 @@ using Domain.Exceptions;
 using Domain.Helpers;
 using Domain.Repositories;
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -24,8 +25,7 @@ namespace Tests.ApplicationTests
             var currentAuction = new Auction()
             {
                 Id = 1,
-                appid = 1,
-                AppListing = new AppListing() { appid = 1, name = "MockAppName" },
+                AppListingId = 1,
                 DateAdded = DateTimeOffset.Now.AddDays(-10),
                 StartingPrice = 10,
                 RowVersion = 1,
@@ -42,7 +42,7 @@ namespace Tests.ApplicationTests
                 RowVersion: 1
             );
 
-            var auctionService = new AuctionService(auctionRepoMock.Object, uowMock.Object, null, null, null);
+            var auctionService = new AuctionService(auctionRepoMock.Object, uowMock.Object, Mock.Of<IAuthService>(), Mock.Of<IAppListingService>(), Mock.Of<IConfiguration>());
 
             // Act
             await auctionService.PlaceBidAsync(command);
@@ -63,8 +63,7 @@ namespace Tests.ApplicationTests
             var currentAuction = new Auction()
             {
                 Id = 2,
-                appid = 1,
-                AppListing = new AppListing() { appid = 1, name = "MockAppName" },
+                AppListingId = 1,
                 DateAdded = DateTimeOffset.Now.AddDays(-10),
                 StartingPrice = 10,
                 RowVersion = 1,
@@ -81,7 +80,7 @@ namespace Tests.ApplicationTests
                 RowVersion: 1
             );
 
-            var auctionService = new AuctionService(auctionRepoMock.Object, uowMock.Object, null, null, null);
+            var auctionService = new AuctionService(auctionRepoMock.Object, uowMock.Object, Mock.Of<IAuthService>(), Mock.Of<IAppListingService>(), Mock.Of<IConfiguration>());
 
             // Act & assert
             Func<Task> act = () => auctionService.PlaceBidAsync(command);
@@ -101,8 +100,7 @@ namespace Tests.ApplicationTests
             var currentAuction = new Auction()
             {
                 Id = 2,
-                appid = 1,
-                AppListing = new AppListing() { appid = 1, name = "MockAppName" },
+                AppListingId = 1,
                 DateAdded = DateTimeOffset.Now.AddDays(-10),
                 StartingPrice = 10,
                 CurrentPrice = 20,
@@ -119,7 +117,7 @@ namespace Tests.ApplicationTests
                 RowVersion: 1
             );
 
-            var auctionService = new AuctionService(auctionRepoMock.Object, uowMock.Object, null, null, null);
+            var auctionService = new AuctionService(auctionRepoMock.Object, uowMock.Object, Mock.Of<IAuthService>(), Mock.Of<IAppListingService>(), Mock.Of<IConfiguration>());
 
             // Act & assert
             Func<Task> act = () => auctionService.PlaceBidAsync(command);

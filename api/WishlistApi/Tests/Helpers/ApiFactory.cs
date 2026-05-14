@@ -15,7 +15,7 @@ namespace Tests.Helpers
 {
     public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
-        private readonly PostgreSqlContainer _db = new PostgreSqlBuilder()//TODO deprecated
+        private readonly PostgreSqlContainer _db = new PostgreSqlBuilder("postgres:18.1")
             .WithDatabase("testdb")
             .WithUsername("user")
             .WithPassword("pass")
@@ -46,7 +46,12 @@ namespace Tests.Helpers
         }
 
         public async Task InitializeAsync() => await _db.StartAsync();
-        public async Task DisposeAsync() => await _db.DisposeAsync();//TODO warning
+        async Task IAsyncLifetime.DisposeAsync() => await _db.DisposeAsync();
+        public override async ValueTask DisposeAsync()
+        {
+            await _db.DisposeAsync();
+            await base.DisposeAsync();
+        }
 
         public async Task SeedAsync(Func<IServiceProvider, Task> seed)
         {

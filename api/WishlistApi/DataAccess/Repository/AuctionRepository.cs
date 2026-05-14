@@ -39,7 +39,7 @@ namespace DataAccess.Repository
 
         public async Task<Domain.Auction?> GetLatestAuctionAsync()
         {
-            var auction = await context.Auctions.Include(a => a.User).Include(a => a.AppListing).OrderByDescending(x => x.ID).FirstOrDefaultAsync();
+            var auction = await context.Auctions.OrderByDescending(x => x.ID).FirstOrDefaultAsync();
             return auction == null ? null : new Domain.Auction
             {
                 Id = auction.ID,
@@ -47,9 +47,7 @@ namespace DataAccess.Repository
                 StartingPrice = auction.StartingPrice,
                 CurrentPrice = auction.CurrentPrice,
                 RowVersion = auction.RowVersion,
-                UserUUID = auction.User?.UUID,
-                appid = auction.appid,
-                AppListing = new Domain.AppListing { appid = auction.appid, name = auction.AppListing.name }
+                AppListingId = auction.appid,
             };
         }
 
@@ -60,7 +58,7 @@ namespace DataAccess.Repository
                 DateAdded = auction.DateAdded,
                 Status = auction.Status,
                 StartingPrice = auction.StartingPrice,
-                appid = auction.appid,
+                appid = auction.AppListingId,
             };
             context.Auctions.Add(entity);
         }
@@ -72,7 +70,7 @@ namespace DataAccess.Repository
                 DateAdded = newAuction.DateAdded,
                 Status = newAuction.Status,
                 StartingPrice = newAuction.StartingPrice,
-                appid = newAuction.appid,
+                appid = newAuction.AppListingId,
             };
 
             var oldAuction = await context.Auctions.OrderByDescending(x => x.ID).FirstAsync();

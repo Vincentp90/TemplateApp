@@ -4,11 +4,12 @@ using System.Text;
 
 namespace Domain
 {
-    public class WishlistStats
+    //TODO this is more like a dto, move to application
+    public record WishlistStats
     {
         public TimeSpan AvgTimeAdded { get; set; }
         public TimeSpan AvgTimeBetweenAdded { get; set; }
-        public string OldestItem { get; set; }
-        public string MostCommonCharacter { get; set; }
+        public required string OldestItem { get; set; }
+        public required string MostCommonCharacter { get; set; }
     }
 }

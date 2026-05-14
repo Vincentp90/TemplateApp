@@ -1,6 +1,7 @@
 ﻿using Application;
 using Application.Commands;
-using DataAccess.Auctions;
+using Application.Contracts;
+using Application.Queries;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Dynamic;
 using System.Security.Claims;
-using WishlistApi.DTOs;
 using WishlistApi.Helpers;
 
 namespace WishlistApi.Controllers
@@ -21,45 +21,37 @@ namespace WishlistApi.Controllers
     [ApiController]
     [Authorize]
     [Route("[controller]")]
-    public class AuctionsController(IUserContext _userContext, IAuctionService _auctionService, IHubContext<AuctionHub> _hub) : ControllerBase
+    public class AuctionsController(IUserContext userContext, IAuctionService auctionService, IAuctionQueries auctionQueries, IHubContext<AuctionHub> hub) : ControllerBase
     {
         [HttpGet("current")]
-        public async Task<ActionResult<AuctionDTOs.Auction>> GetCurrentAuctionAsync()
+        public async Task<ActionResult<AuctionDto>> GetCurrentAuctionAsync()
         {
-            var auction = await _auctionService.GetLatestAuctionAsync();
+            var userClaimNameId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid? userGuid = userClaimNameId == null ? null : new Guid(userClaimNameId);
+            var auction = await auctionQueries.GetCurrentAuctionAsync(userGuid);
             if(auction == null)
                 return NoContent();
 
-            return Ok(new AuctionDTOs.Auction(
-                ID: auction.Id,
-                StartDate: auction.DateAdded,
-                EndDate: auction.DateAdded + Auction.Duration,
-                UserHasBid: (auction.UserUUID?.ToString() == User.FindFirstValue(ClaimTypes.NameIdentifier)),
-                StartingPrice: auction.StartingPrice,
-                CurrentPrice: auction.CurrentPrice,
-                AppID: auction.appid,
-                AppName: auction.AppListing.name,
-                RowVersion: auction.RowVersion
-            ));
+            return Ok(auction);
         }
 
         [HttpPost("current")]
-        public async Task<ActionResult> PostAuctionAsync(AuctionDTOs.Auction auction)
+        public async Task<ActionResult> PostAuctionAsync(AuctionDto auction)
         {
-            int internalUserId = await _userContext.GetIdAsync();
+            int internalUserId = await userContext.GetIdAsync();
 
             if(auction.CurrentPrice == null)
                 return BadRequest("CurrentPrice is required");
 
             try
             {
-                await _auctionService.PlaceBidAsync(new PlaceBidCommand(
+                await auctionService.PlaceBidAsync(new PlaceBidCommand(
                     AuctionId: auction.ID, 
                     Amount: auction.CurrentPrice.Value, 
                     RowVersion: auction.RowVersion,
                     UserId: internalUserId
                 ));
-                _ = _hub.Clients.All.SendAsync("AuctionUpdated");
+                _ = hub.Clients.All.SendAsync("AuctionUpdated");
                 return Ok();
             }
             catch (DomainException)
@@ -82,8 +74,8 @@ namespace WishlistApi.Controllers
         {
             try
             {
-                await _auctionService.SimulateBid();
-                _ = _hub.Clients.All.SendAsync("AuctionUpdated");
+                await auctionService.SimulateBid();
+                _ = hub.Clients.All.SendAsync("AuctionUpdated");
                 return Ok();
             }
             catch (DomainException)
