@@ -1,5 +1,4 @@
-﻿using DataAccess.Auctions;
-using DataAccess.Migrations;
+﻿using DataAccess.Migrations;
 using Domain;
 using Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace DataAccess.Repository
+namespace DataAccess.Auctions
 {
     public class AuctionRepository(WishlistDbContext context) : IAuctionRepository
     {
@@ -39,21 +38,23 @@ namespace DataAccess.Repository
 
         public async Task<Domain.Auction?> GetLatestAuctionAsync()
         {
-            var auction = await context.Auctions.OrderByDescending(x => x.ID).FirstOrDefaultAsync();
-            return auction == null ? null : new Domain.Auction
-            {
-                Id = auction.ID,
-                UserId = auction.UserID,
-                StartingPrice = auction.StartingPrice,
-                CurrentPrice = auction.CurrentPrice,
-                RowVersion = auction.RowVersion,
-                AppListingId = auction.appid,
-            };
+            return await context.Auctions
+                .OrderByDescending(x => x.ID)
+                .Select(auction => new Domain.Auction
+                {
+                    Id = auction.ID,
+                    UserId = auction.UserID,
+                    StartingPrice = auction.StartingPrice,
+                    CurrentPrice = auction.CurrentPrice,
+                    RowVersion = auction.RowVersion,
+                    AppListingId = auction.appid,
+                })
+                .FirstOrDefaultAsync();
         }
 
         public void AddAuction(Domain.Auction auction)
         {
-            var entity = new Auctions.Auction
+            var entity = new Auction
             {
                 DateAdded = auction.DateAdded,
                 Status = auction.Status,
@@ -65,7 +66,7 @@ namespace DataAccess.Repository
 
         public async Task CloseAuctionAndAddNewAsync(Domain.Auction newAuction)
         {
-            var entity = new Auctions.Auction
+            var entity = new Auction
             {
                 DateAdded = newAuction.DateAdded,
                 Status = newAuction.Status,

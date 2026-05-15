@@ -16,7 +16,7 @@ namespace DataAccess
         public DbSet<WishlistItem> WishlistItems { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserDetails> UserDetails { get; set; }
-        public DbSet<Auction> Auctions { get; set; }
+        public DbSet<Auctions.Auction> Auctions { get; set; }
 
         public WishlistDbContext(DbContextOptions<WishlistDbContext> options)
             : base(options) { }
@@ -40,7 +40,7 @@ namespace DataAccess
 
             // Explains how to enable RowVersion with EF + Postgres:
             // https://github.com/npgsql/efcore.pg/issues/3270#issuecomment-2346017231
-            modelBuilder.Entity<Auction>()
+            modelBuilder.Entity<Auctions.Auction>()
                 .Property(e => e.RowVersion)
                 .IsRowVersion();
 

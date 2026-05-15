@@ -2,7 +2,7 @@ using Application;
 using Application.Queries;
 using DataAccess;
 using DataAccess.AppListings;
-using DataAccess.Repository;
+using DataAccess.Auctions;
 using DataAccess.Users;
 using DataAccess.Wishlist;
 using Domain.Helpers;
@@ -72,6 +72,7 @@ builder.Services.AddScoped<IAppListingDA, AppListingDA>();
 builder.Services.AddScoped<IWishlistItemDA, WishlistItemDA>();
 builder.Services.AddScoped<IUserDA, UserDA>();
 builder.Services.AddScoped<IAuctionRepository, AuctionRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<IAuctionQueries, AuctionQueries>();
 

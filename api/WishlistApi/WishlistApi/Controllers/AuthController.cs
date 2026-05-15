@@ -1,4 +1,5 @@
 ﻿using Application;
+using Application.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,7 @@ namespace WishlistApi.Controllers
             if (!await userService.IsUsernameAvailableAsync(request.Username))
                 return BadRequest("Username already taken");
 
-            await authService.AddUserAsync(request.Username, request.Password);
+            await authService.AddUserAsync(new RegisterUserCommand(request.Username, request.Password));
             return Ok();
         }
 
@@ -27,7 +28,7 @@ namespace WishlistApi.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponse>> LoginAsync(LoginRequest request)
         {
-            var user = await authService.LoginAsync(request.Username, request.Password);
+            var user = await authService.LoginAsync(new LoginCommand(request.Username, request.Password));
 
             if (user == null)
                 return Unauthorized();

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Domain
 {
-    //TODO this is more like a dto, move to application
+    //TODO this is more like a dto, move to application (or is it valueobject?)
     public record WishlistStats
     {
         public TimeSpan AvgTimeAdded { get; set; }

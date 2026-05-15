@@ -1,6 +1,5 @@
 ﻿using DataAccess.AppListings;
 using DataAccess.Users;
-using Domain;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -19,7 +18,7 @@ namespace DataAccess.Auctions
         [Key]
         public int ID { get; set; }
         public DateTimeOffset DateAdded { get; set; }
-        public AuctionStatus Status { get; set; }
+        public Domain.AuctionStatus Status { get; set; }
         public decimal StartingPrice { get; set; }
         public decimal? CurrentPrice { get; set; }
 

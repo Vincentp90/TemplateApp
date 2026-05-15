@@ -1,5 +1,6 @@
 ﻿using Application;
 using Application.Commands;
+using DataAccess.Users;
 using Domain;
 using Domain.Exceptions;
 using Domain.Helpers;
@@ -42,7 +43,7 @@ namespace Tests.ApplicationTests
                 RowVersion: 1
             );
 
-            var auctionService = new AuctionService(auctionRepoMock.Object, uowMock.Object, Mock.Of<IAuthService>(), Mock.Of<IAppListingService>(), Mock.Of<IConfiguration>());
+            var auctionService = new AuctionService(auctionRepoMock.Object, uowMock.Object, Mock.Of<IAuthService>(), Mock.Of<IAppListingService>(), Mock.Of<IConfiguration>(), Mock.Of<IUserDA>());
 
             // Act
             await auctionService.PlaceBidAsync(command);
@@ -80,7 +81,7 @@ namespace Tests.ApplicationTests
                 RowVersion: 1
             );
 
-            var auctionService = new AuctionService(auctionRepoMock.Object, uowMock.Object, Mock.Of<IAuthService>(), Mock.Of<IAppListingService>(), Mock.Of<IConfiguration>());
+            var auctionService = new AuctionService(auctionRepoMock.Object, uowMock.Object, Mock.Of<IAuthService>(), Mock.Of<IAppListingService>(), Mock.Of<IConfiguration>(), Mock.Of<IUserDA>());
 
             // Act & assert
             Func<Task> act = () => auctionService.PlaceBidAsync(command);
@@ -117,7 +118,7 @@ namespace Tests.ApplicationTests
                 RowVersion: 1
             );
 
-            var auctionService = new AuctionService(auctionRepoMock.Object, uowMock.Object, Mock.Of<IAuthService>(), Mock.Of<IAppListingService>(), Mock.Of<IConfiguration>());
+            var auctionService = new AuctionService(auctionRepoMock.Object, uowMock.Object, Mock.Of<IAuthService>(), Mock.Of<IAppListingService>(), Mock.Of<IConfiguration>(), Mock.Of<IUserDA>());
 
             // Act & assert
             Func<Task> act = () => auctionService.PlaceBidAsync(command);

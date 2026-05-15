@@ -1,7 +1,6 @@
 ﻿using DataAccess;
 using DataAccess.AppListings;
 using DataAccess.Auctions;
-using DataAccess.Repository;
 using Domain.Helpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;

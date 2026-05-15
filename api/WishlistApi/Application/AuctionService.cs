@@ -18,7 +18,7 @@ namespace Application
         Task SimulateBid();
     }
 
-    public class AuctionService(IAuctionRepository repository, IUnitOfWork unitOfWork, IAuthService authService, IAppListingService appListingService, IConfiguration config) : IAuctionService
+    public class AuctionService(IAuctionRepository repository, IUnitOfWork unitOfWork, IAuthService authService, IAppListingService appListingService, IConfiguration config, IUserDA userDA) : IAuctionService
     {
         public async Task StartNextAuctionAsync()
         {
@@ -61,23 +61,25 @@ namespace Application
 
         public async Task SimulateBid()
         {
-            var user = await GetSimulationUser();
+            var loginResult = await GetSimulationUser();
             Auction auction = (await repository.GetLatestAuctionAsync())!;
             var newPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
-            await PlaceBidAsync(new PlaceBidCommand(AuctionId: auction.Id, Amount: newPrice, UserId: user.ID, RowVersion: auction.RowVersion ));
+            var userId = await userDA.GetInternalUserIdAsync(loginResult.UserId);
+            await PlaceBidAsync(new PlaceBidCommand(AuctionId: auction.Id, Amount: newPrice, UserId: userId, RowVersion: auction.RowVersion ));
         }
 
-        private async Task<User> GetSimulationUser()
+        private async Task<LoginResult> GetSimulationUser()
         {
             const string username = "SimulateAuctionUser";
             string password = config["SimUserPassword"]!;
-            var user = await authService.LoginAsync(username, password);
-            if (user == null)
+            var command = new LoginCommand(username, password);
+            var loginResult = await authService.LoginAsync(command);
+            if (loginResult == null)
             {
-                await authService.AddUserAsync(username, password);
-                user = await authService.LoginAsync(username, password);
+                await authService.AddUserAsync(new RegisterUserCommand(username, password));
+                loginResult = await authService.LoginAsync(command);
             }
-            return user!;
+            return loginResult!;
         }
     }
 }

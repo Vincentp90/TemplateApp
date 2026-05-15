@@ -1,4 +1,5 @@
-﻿using DataAccess.Users;
+﻿using Application.Commands;
+using DataAccess.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -14,18 +15,18 @@ namespace WishlistApi.Helpers
 
     public interface IJwtTokenGenerator
     {
-        string Generate(User user);
+        string Generate(LoginResult loginResult);
     }
 
     public class JwtTokenGenerator(IConfiguration config) : IJwtTokenGenerator
     {
-        public string Generate(User user)
+        public string Generate(LoginResult loginResult)
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.UUID.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role)
+                new Claim(ClaimTypes.NameIdentifier, loginResult.UserId.ToString()),
+                new Claim(ClaimTypes.Name, loginResult.Username),
+                new Claim(ClaimTypes.Role, loginResult.Role)
             };
 
             var key = new SymmetricSecurityKey(

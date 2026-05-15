@@ -25,31 +25,20 @@ namespace DataAccess.Users
         /// <returns>Limit + 1 users</returns>
         Task<List<User>> GetUsersAsync(int page, int limit);
         Task<bool> IsUsernameAvailableAsync(string username);
-        Task AddUserAsync(User user);
-        Task<User?> GetUserAsync(string username);
         Task<UserDetails> GetUserDetailsAsync(int userId);
         Task UpdateUserDetailsAsync(UserDetails userDetails);
     }
 
-    public class UserDA : IUserDA
+    public class UserDA(WishlistDbContext context, IMemoryCache cache) : IUserDA
     {
-        private readonly WishlistDbContext _context;
-        private readonly IMemoryCache _cache;
-
-        public UserDA(WishlistDbContext dbContext, IMemoryCache cache)
-        {
-            _context = dbContext;
-            _cache = cache;
-        }
-
         public async Task<int> GetInternalUserIdAsync(Guid guid)
         {
-            if (_cache.TryGetValue(guid, out int id))
+            if (cache.TryGetValue(guid, out int id))
                 return id;
 
-            id = await _context.Users.Where(u => u.UUID == guid).Select(u => u.ID).FirstAsync();
+            id = await context.Users.Where(u => u.UUID == guid).Select(u => u.ID).FirstAsync();
 
-            _cache.Set(guid, id, new MemoryCacheEntryOptions { Size = 1 });
+            cache.Set(guid, id, new MemoryCacheEntryOptions { Size = 1 });
             return id;
         }
 
@@ -63,36 +52,25 @@ namespace DataAccess.Users
         {
             page = Math.Max(page, 1);
             limit = Math.Clamp(limit, 1, 200);
-            return await _context.Users.OrderBy(x => x.ID).Skip((page-1) * limit).Take(limit+1).ToListAsync();
+            return await context.Users.OrderBy(x => x.ID).Skip((page-1) * limit).Take(limit+1).ToListAsync();
         }
 
         public async Task<bool> IsUsernameAvailableAsync(string username)
         {
-            return !await _context.Users.AnyAsync(u => u.Username == username);
+            return !await context.Users.AnyAsync(u => u.Username == username);
         }
-
-        public async Task AddUserAsync(User user)
-        {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task<User?> GetUserAsync(string username)
-        {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
-        }        
 
         public async Task<UserDetails> GetUserDetailsAsync(int userId)
         {
-            var details = await _context.UserDetails.Include(u => u.User).FirstOrDefaultAsync(u => u.UserID == userId);
+            var details = await context.UserDetails.Include(u => u.User).FirstOrDefaultAsync(u => u.UserID == userId);
             if (details != null)
                 return details;
             else
             {
-                var user = await _context.Users.FirstAsync(u => u.ID == userId);
+                var user = await context.Users.FirstAsync(u => u.ID == userId);
                 var userDetails = new UserDetails { UserID = user.ID, User = user };
-                _context.UserDetails.Add(userDetails);
-                await _context.SaveChangesAsync();
+                context.UserDetails.Add(userDetails);
+                await context.SaveChangesAsync();
                 return userDetails;
             }
         }
@@ -100,10 +78,10 @@ namespace DataAccess.Users
         public async Task UpdateUserDetailsAsync(UserDetails userDetails)
         {
             // Optimistic concurrency check
-            _context.Entry(userDetails).Property(a => a.RowVersion).OriginalValue = userDetails.RowVersion;
+            context.Entry(userDetails).Property(a => a.RowVersion).OriginalValue = userDetails.RowVersion;
 
-            _context.UserDetails.Update(userDetails);
-            await _context.SaveChangesAsync();
+            context.UserDetails.Update(userDetails);
+            await context.SaveChangesAsync();
         }
     }
 }
