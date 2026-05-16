@@ -14,7 +14,6 @@ namespace DataAccess.Users
 {
     public interface IUserDA
     {
-        Task<int> GetInternalUserIdAsync(Guid guid);
         //Task<User> GetUserAsync(int id);
 
         /// <summary>
@@ -27,19 +26,8 @@ namespace DataAccess.Users
         Task<UserDetails> GetUserDetailsAsync(int userId);
     }
 
-    public class UserDA(WishlistDbContext context, IMemoryCache cache) : IUserDA
+    public class UserDA(WishlistDbContext context) : IUserDA
     {
-        public async Task<int> GetInternalUserIdAsync(Guid guid)
-        {
-            if (cache.TryGetValue(guid, out int id))
-                return id;
-
-            id = await context.Users.Where(u => u.UUID == guid).Select(u => u.ID).FirstAsync();
-
-            cache.Set(guid, id, new MemoryCacheEntryOptions { Size = 1 });
-            return id;
-        }
-
         /*public async Task<User> GetUserAsync(int id)
         {
             return await _context.Users.Where(u => u.ID == id).FirstAsync();

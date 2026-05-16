@@ -1,5 +1,4 @@
 ﻿using Application.Commands;
-using DataAccess.Users;
 using Domain;
 using Domain.Exceptions;
 using Domain.Helpers;
@@ -18,7 +17,7 @@ namespace Application
         Task SimulateBid();
     }
 
-    public class AuctionService(IAuctionRepository repository, IUnitOfWork unitOfWork, IAuthService authService, IAppListingService appListingService, IConfiguration config, IUserDA userDA) : IAuctionService
+    public class AuctionService(IAuctionRepository repository, IUnitOfWork unitOfWork, IAuthService authService, IAppListingService appListingService, IConfiguration config, IUserService userService) : IAuctionService
     {
         public async Task StartNextAuctionAsync()
         {
@@ -64,7 +63,7 @@ namespace Application
             var loginResult = await GetSimulationUser();
             Auction auction = (await repository.GetLatestAuctionAsync())!;
             var newPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
-            var userId = await userDA.GetInternalUserIdAsync(loginResult.UserId);
+            var userId = await userService.GetInternalUserIdAsync(loginResult.UserId);
             await PlaceBidAsync(new PlaceBidCommand(AuctionId: auction.Id, Amount: newPrice, UserId: userId, RowVersion: auction.RowVersion ));
         }
 

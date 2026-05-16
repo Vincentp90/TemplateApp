@@ -3,6 +3,7 @@ using DataAccess.Users;
 using DataAccess.Wishlist;
 using Domain.Helpers;
 using Domain.Repositories;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -23,11 +24,20 @@ namespace Application
         Task UpdateUserDetailsAsync(UpdateUserDetailsCommand command);
     }
 
-    public class UserService(IUserDA userDA, IUserRepository userRepo, IUnitOfWork unitOfWork) : IUserService
+    public class UserService(IUserDA userDA, IUserRepository userRepo, IMemoryCache cache, IUnitOfWork unitOfWork) : IUserService
     {
-        public async Task<int> GetInternalUserIdAsync(Guid guid)
+        public async Task<int> GetInternalUserIdAsync(Guid externalUserId)
         {
-            return await userDA.GetInternalUserIdAsync(guid);
+            // Check cache first
+            if (cache.TryGetValue(externalUserId, out int id))
+                return id;
+
+            // Fetch from repository (DDD pattern)
+            id = await userRepo.GetInternalUserIdAsync(externalUserId);
+
+            // Cache the result
+            cache.Set(externalUserId, id, new MemoryCacheEntryOptions { Size = 1 });
+            return id;
         }
 
         public async Task<Domain.User> GetUserAsync(GetUserCommand command)

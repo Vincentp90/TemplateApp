@@ -82,5 +82,13 @@ namespace DataAccess.Users
             // Optimistic concurrency check
             context.Entry(entity).Property(a => a.RowVersion).OriginalValue = user.Details.RowVersion;
         }
+
+        public async Task<int> GetInternalUserIdAsync(Guid externalUserId)
+        {
+            return await context.Users
+                .Where(u => u.UUID == externalUserId)
+                .Select(u => u.ID)
+                .FirstAsync();
+        }
     }
 }

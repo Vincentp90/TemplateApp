@@ -1,6 +1,5 @@
 ﻿using Application;
 using DataAccess.AppListings;
-using DataAccess.Users;
 using DataAccess.Wishlist;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
@@ -53,10 +52,10 @@ namespace Tests.ControllerTests
                     },
                 });
 
-            var userDAMock = new Mock<IUserDA>(MockBehavior.Strict);
-            userDAMock.Setup(x => x.GetInternalUserIdAsync(externalID)).ReturnsAsync(3);
+            var userServiceMock = new Mock<IUserService>(MockBehavior.Strict);
+            userServiceMock.Setup(x => x.GetInternalUserIdAsync(externalID)).ReturnsAsync(3);
 
-            IUserContext userContextMock = new UserContext(mockAccessor.Object, userDAMock.Object);
+            IUserContext userContextMock = new UserContext(mockAccessor.Object, userServiceMock.Object);
 
             var controller = new WishlistController(userContextMock, new WishlistService(wlDAMock.Object));
             controller.ControllerContext = new ControllerContext
@@ -71,7 +70,7 @@ namespace Tests.ControllerTests
             
             // Check data access calls were only called once
             wlDAMock.Verify(x => x.GetWishlistItemsAsync(3), Times.Once);
-            userDAMock.Verify(x => x.GetInternalUserIdAsync(externalID), Times.Once);
+            userServiceMock.Verify(x => x.GetInternalUserIdAsync(externalID), Times.Once);
 
             actionResult.Should().NotBeNull();
             var okResult = actionResult.Result as OkObjectResult;

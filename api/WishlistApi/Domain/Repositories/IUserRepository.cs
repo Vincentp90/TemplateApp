@@ -11,5 +11,6 @@ namespace Domain.Repositories
         void AddUser(User user);
         Task<bool> IsUsernameAvailableAsync(string username);
         Task UpdateUserAsync(User user);
+        Task<int> GetInternalUserIdAsync(Guid externalUserId);
     }
 }
