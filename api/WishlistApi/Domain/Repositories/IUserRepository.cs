@@ -7,6 +7,9 @@ namespace Domain.Repositories
     public interface IUserRepository
     {
         Task<User?> GetUserAsync(string Username);
-        void AddUserAsync(User user);
+        Task<User> GetUserAsync(int userId);
+        void AddUser(User user);
+        Task<bool> IsUsernameAvailableAsync(string username);
+        Task UpdateUserAsync(User user);
     }
 }

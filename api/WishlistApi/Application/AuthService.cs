@@ -1,5 +1,5 @@
 ﻿using Application.Commands;
-using DataAccess.Users;
+using Domain.Exceptions;
 using Domain.Helpers;
 using Domain.Repositories;
 using System;
@@ -31,16 +31,18 @@ namespace Application
 
         public async Task AddUserAsync(RegisterUserCommand command)
         {
+            if (!await userRepo.IsUsernameAvailableAsync(command.Username))
+                throw new DomainException("Username already taken");
+
             CreatePasswordHash(command.Password, out byte[] hash, out byte[] salt);
 
-            var user = new Domain.User
-            {
-                Username = command.Username,
-                PasswordHash = hash,
-                PasswordSalt = salt
-            };
+            var user = new Domain.User(
+                username: command.Username,
+                passwordHash: hash,
+                passwordSalt: salt
+            );
 
-            userRepo.AddUserAsync(user);
+            userRepo.AddUser(user);
             await unitOfWork.SaveChangesAsync();
         }
 

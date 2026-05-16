@@ -24,9 +24,7 @@ namespace DataAccess.Users
         /// <param name="limit">How much users in one page</param>
         /// <returns>Limit + 1 users</returns>
         Task<List<User>> GetUsersAsync(int page, int limit);
-        Task<bool> IsUsernameAvailableAsync(string username);
         Task<UserDetails> GetUserDetailsAsync(int userId);
-        Task UpdateUserDetailsAsync(UserDetails userDetails);
     }
 
     public class UserDA(WishlistDbContext context, IMemoryCache cache) : IUserDA
@@ -55,11 +53,6 @@ namespace DataAccess.Users
             return await context.Users.OrderBy(x => x.ID).Skip((page-1) * limit).Take(limit+1).ToListAsync();
         }
 
-        public async Task<bool> IsUsernameAvailableAsync(string username)
-        {
-            return !await context.Users.AnyAsync(u => u.Username == username);
-        }
-
         public async Task<UserDetails> GetUserDetailsAsync(int userId)
         {
             var details = await context.UserDetails.Include(u => u.User).FirstOrDefaultAsync(u => u.UserID == userId);
@@ -73,15 +66,6 @@ namespace DataAccess.Users
                 await context.SaveChangesAsync();
                 return userDetails;
             }
-        }
-
-        public async Task UpdateUserDetailsAsync(UserDetails userDetails)
-        {
-            // Optimistic concurrency check
-            context.Entry(userDetails).Property(a => a.RowVersion).OriginalValue = userDetails.RowVersion;
-
-            context.UserDetails.Update(userDetails);
-            await context.SaveChangesAsync();
         }
     }
 }

@@ -48,6 +48,13 @@ namespace DataAccess
                 .Property(e => e.RowVersion)
                 .IsRowVersion()
                 .HasColumnName("xmin");
+
+            /* TODO create migration for this:
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.UserDetails)
+                .WithOne()
+                .HasForeignKey<UserDetails>("UserId")
+                .IsRequired();*/
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Application;
 using Application.Commands;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Mvc;
@@ -12,15 +13,19 @@ namespace WishlistApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AuthController(IUserService userService, IAuthService authService, IJwtTokenGenerator jwtTokenGenerator) : ControllerBase
+    public class AuthController(IAuthService authService, IJwtTokenGenerator jwtTokenGenerator) : ControllerBase
     {
         [HttpPost("register")]
         public async Task<ActionResult> RegisterAsync(RegisterRequest request)
         {
-            if (!await userService.IsUsernameAvailableAsync(request.Username))
-                return BadRequest("Username already taken");
-
-            await authService.AddUserAsync(new RegisterUserCommand(request.Username, request.Password));
+            try
+            {
+                await authService.AddUserAsync(new RegisterUserCommand(request.Username, request.Password));
+            }
+            catch (DomainException ex)
+            {
+                return BadRequest(ex.Message);
+            }
             return Ok();
         }
 
@@ -49,12 +54,6 @@ namespace WishlistApi.Controllers
         {
             Response.Cookies.Delete("auth_token");
             return Ok();
-        }
-
-        [HttpGet("check")]
-        public async Task<ActionResult<bool>> CheckUsernameAvailableAsync([FromQuery] string username)
-        {
-            return Ok(await userService.IsUsernameAvailableAsync(username));
         }
 
         [Authorize]

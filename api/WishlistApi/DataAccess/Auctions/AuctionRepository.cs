@@ -76,7 +76,7 @@ namespace DataAccess.Auctions
 
             var oldAuction = await context.Auctions.OrderByDescending(x => x.ID).FirstAsync();
             oldAuction.Status = AuctionStatus.Closed;
-            context.Auctions.Update(oldAuction);
+
             context.Auctions.Add(entity);
         }
     }
