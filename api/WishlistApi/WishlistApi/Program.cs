@@ -70,11 +70,11 @@ builder.Services.AddHostedService<SteamUpdaterService>();
 
 builder.Services.AddScoped<IAppListingDA, AppListingDA>();
 builder.Services.AddScoped<IWishlistItemDA, WishlistItemDA>();
-builder.Services.AddScoped<IUserDA, UserDA>();
 builder.Services.AddScoped<IAuctionRepository, AuctionRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<IAuctionQueries, AuctionQueries>();
+builder.Services.AddScoped<IUserQueries, UserQueries>();
 
 builder.Services.AddScoped<IAppListingService, AppListingService>();
 builder.Services.AddScoped<IUserService, UserService>();

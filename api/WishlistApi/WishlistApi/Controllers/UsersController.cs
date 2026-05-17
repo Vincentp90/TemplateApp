@@ -1,5 +1,6 @@
 ﻿using Application;
 using Application.Commands;
+using Application.Contracts;
 using DataAccess.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -91,11 +92,7 @@ namespace WishlistApi.Controllers
         {
             var users = await userService.GetUsersAsync(page, limit);
             var hasNextPage = users.Count > limit;
-            var usersDTO = users.Take(limit).Select(u => new
-            {
-                uuid = u.UUID,
-                username = u.Username
-            }).ToList();
+            var usersDTO = users.Take(limit).ToList();
             return Ok(new
             {
                 items = usersDTO,

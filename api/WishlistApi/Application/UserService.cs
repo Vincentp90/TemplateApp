@@ -1,4 +1,6 @@
 ﻿using Application.Commands;
+using Application.Contracts;
+using Application.Queries;
 using DataAccess.Users;
 using DataAccess.Wishlist;
 using Domain.Helpers;
@@ -19,12 +21,12 @@ namespace Application
         /// <param name="page">Which page</param>
         /// <param name="limit">How much users in one page</param>
         /// <returns>Limit + 1 users</returns>
-        Task<List<User>> GetUsersAsync(int page, int limit);
+        Task<List<UserSummaryDto>> GetUsersAsync(int page, int limit);
         Task<Domain.User> GetUserAsync(GetUserCommand command);
         Task UpdateUserDetailsAsync(UpdateUserDetailsCommand command);
     }
 
-    public class UserService(IUserDA userDA, IUserRepository userRepo, IMemoryCache cache, IUnitOfWork unitOfWork) : IUserService
+    public class UserService(IUserRepository userRepo, IMemoryCache cache, IUnitOfWork unitOfWork, IUserQueries userQueries) : IUserService
     {
         public async Task<int> GetInternalUserIdAsync(Guid externalUserId)
         {
@@ -46,9 +48,9 @@ namespace Application
             return await userRepo.GetUserAsync(internalUserId);
         }
 
-        public async Task<List<User>> GetUsersAsync(int page, int limit)
+        public async Task<List<UserSummaryDto>> GetUsersAsync(int page, int limit)
         {
-            return await userDA.GetUsersAsync(page, limit);
+            return await userQueries.GetUsersAsync(page, limit);
         }
 
         public async Task UpdateUserDetailsAsync(UpdateUserDetailsCommand command)
