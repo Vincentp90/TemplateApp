@@ -1,6 +1,7 @@
 ﻿using Application;
 using DataAccess.AppListings;
 using DataAccess.Wishlist;
+using Domain.Helpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -39,8 +40,8 @@ namespace Tests.ControllerTests
             var mockAccessor = new Mock<IHttpContextAccessor>();
             mockAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
-            var wlDAMock = new Mock<IWishlistItemDA>(MockBehavior.Strict);
-            wlDAMock.Setup(x => x.GetWishlistItemsAsync(3)).ReturnsAsync(
+            var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
+            repositoryMock.Setup(x => x.GetWishlistItemsAsync(3)).ReturnsAsync(
                 new List<WishlistItem>()
                 {
                     new WishlistItem() { 
@@ -57,7 +58,10 @@ namespace Tests.ControllerTests
 
             IUserContext userContextMock = new UserContext(mockAccessor.Object, userServiceMock.Object);
 
-            var controller = new WishlistController(userContextMock, new WishlistService(wlDAMock.Object));
+            var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
+            uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+            var controller = new WishlistController(userContextMock, new WishlistService(repositoryMock.Object, uowMock.Object));
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = httpContext
@@ -69,7 +73,7 @@ namespace Tests.ControllerTests
             // Assert
             
             // Check data access calls were only called once
-            wlDAMock.Verify(x => x.GetWishlistItemsAsync(3), Times.Once);
+            repositoryMock.Verify(x => x.GetWishlistItemsAsync(3), Times.Once);
             userServiceMock.Verify(x => x.GetInternalUserIdAsync(externalID), Times.Once);
 
             actionResult.Should().NotBeNull();

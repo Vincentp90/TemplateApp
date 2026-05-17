@@ -1,4 +1,5 @@
 ﻿using Application;
+using Application.Commands;
 using DataAccess.AppListings;
 using DataAccess.Users;
 using DataAccess.Wishlist;
@@ -69,17 +70,12 @@ namespace WishlistApi.Controllers
             int internalUserId = await _userContext.GetIdAsync();
             try
             {
-                await _wishlistService.AddWishlistItemAsync(new WishlistItem()
-                {
-                    UserID = internalUserId,
-                    appid = appId
-                });
+                await _wishlistService.AddToWishlistAsync(new AddToWishlistCommand(UserId: internalUserId, AppId: appId));
             }
             catch (DuplicateNameException ex)
             {
                 return StatusCode(StatusCodes.Status409Conflict, ex.Message);
             }
-
             return Ok();
         }
 

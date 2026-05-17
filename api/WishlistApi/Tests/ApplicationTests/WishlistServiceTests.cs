@@ -1,6 +1,9 @@
-﻿using DataAccess.AppListings;
+﻿using Application;
+using DataAccess.AppListings;
 using DataAccess.Users;
 using DataAccess.Wishlist;
+using Domain.Helpers;
+using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -9,8 +12,6 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
 using WishlistApi.Controllers;
-using Application;
-using FluentAssertions;
 
 namespace Tests.ApplicationTests
 {
@@ -23,8 +24,8 @@ namespace Tests.ApplicationTests
             const int USERID = 1;
             const string OLDESTAPPNAME = "This app is so old";
 
-            var wlDAMock = new Mock<IWishlistItemDA>(MockBehavior.Strict);
-            wlDAMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
+            var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);            
+            repositoryMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
                 new List<WishlistItem>()
                 {
                     new WishlistItem() {
@@ -50,7 +51,10 @@ namespace Tests.ApplicationTests
                     },
                 });
 
-            var wishlistService = new WishlistService(wlDAMock.Object);
+            var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
+            uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+            var wishlistService = new WishlistService(repositoryMock.Object, uowMock.Object);
 
             // Act
             var result = await wishlistService.GetWishlistStatsAsync(USERID);
@@ -69,11 +73,14 @@ namespace Tests.ApplicationTests
             // Arrange
             const int USERID = 1;
 
-            var wlDAMock = new Mock<IWishlistItemDA>(MockBehavior.Strict);
-            wlDAMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
+            var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
+            repositoryMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
                 new List<WishlistItem>());
 
-            var WishlistService = new WishlistService(wlDAMock.Object);
+            var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
+            uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+            var WishlistService = new WishlistService(repositoryMock.Object, uowMock.Object);
 
             // Act
             var result = await WishlistService.GetWishlistStatsAsync(USERID);
@@ -92,8 +99,8 @@ namespace Tests.ApplicationTests
             // Arrange
             const int USERID = 1;
 
-            var wlDAMock = new Mock<IWishlistItemDA>(MockBehavior.Strict);
-            wlDAMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
+            var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
+            repositoryMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
                 new List<WishlistItem>()
                 {
                     new WishlistItem() {
@@ -105,7 +112,10 @@ namespace Tests.ApplicationTests
                     },
                 });
 
-            var WishlistService = new WishlistService(wlDAMock.Object);
+            var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
+            uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+            var WishlistService = new WishlistService(repositoryMock.Object, uowMock.Object);
 
             // Act
             var result = await WishlistService.GetWishlistStatsAsync(USERID);
@@ -122,8 +132,8 @@ namespace Tests.ApplicationTests
             // Arrange
             const int USERID = 1;
 
-            var wlDAMock = new Mock<IWishlistItemDA>(MockBehavior.Strict);
-            wlDAMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
+            var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
+            repositoryMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
                 new List<WishlistItem>()
                 {
                     new WishlistItem() {
@@ -149,7 +159,10 @@ namespace Tests.ApplicationTests
                     },
                 });
 
-            var WishlistService = new WishlistService(wlDAMock.Object);
+            var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
+            uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+            var WishlistService = new WishlistService(repositoryMock.Object, uowMock.Object);
 
             // Act
             var result = await WishlistService.GetWishlistStatsAsync(USERID);
@@ -166,8 +179,8 @@ namespace Tests.ApplicationTests
             // Arrange
             const int USERID = 1;
 
-            var wlDAMock = new Mock<IWishlistItemDA>(MockBehavior.Strict);
-            wlDAMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
+            var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
+            repositoryMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
                 new List<WishlistItem>()
                 {
                     new WishlistItem() {
@@ -179,7 +192,10 @@ namespace Tests.ApplicationTests
                     },
                 });
 
-            var WishlistService = new WishlistService(wlDAMock.Object);
+            var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
+            uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+            var WishlistService = new WishlistService(repositoryMock.Object, uowMock.Object);
 
             // Act
             var result = await WishlistService.GetWishlistStatsAsync(USERID);

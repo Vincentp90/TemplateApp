@@ -69,7 +69,7 @@ builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<WishlistDbCo
 builder.Services.AddHostedService<SteamUpdaterService>();
 
 builder.Services.AddScoped<IAppListingDA, AppListingDA>();
-builder.Services.AddScoped<IWishlistItemDA, WishlistItemDA>();
+builder.Services.AddScoped<IWishlistItemRepository, WishlistRepository>();
 builder.Services.AddScoped<IAuctionRepository, AuctionRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 

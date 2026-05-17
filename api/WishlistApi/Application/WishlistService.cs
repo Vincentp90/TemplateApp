@@ -1,49 +1,52 @@
-﻿using Domain;
+﻿using Application.Commands;
 using DataAccess.Wishlist;
-using Microsoft.EntityFrameworkCore;
+using Domain;
+using Domain.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Application
 {
     public interface IWishlistService
     {
         Task<List<WishlistItem>> GetWishlistItemsAsync(int userID);
-        Task AddWishlistItemAsync(WishlistItem item);
+        Task AddToWishlistAsync(AddToWishlistCommand command);
         Task DeleteWishlistItemAsync(int userID, int appid);
         Task<WishlistStats> GetWishlistStatsAsync(int userID);
-        
     }
 
-    public class WishlistService : IWishlistService
+    public class WishlistService(IWishlistItemRepository wishlistItemRepository, IUnitOfWork unitOfWork) : IWishlistService
     {
-        //private readonly IWishlistRepository _wishlistRepository;TODO
-        private readonly IWishlistItemDA _wishlistItemDA;
-
-        public WishlistService(IWishlistItemDA wishlistItemDA)
-        {
-            _wishlistItemDA = wishlistItemDA;
-        }        
-
         public async Task<List<WishlistItem>> GetWishlistItemsAsync(int userID)
         {
-            return await _wishlistItemDA.GetWishlistItemsAsync(userID);
+            return await wishlistItemRepository.GetWishlistItemsAsync(userID);
         }
 
-        public async Task AddWishlistItemAsync(WishlistItem item)
+        public async Task AddToWishlistAsync(AddToWishlistCommand command)
         {
-            await _wishlistItemDA.AddWishlistItemAsync(item);
+            var itemOnListAlready = await wishlistItemRepository.AppIsOnWishlistAsync(command.UserId, command.AppId);
+            if (itemOnListAlready)
+                throw new DuplicateNameException("Item already on wishlist");
+
+            var item = new WishlistItem { UserID = command.UserId, appid = command.AppId };
+            item.DateAdded = DateTimeOffset.UtcNow;
+
+            await wishlistItemRepository.AddWishlistItemAsync(item);
+            await unitOfWork.SaveChangesAsync();
         }
 
         public async Task DeleteWishlistItemAsync(int userID, int appid)
         {
-            await _wishlistItemDA.DeleteWishlistItemAsync(userID, appid);
+            await wishlistItemRepository.DeleteWishlistItemAsync(userID, appid);
         }
 
         public async Task<WishlistStats> GetWishlistStatsAsync(int userID)
         {
-            var items = await _wishlistItemDA.GetWishlistItemsAsync(userID);
+            var items = await wishlistItemRepository.GetWishlistItemsAsync(userID);
 
             if (!items.Any())
             {
