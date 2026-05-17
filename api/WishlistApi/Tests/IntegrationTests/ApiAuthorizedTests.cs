@@ -195,5 +195,128 @@ namespace Tests.IntegrationTests
             var rowVersionIncrement = updatedAuctionResponse.RowVersion - auction.RowVersion;
             rowVersionIncrement.Should().Be(1);
         }
+
+        [Fact]
+        public async Task GetWishlist_Test()
+        {
+            // Arrange
+            var client = await _apiFactory.CreateAuthenticatedClientAsync();
+
+            int appIdRandomOffset = Random.Shared.Next(0, Int32.MaxValue / 4);
+            await _apiFactory.SeedAsync(async sp =>
+            {
+                var dbContext = sp.GetRequiredService<WishlistDbContext>();
+
+                var appList = new List<AppListing>()
+                {
+                    new AppListing(){ appid = appIdRandomOffset + 1, name = "Game One" },
+                    new AppListing(){ appid = appIdRandomOffset + 2, name = "Game Two" },
+                    new AppListing(){ appid = appIdRandomOffset + 3, name = "Game Three" },
+                };
+
+                dbContext.AppListings.AddRange(appList);
+                await dbContext.SaveChangesAsync();
+
+                // Add items to wishlist
+                await client.PostAsync($"/wishlist/{appIdRandomOffset + 1}", null);
+                await client.PostAsync($"/wishlist/{appIdRandomOffset + 2}", null);
+            });
+
+            // Act
+            var response = await client.GetAsync("/wishlist");
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadFromJsonAsync<WishlistDTOs.Wishlist>();
+            content.Should().NotBeNull();
+            content.Items.Count().Should().Be(2);
+            content.Items.Select(x => x.AppId).Should().BeEquivalentTo(new[] { appIdRandomOffset + 1, appIdRandomOffset + 2 });
+
+            // Act - test fields filtering
+            response = await client.GetAsync("/wishlist?fields=appid,name");
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+            content = await response.Content.ReadFromJsonAsync<WishlistDTOs.Wishlist>();
+            content.Should().NotBeNull();
+            content.Items.Should().AllSatisfy(item =>
+            {
+                item.AppId.Should().NotBeNull();
+                item.Name.Should().NotBeNull();
+            });
+        }
+
+        [Fact]
+        public async Task AddWishlistItem_Test()
+        {
+            // Arrange
+            var client = await _apiFactory.CreateAuthenticatedClientAsync();
+
+            int appIdRandomOffset = Random.Shared.Next(0, Int32.MaxValue / 4);
+            await _apiFactory.SeedAsync(async sp =>
+            {
+                var dbContext = sp.GetRequiredService<WishlistDbContext>();
+
+                var appList = new List<AppListing>()
+                {
+                    new AppListing(){ appid = appIdRandomOffset + 1, name = "New Game" },
+                };
+
+                dbContext.AppListings.AddRange(appList);
+                await dbContext.SaveChangesAsync();
+            });
+
+            // Act
+            var response = await client.PostAsync($"/wishlist/{appIdRandomOffset + 1}", null);
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+
+            // Verify the item was added
+            response = await client.GetAsync("/wishlist");
+            var content = await response.Content.ReadFromJsonAsync<WishlistDTOs.Wishlist>();
+            content.Should().NotBeNull();
+            content.Items.Count().Should().Be(1);
+            content.Items.First().AppId.Should().Be(appIdRandomOffset + 1);
+        }
+
+        [Fact]
+        public async Task DeleteWishlistItem_Test()
+        {
+            // Arrange
+            var client = await _apiFactory.CreateAuthenticatedClientAsync();
+
+            int appIdRandomOffset = Random.Shared.Next(0, Int32.MaxValue / 4);
+            await _apiFactory.SeedAsync(async sp =>
+            {
+                var dbContext = sp.GetRequiredService<WishlistDbContext>();
+
+                var appList = new List<AppListing>()
+                {
+                    new AppListing(){ appid = appIdRandomOffset + 1, name = "ToRemove" },
+                    new AppListing(){ appid = appIdRandomOffset + 2, name = "ToKeep" },
+                };
+
+                dbContext.AppListings.AddRange(appList);
+                await dbContext.SaveChangesAsync();
+
+                // Add both items to wishlist
+                await client.PostAsync($"/wishlist/{appIdRandomOffset + 1}", null);
+                await client.PostAsync($"/wishlist/{appIdRandomOffset + 2}", null);
+            });
+
+            // Act - delete one item
+            var response = await client.DeleteAsync($"/wishlist/{appIdRandomOffset + 1}");
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+
+            // Verify the item was removed and the other is still there
+            response = await client.GetAsync("/wishlist");
+            var content = await response.Content.ReadFromJsonAsync<WishlistDTOs.Wishlist>();
+            content.Should().NotBeNull();
+            content.Items.Count().Should().Be(1);
+            content.Items.First().AppId.Should().Be(appIdRandomOffset + 2);
+        }
     }
 }
