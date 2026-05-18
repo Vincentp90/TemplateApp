@@ -6,13 +6,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using Tests.Helpers;
 
 namespace Tests.IntegrationTests
 {
     // For doing load test on the applistings table (the apps we got from the steam API, so we can't test it with a Testcontainer)
     public class DatabaseTest
     {
-        [Fact]
+        [LiveDbFact]
         public async Task CompareRandomStrategies()
         {
             // Dev DB docker should be running!

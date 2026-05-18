@@ -1,4 +1,5 @@
 ﻿using Application;
+using Application.Commands;
 using DataAccess.AppListings;
 using DataAccess.Users;
 using DataAccess.Wishlist;
@@ -204,6 +205,36 @@ namespace Tests.ApplicationTests
             result.Should().NotBeNull();
             result.MostCommonCharacter.Should().Be("a");
             result.MostCommonCharacter.Should().NotBe(" ");
+        }
+
+        [Fact]
+        public async Task AddToWishlistAsyncSetsDateAddedToUtcNow()
+        {
+            // Arrange
+            const int USERID = 1;
+            const int APPID = 42;
+
+            var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
+            repositoryMock.Setup(x => x.AppIsOnWishlistAsync(USERID, APPID)).ReturnsAsync(false);
+
+            // Capture the WishlistItem passed to AddWishlistItemAsync
+            WishlistItem? capturedItem = null;
+            repositoryMock
+                .Setup(x => x.AddWishlistItemAsync(It.IsAny<WishlistItem>()))
+                .Returns<WishlistItem>(item => { capturedItem = item; return Task.CompletedTask; });
+
+            var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
+            uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+            var wishlistService = new WishlistService(repositoryMock.Object, uowMock.Object);
+            var command = new AddToWishlistCommand(USERID, APPID);
+
+            // Act
+            await wishlistService.AddToWishlistAsync(command);
+
+            // Assert
+            capturedItem.Should().NotBeNull();
+            capturedItem!.DateAdded.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
         }
     }
 }
