@@ -1,18 +1,13 @@
 ﻿using Application;
 using Application.Commands;
-using DataAccess.AppListings;
-using DataAccess.Users;
-using DataAccess.Wishlist;
 using Domain.Helpers;
+using Domain.Repositories;
 using FluentAssertions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Moq;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
-using WishlistApi.Controllers;
 
 namespace Tests.ApplicationTests
 {

@@ -1,7 +1,6 @@
 ﻿using Application;
-using DataAccess.AppListings;
-using DataAccess.Wishlist;
 using Domain.Helpers;
+using Domain.Repositories;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,8 +10,6 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 using WishlistApi.Controllers;
 using WishlistApi.DTOs;
 using WishlistApi.Helpers;

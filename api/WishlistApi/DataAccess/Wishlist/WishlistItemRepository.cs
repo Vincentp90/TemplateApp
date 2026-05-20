@@ -1,4 +1,4 @@
-using Domain.Helpers;
+using Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Data;
@@ -6,15 +6,6 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Wishlist
 {
-    //TODO move interface to domain
-    public interface IWishlistItemRepository
-    {
-        Task<List<Domain.WishlistItem>> GetWishlistItemsAsync(int userID);
-        Task AddWishlistItemAsync(Domain.WishlistItem item);
-        Task DeleteWishlistItemAsync(int userID, int appid);
-        Task<bool> AppIsOnWishlistAsync(int userID, int appid);
-    }
-
     public class WishlistItemRepository(WishlistDbContext context) : IWishlistItemRepository
     {
         public async Task<List<Domain.WishlistItem>> GetWishlistItemsAsync(int userID)

@@ -1,13 +1,12 @@
 ﻿using Application.Commands;
-using DataAccess.Wishlist;
 using Domain;
 using Domain.Helpers;
+using Domain.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Application
 {

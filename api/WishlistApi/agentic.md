@@ -8,8 +8,7 @@ cd api/WishlistApi; dotnet test
 dotnet test api/WishlistApi/WishlistApi.sln
 
 Next:
-Move interface IWishlistItemRepository to the domain layer. Run tests at the end to verify that nothing broke. Don't ignore AGENTS.md.
-
+Delete unused using statements from the files that are currently changed in git. Don't ignore AGENTS.md.
 
 ----
 
@@ -29,7 +28,15 @@ setx LLAMA_CACHE "G:\llamacache\llama-cache"
 cd G:\llama
 
 Try next:
-.\llama-server.exe -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M -c 262144 --jinja --temp 1.0 --top-p 0.95 --min-p 0.01 --top-k 40 --n-gpu-layers 999 --flash-attn on --presence_penalty 1.5 --repeat-penalty 1.0 --no-mmap --chat-template-kwargs '{"enable_thinking": false}'
+bartowski Q5_K_L
+
+--chat-template chatml --special
+
+.\llama-server.exe -hf bartowski/Qwen_Qwen3.6-35B-A3B-GGUF:Q4_K_L -c 262144 --jinja --temp 1.0 --top-p 0.95 --min-p 0.01 --top-k 40 --n-gpu-layers 999 --flash-attn on --presence_penalty 1.5 --repeat-penalty 1.0 --spec-type draft-mtp
+
+.\llama-server.exe -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M -c 262144 --jinja --temp 1.0 --top-p 0.95 --min-p 0.01 --top-k 40 --n-gpu-layers 999 --flash-attn on --presence_penalty 1.5 --repeat-penalty 1.0
+
+.\llama-server.exe -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M -c 262144 --jinja --temp 1.0 --top-p 0.95 --min-p 0.01 --top-k 40 --n-gpu-layers 999 --flash-attn on --presence_penalty 1.5 --repeat-penalty 1.0 --no-mmap --chat-template-kwargs '{\"enable_thinking\": false}'
 
 
 .\llama-server.exe -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M -c 262144 --jinja --temp 1.0 --top-p 0.95 --min-p 0.01 --top-k 40
