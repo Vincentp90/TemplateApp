@@ -25,31 +25,31 @@ namespace Tests.ApplicationTests
             const int USERID = 1;
             const string OLDESTAPPNAME = "This app is so old";
 
-            var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);            
+            var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
             repositoryMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
-                new List<WishlistItem>()
+                new List<Domain.WishlistItem>()
                 {
-                    new WishlistItem() {
-                        DateAdded = DateTimeOffset.Now.AddDays(-20),
-                        UserID = USERID,
-                        ID = 1,
-                        appid = 1,
-                        AppListing = new AppListing(){ appid = 1, name = OLDESTAPPNAME }
-                    },
-                    new WishlistItem() {
-                        DateAdded = DateTimeOffset.Now.AddDays(-13),
-                        UserID = USERID,
-                        ID = 2,
-                        appid = 2,
-                        AppListing = new AppListing(){ appid = 2, name = "A Whole Lot of aaaaaaaa" }
-                    },
-                    new WishlistItem() {
-                        DateAdded = DateTimeOffset.Now.AddDays(-10),
-                        UserID = USERID,
-                        ID = 3,
-                        appid = 3,
-                        AppListing = new AppListing(){ appid = 3, name = "MockAppName" }
-                    },
+                    new Domain.WishlistItem(
+                        id: 1,
+                        appId: 1,
+                        name: OLDESTAPPNAME,
+                        dateAdded: DateTimeOffset.Now.AddDays(-20),
+                        userId: USERID
+                    ),
+                    new Domain.WishlistItem(
+                        id: 2,
+                        appId: 2,
+                        name: "A Whole Lot of aaaaaaaa",
+                        dateAdded: DateTimeOffset.Now.AddDays(-13),
+                        userId: USERID
+                    ),
+                    new Domain.WishlistItem(
+                        id: 3,
+                        appId: 3,
+                        name: "MockAppName",
+                        dateAdded: DateTimeOffset.Now.AddDays(-10),
+                        userId: USERID
+                    ),
                 });
 
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
@@ -76,7 +76,7 @@ namespace Tests.ApplicationTests
 
             var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
             repositoryMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
-                new List<WishlistItem>());
+                new List<Domain.WishlistItem>());
 
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
@@ -102,15 +102,15 @@ namespace Tests.ApplicationTests
 
             var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
             repositoryMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
-                new List<WishlistItem>()
+                new List<Domain.WishlistItem>()
                 {
-                    new WishlistItem() {
-                        DateAdded = DateTimeOffset.Now.AddDays(-10),
-                        UserID = USERID,
-                        ID = 3,
-                        appid = 3,
-                        AppListing = new AppListing(){ appid = 3, name = "MockAppName" }
-                    },
+                    new Domain.WishlistItem(
+                        id: 3,
+                        appId: 3,
+                        name: "MockAppName",
+                        dateAdded: DateTimeOffset.Now.AddDays(-10),
+                        userId: USERID
+                    ),
                 });
 
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
@@ -135,30 +135,30 @@ namespace Tests.ApplicationTests
 
             var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
             repositoryMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
-                new List<WishlistItem>()
-                {
-                    new WishlistItem() {
-                        DateAdded = DateTimeOffset.Now.AddDays(-14),
-                        UserID = USERID,
-                        ID = 1,
-                        appid = 1,
-                        AppListing = new AppListing(){ appid = 1, name = "dddd" }
-                    },
-                    new WishlistItem() {
-                        DateAdded = DateTimeOffset.Now.AddDays(-13),
-                        UserID = USERID,
-                        ID = 2,
-                        appid = 2,
-                        AppListing = new AppListing(){ appid = 2, name = "bbbb" }
-                    },
-                    new WishlistItem() {
-                        DateAdded = DateTimeOffset.Now.AddDays(-10),
-                        UserID = USERID,
-                        ID = 3,
-                        appid = 3,
-                        AppListing = new AppListing(){ appid = 2, name = "ccc" }
-                    },
-                });
+            new List<Domain.WishlistItem>()
+            {
+                new Domain.WishlistItem(
+                    id: 1,
+                    appId: 1,
+                    name: "dddd",
+                    dateAdded: DateTimeOffset.Now.AddDays(-14),
+                    userId: USERID
+                ),
+                new Domain.WishlistItem(
+                    id: 2,
+                    appId: 2,
+                    name: "bbbb",
+                    dateAdded: DateTimeOffset.Now.AddDays(-13),
+                    userId: USERID
+                ),
+                new Domain.WishlistItem(
+                    id: 3,
+                    appId: 3,
+                    name: "ccc",
+                    dateAdded: DateTimeOffset.Now.AddDays(-10),
+                    userId: USERID
+                ),
+            });
 
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
@@ -182,15 +182,15 @@ namespace Tests.ApplicationTests
 
             var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
             repositoryMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(
-                new List<WishlistItem>()
+                new List<Domain.WishlistItem>()
                 {
-                    new WishlistItem() {
-                        DateAdded = DateTimeOffset.Now.AddDays(-14),
-                        UserID = USERID,
-                        ID = 1,
-                        appid = 1,
-                        AppListing = new AppListing(){ appid = 1, name = "a a c d" }
-                    },
+                    new Domain.WishlistItem(
+                        id: 1,
+                        appId: 1,
+                        name: "a a c d",
+                        dateAdded: DateTimeOffset.Now.AddDays(-14),
+                        userId: USERID
+                    ),
                 });
 
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
@@ -218,10 +218,10 @@ namespace Tests.ApplicationTests
             repositoryMock.Setup(x => x.AppIsOnWishlistAsync(USERID, APPID)).ReturnsAsync(false);
 
             // Capture the WishlistItem passed to AddWishlistItemAsync
-            WishlistItem? capturedItem = null;
+            Domain.WishlistItem? capturedItem = null;
             repositoryMock
-                .Setup(x => x.AddWishlistItemAsync(It.IsAny<WishlistItem>()))
-                .Returns<WishlistItem>(item => { capturedItem = item; return Task.CompletedTask; });
+                .Setup(x => x.AddWishlistItemAsync(It.IsAny<Domain.WishlistItem>()))
+                .Returns<Domain.WishlistItem>(item => { capturedItem = item; return Task.CompletedTask; });
 
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);

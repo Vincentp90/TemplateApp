@@ -6,22 +6,25 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Wishlist
 {
+    //TODO move interface to domain
     public interface IWishlistItemRepository
     {
-        Task<List<WishlistItem>> GetWishlistItemsAsync(int userID);
-        Task AddWishlistItemAsync(WishlistItem item);
+        Task<List<Domain.WishlistItem>> GetWishlistItemsAsync(int userID);
+        Task AddWishlistItemAsync(Domain.WishlistItem item);
         Task DeleteWishlistItemAsync(int userID, int appid);
         Task<bool> AppIsOnWishlistAsync(int userID, int appid);
     }
 
-    public class WishlistRepository(WishlistDbContext context) : IWishlistItemRepository
+    public class WishlistItemRepository(WishlistDbContext context) : IWishlistItemRepository
     {
-        public async Task<List<WishlistItem>> GetWishlistItemsAsync(int userID)
+        public async Task<List<Domain.WishlistItem>> GetWishlistItemsAsync(int userID)
         {
-            return await context.WishlistItems
+            var entities = await context.WishlistItems
                 .Include(wi => wi.AppListing)
                 .Where(wi => wi.UserID == userID)
                 .ToListAsync();
+
+            return entities.Select(MapToDomain).ToList();
         }
 
         public async Task<bool> AppIsOnWishlistAsync(int userID, int appid)
@@ -31,9 +34,16 @@ namespace DataAccess.Wishlist
                 .AnyAsync();
         }
 
-        public async Task AddWishlistItemAsync(WishlistItem item)
+        public async Task AddWishlistItemAsync(Domain.WishlistItem item)
         {
-            await context.WishlistItems.AddAsync(item);
+            var entity = new WishlistItem
+            {
+                ID = item.Id, 
+                appid = item.AppId, 
+                DateAdded = item.DateAdded, 
+                UserID = item.UserId
+            };
+            await context.WishlistItems.AddAsync(entity);
         }
 
         public async Task DeleteWishlistItemAsync(int userID, int appid)
@@ -46,6 +56,18 @@ namespace DataAccess.Wishlist
                 context.WishlistItems.Remove(item);
                 await context.SaveChangesAsync();
             }
+        }
+
+        private Domain.WishlistItem MapToDomain(WishlistItem entity)
+        {
+            var domain = new Domain.WishlistItem(
+                entity.ID,
+                entity.appid,
+                entity.AppListing?.name ?? string.Empty,
+                entity.DateAdded,
+                entity.UserID
+            );
+            return domain;
         }
     }
 }

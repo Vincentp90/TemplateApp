@@ -1,13 +1,8 @@
 ﻿using Application;
 using Application.Commands;
-using DataAccess.AppListings;
-using DataAccess.Users;
-using DataAccess.Wishlist;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
-using System.Dynamic;
-using System.Security.Claims;
 using WishlistApi.DTOs;
 using WishlistApi.Helpers;
 
@@ -41,9 +36,9 @@ namespace WishlistApi.Controllers
 
             var result = (await _wishlistService.GetWishlistItemsAsync(internalUserId))
                 .Select(x => new WishlistDTOs.WishlistItemDto(
-                    AppId: Has("appid") ? x.appid : null,
+                    AppId: Has("appid") ? x.AppId : null,
                     DateAdded: Has("dateadded") ? x.DateAdded : null,
-                    Name: Has("name") ? x.AppListing?.name : null
+                    Name: Has("name") ? x.AppName : null
                 ));
 
             return Ok(new WishlistDTOs.Wishlist(result));

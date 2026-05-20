@@ -8,6 +8,7 @@ namespace Domain
 {
     public class Auction
     {
+        //TODO remove setters, replace with constructor
         public int Id { get; set; }
         public decimal? CurrentPrice { get; set; }
         public decimal StartingPrice { get; set; }

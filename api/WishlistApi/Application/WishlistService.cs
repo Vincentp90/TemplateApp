@@ -13,7 +13,7 @@ namespace Application
 {
     public interface IWishlistService
     {
-        Task<List<WishlistItem>> GetWishlistItemsAsync(int userID);
+        Task<List<Domain.WishlistItem>> GetWishlistItemsAsync(int userID);
         Task AddToWishlistAsync(AddToWishlistCommand command);
         Task DeleteWishlistItemAsync(int userID, int appid);
         Task<WishlistStats> GetWishlistStatsAsync(int userID);
@@ -21,7 +21,7 @@ namespace Application
 
     public class WishlistService(IWishlistItemRepository wishlistItemRepository, IUnitOfWork unitOfWork) : IWishlistService
     {
-        public async Task<List<WishlistItem>> GetWishlistItemsAsync(int userID)
+        public async Task<List<Domain.WishlistItem>> GetWishlistItemsAsync(int userID)
         {
             return await wishlistItemRepository.GetWishlistItemsAsync(userID);
         }
@@ -32,10 +32,13 @@ namespace Application
             if (itemOnListAlready)
                 throw new DuplicateNameException("Item already on wishlist");
 
-            var item = new WishlistItem { UserID = command.UserId, appid = command.AppId };
-            item.DateAdded = DateTimeOffset.UtcNow;
+            var wishlistItem = new Domain.WishlistItem(
+                appId: command.AppId,
+                dateAdded: DateTimeOffset.UtcNow,
+                userId: command.UserId
+            );
 
-            await wishlistItemRepository.AddWishlistItemAsync(item);
+            await wishlistItemRepository.AddWishlistItemAsync(wishlistItem);
             await unitOfWork.SaveChangesAsync();
         }
 
@@ -62,7 +65,7 @@ namespace Application
             var avgTicksAdded = items.Average(x => (DateTimeOffset.Now - x.DateAdded).Ticks);
             var avgTimeAdded = TimeSpan.FromTicks(Convert.ToInt64(avgTicksAdded));
 
-            var orderedItems = items.OrderBy(x => x.ID);
+            var orderedItems = items.OrderBy(x => x.Id);
             TimeSpan avgTimeBetweenAdded;
             if (items.Count() > 1)
             {
@@ -78,9 +81,9 @@ namespace Application
                 avgTimeBetweenAdded = TimeSpan.Zero;
             }            
 
-            var oldestItem = orderedItems.FirstOrDefault()?.AppListing!.name ?? "";
+            var oldestItem = orderedItems.FirstOrDefault()?.AppName ?? "";
 
-            var appNamesConcatenated = items.SelectMany(x => x.AppListing!.name).Where(c => c != ' ');
+            var appNamesConcatenated = items.SelectMany(x => x.AppName).Where(c => c != ' ');
             var mostCommonCharacter = appNamesConcatenated.GroupBy(x => x).MaxBy(x => x.Count())?.Key.ToString() ?? "";
 
             return new WishlistStats

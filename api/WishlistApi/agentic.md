@@ -8,6 +8,58 @@ cd api/WishlistApi; dotnet test
 dotnet test api/WishlistApi/WishlistApi.sln
 
 Next:
-AddWishlistItemAsync: make a unit test at the WishlistService level that would catch that DateAdded was not correctly set to UtcNow. 
+Move interface IWishlistItemRepository to the domain layer. Run tests at the end to verify that nothing broke. Don't ignore AGENTS.md.
 
-Add WishlistItem domain class. Refactor where necessary to use the domain class instead of WishlistItem entity class
+
+----
+
+Trying llamma.cpp instead of ollama
+Quantisation: UD-Q4_K_XL
+Maybe try Q6 later
+
+https://unsloth.ai/docs/models/qwen3.6#mtp-qwen3.6-27b
+https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF?utm_source=chatgpt.com&show_file_info=Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf
+
+Command:
+
+Permanently set env vars for model location
+setx HF_HOME "G:\llamacache\hf-cache"
+setx LLAMA_CACHE "G:\llamacache\llama-cache"
+
+cd G:\llama
+
+Try next:
+.\llama-server.exe -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M -c 262144 --jinja --temp 1.0 --top-p 0.95 --min-p 0.01 --top-k 40 --n-gpu-layers 999 --flash-attn on --presence_penalty 1.5 --repeat-penalty 1.0 --no-mmap --chat-template-kwargs '{"enable_thinking": false}'
+
+
+.\llama-server.exe -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M -c 262144 --jinja --temp 1.0 --top-p 0.95 --min-p 0.01 --top-k 40
+
+
+.\llama-server.exe -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M -c 262144 --rope-scaling yarn --rope-scale 8 --chat-template qwen --temp 1 --top-p 0.95 --top-k 20 --repeat-penalty 1 --presence-penalty 1.5
+
+Problem: below ones keep getting stuck in loops
+
+.\llama-server.exe `
+  -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL `
+  --ctx-size 260000 `
+  --temp 0.6 `
+  --top-p 0.95 `
+  --top-k 20 `
+  --presence-penalty 0.0 `
+  --chat-template chatml `
+  --min-p 0.00 --jinja --chat-template-file chat_template.jinja
+
+
+
+MTP attempt, gets stuck in loops constantly
+.\llama-server.exe `
+  -hf unsloth/Qwen3.6-35B-A3B-MTP-GGUF:UD-Q4_K_XL `
+  --ctx-size 260000 `
+  --temp 0.6 `
+  --top-p 0.95 `
+  --top-k 20 `
+  --presence-penalty 0.0 `
+  --spec-type draft-mtp `
+  --spec-draft-n-max 6 `
+  --min-p 0.00 --jinja --chat-template-file chat_template.jinja
+  

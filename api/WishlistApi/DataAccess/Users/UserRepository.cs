@@ -50,10 +50,8 @@ namespace DataAccess.Users
             var entity = new User
             {
                 Username = user.Username,
-                UUID = user.UUID,
                 PasswordHash = user.PasswordHash,
                 PasswordSalt = user.PasswordSalt,
-                Role = user.Role
             };
             context.Users.Add(entity);
 

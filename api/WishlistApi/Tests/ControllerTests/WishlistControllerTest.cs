@@ -42,15 +42,15 @@ namespace Tests.ControllerTests
 
             var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
             repositoryMock.Setup(x => x.GetWishlistItemsAsync(3)).ReturnsAsync(
-                new List<WishlistItem>()
+                new List<Domain.WishlistItem>()
                 {
-                    new WishlistItem() { 
-                        appid = 1, 
-                        DateAdded = DateTimeOffset.Now, 
-                        ID = 2, 
-                        UserID = 3,
-                        AppListing = new AppListing(){ appid = 1, name = APPNAME }
-                    },
+                    new Domain.WishlistItem(
+                        id: 2,
+                        appId: 1,
+                        name: APPNAME,
+                        dateAdded: DateTimeOffset.Now,
+                        userId: 3
+                    ),
                 });
 
             var userServiceMock = new Mock<IUserService>(MockBehavior.Strict);
