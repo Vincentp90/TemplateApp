@@ -8,16 +8,43 @@ namespace Domain
 {
     public class Auction
     {
-        //TODO remove setters, replace with constructor
-        public int Id { get; set; }
-        public decimal? CurrentPrice { get; set; }
-        public decimal StartingPrice { get; set; }
-        public DateTimeOffset DateAdded { get; set; }
-        public AuctionStatus Status { get; set; }
-        public int? UserId { get; set; }
-        public int AppListingId { get; set; }
+        public int Id { get; private set; }
+        public decimal? CurrentPrice { get; internal set; }
+        public decimal StartingPrice { get; internal set; }
+        public DateTimeOffset DateAdded { get; internal set; }
+        public AuctionStatus Status { get; internal set; }
+        public int? UserId { get; private set; }
+        public int AppListingId { get; internal set; }
+        // To be removed once we stop doing client side OCC
+        public uint RowVersion { get; internal set; }
 
-        public void PlaceBid(int userId, decimal amount)
+        // Default constructor for creating new auctions (used by Application layer)
+        public Auction()
+        {
+        }
+
+        // Constructor for mapping from Data Access layer (GetLatestAuctionAsync) and Application layer
+        public Auction(
+            int id,
+            DateTimeOffset dateAdded,
+            decimal? currentPrice,
+            decimal startingPrice,
+            AuctionStatus status,
+            int? userId,
+            int appListingId,
+            uint rowVersion)
+        {
+            Id = id;
+            DateAdded = dateAdded;
+            CurrentPrice = currentPrice;
+            StartingPrice = startingPrice;
+            Status = status;
+            UserId = userId;
+            AppListingId = appListingId;
+            RowVersion = rowVersion;
+        }
+
+        public void PlaceBid(int bidderUserId, decimal amount)
         {
             if (amount <= StartingPrice)
                 throw new DomainException("Bid must be higher than starting price.");
@@ -26,11 +53,8 @@ namespace Domain
                 throw new DomainException("Bid must be higher than current price.");
 
             CurrentPrice = amount;
-            UserId = userId;
+            UserId = bidderUserId;
         }
-
-        // To be removed once we stop doing client side OCC
-        public required uint RowVersion { get; set; }
     }
 
     public enum AuctionStatus

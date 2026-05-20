@@ -28,27 +28,40 @@ namespace Tests.DataAccessTests
             });
             ctx.SaveChanges();
 
-            var existing = new Domain.Auction
-            {
-                StartingPrice = 100,
-                CurrentPrice = 150,
-                RowVersion = 2,
-                AppListingId = 4
-            };
+            var existing = new Domain.Auction(
+                id: 1,
+                dateAdded: DateTimeOffset.Now,
+                currentPrice: 150m,
+                startingPrice: 100m,
+                status: Domain.AuctionStatus.Open,
+                userId: null,
+                appListingId: 4,
+                rowVersion: 2
+            );
 
             repo.AddAuction(existing);
             await uow.SaveChangesAsync();
 
             var bid = await repo.GetLatestAuctionAsync();
             bid.Should().NotBeNull();
-            bid.CurrentPrice = 200;
-            bid.UserId = 3;
-            repo.Update(bid, bid.RowVersion);
+            // Note: CurrentPrice and UserId are init-only, reassign with constructor for test mutation
+            var mutated = new Domain.Auction(
+                id: bid.Id,
+                dateAdded: bid.DateAdded,
+                currentPrice: 200m,
+                startingPrice: bid.StartingPrice,
+                status: Domain.AuctionStatus.Open,
+                userId: 3,
+                appListingId: bid.AppListingId,
+                rowVersion: bid.RowVersion
+            );
+            repo.Update(mutated, mutated.RowVersion);
+            //repo.Update(bid, bid.RowVersion);
             await uow.SaveChangesAsync();
 
             var updated = await ctx.Auctions.FindAsync(1);
             updated.Should().NotBeNull();
-            updated.CurrentPrice.Should().Be(200);
+            updated.CurrentPrice.Should().Be(200m);
             updated.UserID.Should().Be(3);
         }
 

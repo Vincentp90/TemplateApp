@@ -22,14 +22,16 @@ namespace Tests.ApplicationTests
             // Arrange
             var auctionRepoMock = new Mock<IAuctionRepository>(MockBehavior.Strict);
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
-            var currentAuction = new Auction()
-            {
-                Id = 1,
-                AppListingId = 1,
-                DateAdded = DateTimeOffset.Now.AddDays(-10),
-                StartingPrice = 10,
-                RowVersion = 1,
-            };
+            var currentAuction = new Domain.Auction(
+                id: 1,
+                dateAdded: DateTimeOffset.Now.AddDays(-10),
+                currentPrice: null,
+                startingPrice: 10,
+                status: Domain.AuctionStatus.Open,
+                userId: null,
+                appListingId: 1,
+                rowVersion: 1
+            );
             auctionRepoMock.Setup(x => x.GetLatestAuctionAsync()).ReturnsAsync(currentAuction);
             auctionRepoMock.Setup(x => x.GetOpenAuction(1)).ReturnsAsync(currentAuction);
             auctionRepoMock.Setup(x => x.Update(currentAuction, 1));
@@ -60,17 +62,19 @@ namespace Tests.ApplicationTests
             // Arrange
             var auctionRepoMock = new Mock<IAuctionRepository>(MockBehavior.Strict);
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
-            var currentAuction = new Auction()
-            {
-                Id = 2,
-                AppListingId = 1,
-                DateAdded = DateTimeOffset.Now.AddDays(-10),
-                StartingPrice = 10,
-                RowVersion = 1,
-            };
+            var currentAuction = new Domain.Auction(
+                id: 2,
+                dateAdded: DateTimeOffset.Now.AddDays(-10),
+                currentPrice: null,
+                startingPrice: 10,
+                status: Domain.AuctionStatus.Open,
+                userId: null,
+                appListingId: 1,
+                rowVersion: 1
+            );
             auctionRepoMock.Setup(x => x.GetLatestAuctionAsync()).ReturnsAsync(currentAuction);
             auctionRepoMock.Setup(x => x.GetOpenAuction(2)).ReturnsAsync(currentAuction);
-            auctionRepoMock.Setup(x => x.GetOpenAuction(1)).ReturnsAsync((Auction?)null);
+            auctionRepoMock.Setup(x => x.GetOpenAuction(1)).ReturnsAsync((Domain.Auction?)null);
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
             var command = new PlaceBidCommand(
@@ -97,15 +101,16 @@ namespace Tests.ApplicationTests
             // Arrange
             var auctionRepoMock = new Mock<IAuctionRepository>(MockBehavior.Strict);
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
-            var currentAuction = new Auction()
-            {
-                Id = 2,
-                AppListingId = 1,
-                DateAdded = DateTimeOffset.Now.AddDays(-10),
-                StartingPrice = 10,
-                CurrentPrice = 20,
-                RowVersion = 1,
-            };
+            var currentAuction = new Domain.Auction(
+                id: 2,
+                dateAdded: DateTimeOffset.Now.AddDays(-10),
+                currentPrice: 20,
+                startingPrice: 10,
+                status: Domain.AuctionStatus.Open,
+                userId: null,
+                appListingId: 1,
+                rowVersion: 1
+            );
             auctionRepoMock.Setup(x => x.GetLatestAuctionAsync()).ReturnsAsync(currentAuction);
             auctionRepoMock.Setup(x => x.GetOpenAuction(1)).ReturnsAsync(currentAuction);
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);

@@ -40,15 +40,16 @@ namespace DataAccess.Auctions
         {
             return await context.Auctions
                 .OrderByDescending(x => x.ID)
-                .Select(auction => new Domain.Auction
-                {
-                    Id = auction.ID,
-                    UserId = auction.UserID,
-                    StartingPrice = auction.StartingPrice,
-                    CurrentPrice = auction.CurrentPrice,
-                    RowVersion = auction.RowVersion,
-                    AppListingId = auction.appid,
-                })
+                .Select(auction => new Domain.Auction(
+                    id: auction.ID,
+                    dateAdded: auction.DateAdded,
+                    currentPrice: auction.CurrentPrice,
+                    startingPrice: auction.StartingPrice,
+                    status: auction.Status,
+                    userId: auction.UserID,
+                    appListingId: auction.appid,
+                    rowVersion: auction.RowVersion
+                ))
                 .FirstOrDefaultAsync();
         }
 

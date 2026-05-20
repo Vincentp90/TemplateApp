@@ -8,13 +8,20 @@ cd api/WishlistApi; dotnet test
 dotnet test api/WishlistApi/WishlistApi.sln
 
 Next:
-Delete unused using statements from the files that are currently changed in git. Don't ignore AGENTS.md.
+In AuctionRepository GetLatestAuctionAsync, when mapping to Domain.Auction, use a constructor instead of the curly brackets notation. Add a fitting constructor for this to Domain.auction.
 
 ----
 
+Other things to try;
+-bash instead of powershell
+-fix warnings to waste less context with build logs
+-mute db migration output (program.cs)
+-try pi instead of cline
+-Q6_K_L
+-131072 context
+
+----
 Trying llamma.cpp instead of ollama
-Quantisation: UD-Q4_K_XL
-Maybe try Q6 later
 
 https://unsloth.ai/docs/models/qwen3.6#mtp-qwen3.6-27b
 https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF?utm_source=chatgpt.com&show_file_info=Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf
@@ -28,45 +35,14 @@ setx LLAMA_CACHE "G:\llamacache\llama-cache"
 cd G:\llama
 
 Try next:
-bartowski Q5_K_L
-
---chat-template chatml --special
-
-.\llama-server.exe -hf bartowski/Qwen_Qwen3.6-35B-A3B-GGUF:Q4_K_L -c 262144 --jinja --temp 1.0 --top-p 0.95 --min-p 0.01 --top-k 40 --n-gpu-layers 999 --flash-attn on --presence_penalty 1.5 --repeat-penalty 1.0 --spec-type draft-mtp
-
-.\llama-server.exe -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M -c 262144 --jinja --temp 1.0 --top-p 0.95 --min-p 0.01 --top-k 40 --n-gpu-layers 999 --flash-attn on --presence_penalty 1.5 --repeat-penalty 1.0
-
-.\llama-server.exe -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M -c 262144 --jinja --temp 1.0 --top-p 0.95 --min-p 0.01 --top-k 40 --n-gpu-layers 999 --flash-attn on --presence_penalty 1.5 --repeat-penalty 1.0 --no-mmap --chat-template-kwargs '{\"enable_thinking\": false}'
+lower temp, lower presence_penalty, no more qpu layers specifying (better split cpu and gpu?)
+Claude says to keep --n-gpu-layers 999
+.\llama-server.exe -hf bartowski/Qwen_Qwen3.6-35B-A3B-GGUF:Q5_K_L -c 131072 --jinja --temp 0.8 --top-p 0.95 --min-p 0.01 --top-k 40 --flash-attn on --presence_penalty 0.8 --chat-template chatml --api-key anything --cache-type-k q8_0 --cache-type-v q8_0 --n-parallel 1
 
 
-.\llama-server.exe -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M -c 262144 --jinja --temp 1.0 --top-p 0.95 --min-p 0.01 --top-k 40
+.\llama-server.exe -hf bartowski/Qwen_Qwen3.6-35B-A3B-GGUF:Q5_K_L -c 262144 --jinja --temp 1.0 --top-p 0.95 --min-p 0.01 --top-k 40 --n-gpu-layers 999 --flash-attn on --presence_penalty 1.5 --chat-template chatml --api-key anything
+12.50 t/s
 
+.\llama-server.exe -hf bartowski/Qwen_Qwen3.6-35B-A3B-GGUF:Q4_K_L -c 262144 --jinja --temp 1.0 --top-p 0.95 --min-p 0.01 --top-k 40 --n-gpu-layers 999 --flash-attn on --presence_penalty 1.5 --chat-template chatml --special --api-key anything
 
-.\llama-server.exe -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M -c 262144 --rope-scaling yarn --rope-scale 8 --chat-template qwen --temp 1 --top-p 0.95 --top-k 20 --repeat-penalty 1 --presence-penalty 1.5
-
-Problem: below ones keep getting stuck in loops
-
-.\llama-server.exe `
-  -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL `
-  --ctx-size 260000 `
-  --temp 0.6 `
-  --top-p 0.95 `
-  --top-k 20 `
-  --presence-penalty 0.0 `
-  --chat-template chatml `
-  --min-p 0.00 --jinja --chat-template-file chat_template.jinja
-
-
-
-MTP attempt, gets stuck in loops constantly
-.\llama-server.exe `
-  -hf unsloth/Qwen3.6-35B-A3B-MTP-GGUF:UD-Q4_K_XL `
-  --ctx-size 260000 `
-  --temp 0.6 `
-  --top-p 0.95 `
-  --top-k 20 `
-  --presence-penalty 0.0 `
-  --spec-type draft-mtp `
-  --spec-draft-n-max 6 `
-  --min-p 0.00 --jinja --chat-template-file chat_template.jinja
-  
+----
