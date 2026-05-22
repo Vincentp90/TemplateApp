@@ -23,7 +23,7 @@ namespace Domain
         {
         }
 
-        // Constructor for mapping from Data Access layer (GetLatestAuctionAsync) and Application layer
+        // Constructor for mapping from Data Access layer (GetLatestAuctionAsync)
         public Auction(
             int id,
             DateTimeOffset dateAdded,
@@ -42,6 +42,23 @@ namespace Domain
             UserId = userId;
             AppListingId = appListingId;
             RowVersion = rowVersion;
+        }
+
+        // Constructor for creating new auctions (used by Application layer)
+        public Auction(
+            DateTimeOffset dateAdded,
+            decimal startingPrice,
+            int appListingId,
+            AuctionStatus status = AuctionStatus.Open)
+        {
+            Id = 0;
+            DateAdded = dateAdded;
+            CurrentPrice = null;
+            StartingPrice = startingPrice;
+            Status = status;
+            UserId = null;
+            AppListingId = appListingId;
+            RowVersion = 0;
         }
 
         public void PlaceBid(int bidderUserId, decimal amount)

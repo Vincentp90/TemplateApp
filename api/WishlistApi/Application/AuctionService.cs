@@ -24,14 +24,9 @@ namespace Application
             var app = await appListingService.GetRandomAppListingAsync();
 
             var newAuction = new Domain.Auction(
-                0,
-                DateTimeOffset.UtcNow,
-                null,
-                1.0m,
-                AuctionStatus.Open,
-                null,
-                app.appid,
-                0
+                dateAdded: DateTimeOffset.UtcNow,
+                startingPrice: 1.0m,
+                appListingId: app.appid
             );
 
             var latestAuction = await repository.GetLatestAuctionAsync();

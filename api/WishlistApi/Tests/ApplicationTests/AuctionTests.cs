@@ -23,14 +23,9 @@ namespace Tests.ApplicationTests
             var auctionRepoMock = new Mock<IAuctionRepository>(MockBehavior.Strict);
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             var currentAuction = new Domain.Auction(
-                id: 1,
-                dateAdded: DateTimeOffset.Now.AddDays(-10),
-                currentPrice: null,
-                startingPrice: 10,
-                status: Domain.AuctionStatus.Open,
-                userId: null,
-                appListingId: 1,
-                rowVersion: 1
+                dateAdded: DateTimeOffset.UtcNow,
+                startingPrice: 10.0m,
+                appListingId: 1
             );
             auctionRepoMock.Setup(x => x.GetLatestAuctionAsync()).ReturnsAsync(currentAuction);
             auctionRepoMock.Setup(x => x.GetOpenAuction(1)).ReturnsAsync(currentAuction);
