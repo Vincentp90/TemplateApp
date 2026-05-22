@@ -31,7 +31,7 @@ Command:
 
 cd G:\llama
 
-.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --chat-template chatml --cache-type-k q8_0 --cache-type-v q8_0 --n-cpu-moe 12
+.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --chat-template chatml --cache-type-k q8_0 --cache-type-v q8_0 --n-cpu-moe 15 --no-ui 
 
 .\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --chat-template chatml --cache-type-k q8_0 --cache-type-v q8_0 --no-ui --n-cpu-moe 10
 35 t/S , 200-900 t/s prompt eval

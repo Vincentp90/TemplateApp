@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -23,6 +24,14 @@ namespace Tests.Helpers
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
+            // Suppress EF Core migration/logging noise in tests
+            builder.ConfigureLogging(logging =>
+            {
+                logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.None);
+                logging.AddFilter("Microsoft.EntityFrameworkCore.Migrations", LogLevel.None);
+                logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
+            });
+
             builder.ConfigureServices(services =>
             {
                 // Remove hosted services (like SteamUpdaterService)
