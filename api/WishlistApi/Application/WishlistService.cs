@@ -1,4 +1,5 @@
 ﻿using Application.Commands;
+using Application.Contracts;
 using Domain;
 using Domain.Helpers;
 using Domain.Repositories;
@@ -53,12 +54,12 @@ namespace Application
             if (!items.Any())
             {
                 return new WishlistStats
-                {
-                    AvgTimeAdded = TimeSpan.Zero,
-                    AvgTimeBetweenAdded = TimeSpan.Zero,
-                    OldestItem = "",
-                    MostCommonCharacter = ""
-                };
+                (
+                    AvgTimeAdded: TimeSpan.Zero,
+                    AvgTimeBetweenAdded: TimeSpan.Zero,
+                    OldestItem: "",
+                    MostCommonCharacter: ""
+                );
             }
 
             var avgTicksAdded = items.Average(x => (DateTimeOffset.Now - x.DateAdded).Ticks);
@@ -86,12 +87,12 @@ namespace Application
             var mostCommonCharacter = appNamesConcatenated.GroupBy(x => x).MaxBy(x => x.Count())?.Key.ToString() ?? "";
 
             return new WishlistStats
-            {
-                AvgTimeAdded = avgTimeAdded,
-                AvgTimeBetweenAdded = avgTimeBetweenAdded,
-                OldestItem = oldestItem,
-                MostCommonCharacter = mostCommonCharacter
-            };
+            (
+                AvgTimeAdded: avgTimeAdded,
+                AvgTimeBetweenAdded: avgTimeBetweenAdded,
+                OldestItem: oldestItem,
+                MostCommonCharacter: mostCommonCharacter
+            );
         }
     }
 }
