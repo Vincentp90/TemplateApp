@@ -27,4 +27,43 @@ public class WishlistItem
         Id = 0;
         AppName = string.Empty;
     }
+
+    public static WishlistStats CalculateStats(IReadOnlyCollection<WishlistItem> items)
+    {
+        if (items == null || !items.Any())
+        {
+            return new WishlistStats(
+                AvgTimeAdded: TimeSpan.Zero,
+                AvgTimeBetweenAdded: TimeSpan.Zero,
+                OldestItem: "",
+                MostCommonCharacter: "");
+        }
+
+        var orderedItems = items.OrderBy(x => x.Id);
+        var avgTicksAdded = items.Average(x => (DateTimeOffset.Now - x.DateAdded).Ticks);
+        var avgTimeAdded = TimeSpan.FromTicks(Convert.ToInt64(avgTicksAdded));
+
+        TimeSpan avgTimeBetweenAdded;
+        if (orderedItems.Count() > 1)
+        {
+            var totalSpanTicks = (orderedItems.Last().DateAdded - orderedItems.First().DateAdded).Ticks;
+            var avgTicksBetween = totalSpanTicks / (orderedItems.Count() - 1);
+            avgTimeBetweenAdded = TimeSpan.FromTicks(Convert.ToInt64(avgTicksBetween));
+        }
+        else
+        {
+            avgTimeBetweenAdded = TimeSpan.Zero;
+        }
+
+        var oldestItem = orderedItems.FirstOrDefault()?.AppName ?? "";
+
+        var appNamesConcatenated = items.SelectMany(x => x.AppName).Where(c => c != ' ');
+        var mostCommonCharacter = appNamesConcatenated.GroupBy(x => x).MaxBy(x => x.Count())?.Key.ToString() ?? "";
+
+        return new WishlistStats(
+            AvgTimeAdded: avgTimeAdded,
+            AvgTimeBetweenAdded: avgTimeBetweenAdded,
+            OldestItem: oldestItem,
+            MostCommonCharacter: mostCommonCharacter);
+    }
 }

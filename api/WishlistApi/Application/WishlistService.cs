@@ -1,13 +1,7 @@
 ﻿using Application.Commands;
-using Application.Contracts;
 using Domain;
 using Domain.Helpers;
 using Domain.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
 
 namespace Application
 {
@@ -30,7 +24,7 @@ namespace Application
         {
             var itemOnListAlready = await wishlistItemRepository.AppIsOnWishlistAsync(command.UserId, command.AppId);
             if (itemOnListAlready)
-                throw new DuplicateNameException("Item already on wishlist");
+                throw new InvalidOperationException("Item already on wishlist");
 
             var wishlistItem = new Domain.WishlistItem(
                 appId: command.AppId,
@@ -50,49 +44,7 @@ namespace Application
         public async Task<WishlistStats> GetWishlistStatsAsync(int userID)
         {
             var items = await wishlistItemRepository.GetWishlistItemsAsync(userID);
-
-            if (!items.Any())
-            {
-                return new WishlistStats
-                (
-                    AvgTimeAdded: TimeSpan.Zero,
-                    AvgTimeBetweenAdded: TimeSpan.Zero,
-                    OldestItem: "",
-                    MostCommonCharacter: ""
-                );
-            }
-
-            var avgTicksAdded = items.Average(x => (DateTimeOffset.Now - x.DateAdded).Ticks);
-            var avgTimeAdded = TimeSpan.FromTicks(Convert.ToInt64(avgTicksAdded));
-
-            var orderedItems = items.OrderBy(x => x.Id);
-            TimeSpan avgTimeBetweenAdded;
-            if (items.Count() > 1)
-            {
-                // Overcomplicated original calculation
-                //var avgTicksBetween = orderedItems.Zip(orderedItems.Skip(1), (a, b) => (b.DateAdded - a.DateAdded).Ticks).Average();
-                // Much more simple and faster calculation:
-                var totalSpanTicks = (orderedItems.Last().DateAdded - orderedItems.First().DateAdded).Ticks;
-                var avgTicksBetween = totalSpanTicks / (orderedItems.Count() - 1);
-                avgTimeBetweenAdded = TimeSpan.FromTicks(Convert.ToInt64(avgTicksBetween));
-            }
-            else
-            {
-                avgTimeBetweenAdded = TimeSpan.Zero;
-            }            
-
-            var oldestItem = orderedItems.FirstOrDefault()?.AppName ?? "";
-
-            var appNamesConcatenated = items.SelectMany(x => x.AppName).Where(c => c != ' ');
-            var mostCommonCharacter = appNamesConcatenated.GroupBy(x => x).MaxBy(x => x.Count())?.Key.ToString() ?? "";
-
-            return new WishlistStats
-            (
-                AvgTimeAdded: avgTimeAdded,
-                AvgTimeBetweenAdded: avgTimeBetweenAdded,
-                OldestItem: oldestItem,
-                MostCommonCharacter: mostCommonCharacter
-            );
+            return WishlistItem.CalculateStats(items);
         }
     }
 }
