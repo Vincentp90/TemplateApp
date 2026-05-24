@@ -10,39 +10,45 @@ cd api/WishlistApi; dotnet test
 dotnet test api/WishlistApi/WishlistApi.sln
 
 Next:
+GetAllUsersAsyncTests do the TODOs in the code. Run tests at the end.
+PatchUserAsyncTests do the TODOs in the code. Run tests at the end.
+WishlistAPI.DTOs: remove the wrapper classes here around the DTO records. Run tests at the end.
+Check in all UsersController tests if the usings at the top can be simplified.
+
 How can i write a test for SteamUpdaterService UpdateAppListingsIfEmptyAsync?
 SteamUpdaterService UpdateAppListingsIfEmptyAsync is currently ignoring the DDD architecture. Move it's functionality to the AppListingService in the Application layer, in SteamUpdaterService simply call the new applistingservice method. Run tests at the end for verification
 
 ----
 
 Todo:
-delete ollama qwen model
-delete ollama
+Stop agent from testing authorization when making controller unit tests (authorization not active during unit tests)
+    -> This is what skills files are used for?
 
 Other things to try;
--try without chat-template chatml again, maybe my old test were with too small context
-    -chat template button top right on HF (or is this included in the downloaded model)
+-qwen-coder-next
 -larger context (both model and in cline)
 -try pi instead of cline
--byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-Q4_K_S-4.22bpw
 
 ----
 Trying llamma.cpp instead of ollama
-
-https://huggingface.co/froggeric/Qwen-Fixed-Chat-Templates --jinja --chat-template-file chat_template.jinja
 
 Command:
 
 cd G:\llama
 
-no template
-.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-k q8_0 --cache-type-v q8_0 --n-cpu-moe 19 --no-ui
+GPU optimised byteshape
+.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --chat-template chatml --n-cpu-moe 21 --no-ui
 
-.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --chat-template chatml --cache-type-k q8_0 --cache-type-v q8_0 --n-cpu-moe 19 --no-ui
+Big boy Q6_K_L 
+.\llama-server.exe -hf bartowski/Qwen_Qwen3.6-35B-A3B-GGUF:Q6_K_L -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --chat-template chatml --n-cpu-moe 32 --no-ui 
 
-.\llama-server.exe -hf bartowski/Qwen_Qwen3.6-35B-A3B-GGUF:Q6_K_L -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --chat-template chatml --cache-type-k q8_0 --cache-type-v q8_0 --n-cpu-moe 32 --no-ui 
-20 t/s, 100 t/s prompt eval
 
+Parameters not sure if needed:
+--chat-template chatml
+Supposedly not good for coding:
+--cache-type-k q8_0
+
+Crashes all the time: byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-Q4_K_S-4.22bpw
 
 ----
 

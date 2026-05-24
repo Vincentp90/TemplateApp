@@ -4,10 +4,7 @@ using Application.Contracts;
 using DataAccess.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.Metrics;
-using System.Net;
 using System.Security.Claims;
 using WishlistApi.DTOs;
 
@@ -19,7 +16,7 @@ namespace WishlistApi.Controllers
     public class UsersController(IUserService userService) : ControllerBase
     {
         [HttpGet("me")]
-        public async Task<ActionResult<UserDTOs.UserDetails>> Index()
+        public async Task<ActionResult<UserDTOs.UserDetails>> GetUserMeAsync()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -30,7 +27,7 @@ namespace WishlistApi.Controllers
 
         [HttpGet("{UserId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<UserDTOs.UserDetails>> Index([FromRoute] string UserId)
+        public async Task<ActionResult<UserDTOs.UserDetails>> GetUserAsync([FromRoute] string UserId)
         {
             return await GetUserDetailsDTO(UserId);
         }
@@ -60,7 +57,7 @@ namespace WishlistApi.Controllers
 
         [HttpPatch("{UserId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<UserDTOs.UserDetails>> PatchUserAsync(UserDTOs.UserDetails userDetailsDTO, [FromRoute] string UserId)
+        public async Task<ActionResult> PatchUserAsync(UserDTOs.UserDetails userDetailsDTO, [FromRoute] string UserId)
         {
             return await UpdateUserDetails(userDetailsDTO, UserId);
         }

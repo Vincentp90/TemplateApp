@@ -1,4 +1,4 @@
-Environment: Windows 10 + PowerShell.
+Environment: Windows 10 + Bash.
 
 Hard rules:
 - Only read/edit inside of api\WishlistApi
