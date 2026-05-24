@@ -27,7 +27,7 @@ Stop agent from testing authorization when making controller unit tests (authori
 Other things to try;
 -qwen-coder-next
 -larger context (both model and in cline)
--try pi instead of cline
+-try pi or opencode instead of cline
 
 ----
 Trying llamma.cpp instead of ollama
@@ -37,7 +37,7 @@ Command:
 cd G:\llama
 
 GPU optimised byteshape
-.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --chat-template chatml --n-cpu-moe 21 --no-ui
+.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --n-cpu-moe 21 --no-ui --chat-template chatml
 
 Big boy Q6_K_L 
 .\llama-server.exe -hf bartowski/Qwen_Qwen3.6-35B-A3B-GGUF:Q6_K_L -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --chat-template chatml --n-cpu-moe 32 --no-ui 

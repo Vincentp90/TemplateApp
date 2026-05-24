@@ -1,5 +1,6 @@
 using Application;
 using Application.Contracts;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Tests.Helpers;
@@ -31,7 +32,10 @@ public class GetAllUsersAsyncTests
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.NotNull(okResult.Value);
-        //TODO assert one of the users is actually in the result
+        var itemsProperty = okResult.Value!.GetType().GetProperty("items")!;
+        var items = itemsProperty.GetValue(okResult.Value) as IEnumerable<UserSummaryDto>;
+        var itemNames = items!.Select(i => i.Username).ToList();
+        itemNames.Should().Contain("user1");
     }
 
     [Fact]
@@ -53,6 +57,8 @@ public class GetAllUsersAsyncTests
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.NotNull(okResult.Value);
-        //TODO assert we get empty list back
+        var itemsProperty = okResult.Value!.GetType().GetProperty("items")!;
+        var items = itemsProperty.GetValue(okResult.Value) as IEnumerable<UserSummaryDto>;
+        items.Should().BeEmpty();
     }
 }
