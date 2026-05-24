@@ -10,8 +10,6 @@ cd api/WishlistApi; dotnet test
 dotnet test api/WishlistApi/WishlistApi.sln
 
 Next:
-GetAllUsersAsyncTests do the TODOs in the code. Run tests at the end.
-PatchUserAsyncTests do the TODOs in the code. Run tests at the end.
 WishlistAPI.DTOs: remove the wrapper classes here around the DTO records. Run tests at the end.
 Check in all UsersController tests if the usings at the top can be simplified.
 
@@ -36,14 +34,17 @@ Command:
 
 cd G:\llama
 
-GPU optimised byteshape
-.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --n-cpu-moe 21 --no-ui --chat-template chatml
+Trying to find best opencode setup, parallel 2, higher cpu-moe
+.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 2 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --n-cpu-moe 22 --no-ui
+
+GPU optimised byteshape, works best with cline
+.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --n-cpu-moe 21 --chat-template chatml --no-ui
 
 Big boy Q6_K_L 
 .\llama-server.exe -hf bartowski/Qwen_Qwen3.6-35B-A3B-GGUF:Q6_K_L -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --chat-template chatml --n-cpu-moe 32 --no-ui 
 
 
-Parameters not sure if needed:
+When running with cline (not needed for opencode):
 --chat-template chatml
 Supposedly not good for coding:
 --cache-type-k q8_0

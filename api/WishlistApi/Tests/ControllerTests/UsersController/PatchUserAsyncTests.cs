@@ -116,8 +116,8 @@ namespace Tests.ControllerTests.UsersController
             var result = await controller.PatchUserAsync(dto, Guid.NewGuid().ToString());
 
             // Assert
-            Assert.NotNull(result);
-            //TODO check 409 status
+            var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
+            Assert.Equal(409, statusCodeResult.StatusCode);
         }
     }
 }
