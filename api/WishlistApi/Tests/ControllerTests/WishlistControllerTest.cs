@@ -65,7 +65,7 @@ namespace Tests.ControllerTests
             };
 
             // Act
-            ActionResult<WishlistDTOs.Wishlist> actionResult = await controller.GetWishlistAsync();
+            ActionResult<Wishlist> actionResult = await controller.GetWishlistAsync();
 
             // Assert
             
@@ -76,7 +76,7 @@ namespace Tests.ControllerTests
             actionResult.Should().NotBeNull();
             var okResult = actionResult.Result as OkObjectResult;
             okResult.Should().NotBeNull();
-            var wl = okResult!.Value as WishlistDTOs.Wishlist;
+            var wl = okResult!.Value as Wishlist;
             wl.Should().NotBeNull();
             wl.Items.Count().Should().Be(1);
 
@@ -93,7 +93,7 @@ namespace Tests.ControllerTests
             actionResult.Should().NotBeNull();
             okResult = actionResult.Result as OkObjectResult;
             okResult.Should().NotBeNull();
-            wl = okResult!.Value as WishlistDTOs.Wishlist;
+            wl = okResult!.Value as Wishlist;
             wl.Should().NotBeNull();
             item = wl.Items.First();
 

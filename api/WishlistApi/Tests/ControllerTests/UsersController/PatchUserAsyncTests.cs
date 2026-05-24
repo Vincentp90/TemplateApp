@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Tests.Helpers;
-using UserDetails = WishlistApi.DTOs.UserDTOs.UserDetails;
+using WishlistApi.DTOs;
 
 namespace Tests.ControllerTests.UsersController
 {
@@ -20,7 +20,7 @@ namespace Tests.ControllerTests.UsersController
                 .Returns(Task.CompletedTask);
 
             var controller = fixture.CreateController();
-            var dto = new UserDetails(
+            var dto = new UserDetailsDTO(
                 RowVersion: 1,
                 Email: "test@example.com",
                 FirstName: "Updated",
@@ -45,7 +45,7 @@ namespace Tests.ControllerTests.UsersController
             var fixture = new UserControllerFixture();
             // Don't set user identity - simulate no authentication claims
             var controller = fixture.CreateController();
-            var dto = new UserDetails(
+            var dto = new UserDetailsDTO(
                 RowVersion: 1,
                 Email: "test@example.com",
                 FirstName: "Test",
@@ -73,7 +73,7 @@ namespace Tests.ControllerTests.UsersController
                 .Returns(Task.CompletedTask);
 
             var controller = fixture.CreateController();
-            var dto = new UserDetails(
+            var dto = new UserDetailsDTO(
                 RowVersion: 5,
                 Email: "admin@example.com",
                 FirstName: "AdminUpdated",
@@ -102,7 +102,7 @@ namespace Tests.ControllerTests.UsersController
                 .ThrowsAsync(new DbUpdateConcurrencyException("Concurrency conflict"));
 
             var controller = fixture.CreateController();
-            var dto = new UserDetails(
+            var dto = new UserDetailsDTO(
                 RowVersion: 1,
                 Email: "test@example.com",
                 FirstName: "Test",

@@ -10,8 +10,8 @@ cd api/WishlistApi; dotnet test
 dotnet test api/WishlistApi/WishlistApi.sln
 
 Next:
-WishlistAPI.DTOs: remove the wrapper classes here around the DTO records. Run tests at the end.
-Check in all UsersController tests if the usings at the top can be simplified.
+Add integration test for each userscontroller api call
+move the userscontroller unit tests back into a single file
 
 How can i write a test for SteamUpdaterService UpdateAppListingsIfEmptyAsync?
 SteamUpdaterService UpdateAppListingsIfEmptyAsync is currently ignoring the DDD architecture. Move it's functionality to the AppListingService in the Application layer, in SteamUpdaterService simply call the new applistingservice method. Run tests at the end for verification
@@ -34,8 +34,8 @@ Command:
 
 cd G:\llama
 
-Trying to find best opencode setup, parallel 2, higher cpu-moe
-.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 2 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --n-cpu-moe 22 --no-ui
+opencode
+.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --n-cpu-moe 24 --no-ui
 
 GPU optimised byteshape, works best with cline
 .\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --n-cpu-moe 21 --chat-template chatml --no-ui
@@ -56,3 +56,5 @@ Crashes all the time: byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-Q4_K_S-4.22
 Permanently set env vars for model location
 setx HF_HOME "G:\llamacache\hf-cache"
 setx LLAMA_CACHE "G:\llamacache\llama-cache"
+
+----

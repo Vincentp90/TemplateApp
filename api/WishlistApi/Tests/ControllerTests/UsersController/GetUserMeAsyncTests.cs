@@ -29,7 +29,7 @@ namespace Tests.ControllerTests.UsersController
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
-            var returnedUser = Assert.IsType<UserDTOs.UserDetails>(okResult.Value);
+            var returnedUser = Assert.IsType<UserDetailsDTO>(okResult.Value);
             Assert.Equal("John", returnedUser.FirstName);
             Assert.Equal("Doe", returnedUser.LastName);
         }

@@ -16,7 +16,7 @@ namespace WishlistApi.Controllers
     public class UsersController(IUserService userService) : ControllerBase
     {
         [HttpGet("me")]
-        public async Task<ActionResult<UserDTOs.UserDetails>> GetUserMeAsync()
+        public async Task<ActionResult<UserDetailsDTO>> GetUserMeAsync()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -27,15 +27,15 @@ namespace WishlistApi.Controllers
 
         [HttpGet("{UserId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<UserDTOs.UserDetails>> GetUserAsync([FromRoute] string UserId)
+        public async Task<ActionResult<UserDetailsDTO>> GetUserAsync([FromRoute] string UserId)
         {
             return await GetUserDetailsDTO(UserId);
         }
 
-        private async Task<ActionResult<UserDTOs.UserDetails>> GetUserDetailsDTO(string UserId)
+        private async Task<ActionResult<UserDetailsDTO>> GetUserDetailsDTO(string UserId)
         {
             var user = await userService.GetUserAsync(new GetUserCommand(new Guid(UserId)));
-            return Ok(new UserDTOs.UserDetails(
+            return Ok(new UserDetailsDTO(
                 RowVersion: user.Details.RowVersion,
                 Email: user.Username,
                 FirstName: user.Details.FirstName,
@@ -47,7 +47,7 @@ namespace WishlistApi.Controllers
         }
 
         [HttpPatch("me")]
-        public async Task<ActionResult> PatchUserAsync(UserDTOs.UserDetails userDetailsDTO)
+        public async Task<ActionResult> PatchUserAsync(UserDetailsDTO userDetailsDTO)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -57,16 +57,16 @@ namespace WishlistApi.Controllers
 
         [HttpPatch("{UserId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> PatchUserAsync(UserDTOs.UserDetails userDetailsDTO, [FromRoute] string UserId)
+        public async Task<ActionResult> PatchUserAsync(UserDetailsDTO userDetailsDTO, [FromRoute] string UserId)
         {
             return await UpdateUserDetails(userDetailsDTO, UserId);
         }
 
-        private async Task<ActionResult> UpdateUserDetails(UserDTOs.UserDetails userDetailsDTO, string userId)
+        private async Task<ActionResult> UpdateUserDetails(UserDetailsDTO userDetailsDTO, string userId)
         {
             try
             {
-                await userService.UpdateUserDetailsAsync(new Application.Commands.UpdateUserDetailsCommand(
+                await userService.UpdateUserDetailsAsync(new UpdateUserDetailsCommand(
                     RowVersion: userDetailsDTO.RowVersion,
                     ExternalUserId: new Guid(userId),
                     FirstName: userDetailsDTO.FirstName,

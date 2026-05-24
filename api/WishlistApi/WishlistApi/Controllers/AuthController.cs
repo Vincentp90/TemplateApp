@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Text;
 using WishlistApi.Helpers;
-using static WishlistApi.DTOs.AuthDTOs;
+using WishlistApi.DTOs;
 
 namespace WishlistApi.Controllers
 {

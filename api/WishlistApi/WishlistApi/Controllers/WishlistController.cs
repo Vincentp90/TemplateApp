@@ -23,7 +23,7 @@ namespace WishlistApi.Controllers
         }
 
         [HttpGet()]
-        public async Task<ActionResult<WishlistDTOs.Wishlist>> GetWishlistAsync([FromQuery] string? fields = null)
+        public async Task<ActionResult<Wishlist>> GetWishlistAsync([FromQuery] string? fields = null)
         {
             int internalUserId = await _userContext.GetIdAsync();
 
@@ -35,22 +35,22 @@ namespace WishlistApi.Controllers
             bool Has(string field) => includeAll || fieldList.Contains(field);
 
             var result = (await _wishlistService.GetWishlistItemsAsync(internalUserId))
-                .Select(x => new WishlistDTOs.WishlistItemDto(
+                .Select(x => new WishlistItemDto(
                     AppId: Has("appid") ? x.AppId : null,
                     DateAdded: Has("dateadded") ? x.DateAdded : null,
                     Name: Has("name") ? x.AppName : null
                 ));
 
-            return Ok(new WishlistDTOs.Wishlist(result));
+            return Ok(new Wishlist(result));
         }
 
         [HttpGet("stats")]
-        public async Task<ActionResult<WishlistDTOs.Stats>> GetWishlistStatsAsync()
+        public async Task<ActionResult<Stats>> GetWishlistStatsAsync()
         {
             int internalUserId = await _userContext.GetIdAsync();
 
             var stats = await _wishlistService.GetWishlistStatsAsync(internalUserId);
-            return Ok(new WishlistDTOs.Stats(
+            return Ok(new Stats(
                 AvgTimeAdded: stats.AvgTimeAdded,
                 AvgTimeBetweenAdded: stats.AvgTimeBetweenAdded,
                 OldestItem: stats.OldestItem,
