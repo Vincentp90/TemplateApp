@@ -16,6 +16,8 @@ using WishlistApi.Helpers;
 
 namespace Tests.ControllerTests
 {
+    //TODO how to organise a test like this. It's not a unit test since it tests 2 layers (API + application)
+    // but it's not really a full integration test either since it doesn't even go to the DB
     public class WishlistControllerTest
     {
         [Fact]

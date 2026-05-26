@@ -10,8 +10,9 @@ cd api/WishlistApi; dotnet test
 dotnet test api/WishlistApi/WishlistApi.sln
 
 Next:
-Add integration test for each userscontroller api call
-move the userscontroller unit tests back into a single file
+Add Tests\ControllerTests\UsersControllerIntegrationTests.cs. Here create one (and only one) integration test for every action in WishlistApi\Controllers\UsersController.cs. In each unit test, do a happy path test. Use an inmemory database, you can use UserQueriesTests as an example for this. For calling the controller methods use UserControllerFixture, you can use UsersControllerUnitTests as an example. Don't test Admin role and authorization, authorization is disabled when the ASP.NET engine is not running.
+
+auction placebid concurrency test, can you check if i already have this kind of test?
 
 How can i write a test for SteamUpdaterService UpdateAppListingsIfEmptyAsync?
 SteamUpdaterService UpdateAppListingsIfEmptyAsync is currently ignoring the DDD architecture. Move it's functionality to the AppListingService in the Application layer, in SteamUpdaterService simply call the new applistingservice method. Run tests at the end for verification
@@ -24,8 +25,8 @@ Stop agent from testing authorization when making controller unit tests (authori
 
 Other things to try;
 -qwen-coder-next
--larger context (both model and in cline)
--try pi or opencode instead of cline
+-Gemma
+-larger context
 
 ----
 Trying llamma.cpp instead of ollama
@@ -35,9 +36,14 @@ Command:
 cd G:\llama
 
 opencode
-.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --n-cpu-moe 24 --no-ui
 
-GPU optimised byteshape, works best with cline
+.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --n-cpu-moe 23 --no-ui
+
+New test: added --flash-attn -b 2048 -ub 2048 
+.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --n-cpu-moe 23 --no-ui --flash-attn on -b 2048 -ub 2048 
+1000/30 tps
+
+byteshape, works best with cline
 .\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-v q8_0 --n-cpu-moe 21 --chat-template chatml --no-ui
 
 Big boy Q6_K_L 
