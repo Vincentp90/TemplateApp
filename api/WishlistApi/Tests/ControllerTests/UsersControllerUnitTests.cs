@@ -17,7 +17,7 @@ public class UsersControllerUnitTests
     public async Task GetUserAsync_WithValidId_ReturnsOkResult()
     {
         // Arrange
-        var fixture = new UserControllerFixture();
+        var fixture = new UserControllerMockFixture();
         var userId = Guid.NewGuid();
         var userDetails = new Domain.UserDetails("John", "Doe", "France", "Paris", "123 Main St", 0);
         var user = new Domain.User(1, "testuser", userId,
@@ -44,7 +44,7 @@ public class UsersControllerUnitTests
     public async Task GetAllUsersAsync_WithValidPage_ReturnsOkResult()
     {
         // Arrange
-        var fixture = new UserControllerFixture();
+        var fixture = new UserControllerMockFixture();
         var users = new List<UserSummaryDto>
         {
             new UserSummaryDto(Guid.NewGuid(), "user1"),
@@ -73,7 +73,7 @@ public class UsersControllerUnitTests
     public async Task GetAllUsersAsync_WithEmptyList_ReturnsOkResultWithEmptyList()
     {
         // Arrange
-        var fixture = new UserControllerFixture();
+        var fixture = new UserControllerMockFixture();
         var users = new List<UserSummaryDto>();
 
         fixture.UserServiceMock.Setup(x => x.GetUsersAsync(It.IsAny<int>(), It.IsAny<int>()))
@@ -98,7 +98,7 @@ public class UsersControllerUnitTests
     public async Task GetUserMeAsync_WithValidUser_ReturnsOkResult()
     {
         // Arrange
-        var fixture = new UserControllerFixture();
+        var fixture = new UserControllerMockFixture();
         var userId = Guid.NewGuid();
         var userDetails = new Domain.UserDetails("John", "Doe", "France", "Paris", "123 Main St", 0);
         var user = new Domain.User(1, "testuser", userId,
@@ -124,7 +124,7 @@ public class UsersControllerUnitTests
     public async Task GetUserMeAsync_NoUserIdClaim_Returns500()
     {
         // Arrange
-        var fixture = new UserControllerFixture();
+        var fixture = new UserControllerMockFixture();
         var controller = fixture.CreateController();
 
         // Act
@@ -140,7 +140,7 @@ public class UsersControllerUnitTests
     public async Task PatchUserAsync_PatchMe_Success()
     {
         // Arrange
-        var fixture = new UserControllerFixture();
+        var fixture = new UserControllerMockFixture();
         fixture.SetUserIdentity();
         fixture.UserServiceMock
             .Setup(x => x.UpdateUserDetailsAsync(It.IsAny<UpdateUserDetailsCommand>()))
@@ -169,7 +169,7 @@ public class UsersControllerUnitTests
     public async Task PatchUserAsync_PatchMe_NoUserIdClaim_Returns500()
     {
         // Arrange
-        var fixture = new UserControllerFixture();
+        var fixture = new UserControllerMockFixture();
         // Don't set user identity - simulate no authentication claims
         var controller = fixture.CreateController();
         var dto = new UserDetailsDTO(
@@ -193,7 +193,7 @@ public class UsersControllerUnitTests
     public async Task PatchUserAsync_PatchOtherUser_Success()
     {
         // Arrange
-        var fixture = new UserControllerFixture();
+        var fixture = new UserControllerMockFixture();
         fixture.SetUserIdentity();
         fixture.UserServiceMock
             .Setup(x => x.UpdateUserDetailsAsync(It.IsAny<UpdateUserDetailsCommand>()))
@@ -222,7 +222,7 @@ public class UsersControllerUnitTests
     public async Task PatchUserAsync_PatchOtherUser_ConcurrencyConflict_Returns409()
     {
         // Arrange
-        var fixture = new UserControllerFixture();
+        var fixture = new UserControllerMockFixture();
         fixture.SetUserIdentity();
         fixture.UserServiceMock
             .Setup(x => x.UpdateUserDetailsAsync(It.IsAny<UpdateUserDetailsCommand>()))

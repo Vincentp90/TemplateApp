@@ -8,55 +8,43 @@ using WishlistApi.Controllers;
 
 namespace Tests.Helpers
 {
-    /// <summary>
-    /// Test fixture for UsersController that provides mock HttpContext and IUserService.
-    /// </summary>
-    public class UserControllerFixture
+    public abstract class UserControllerFixtureBase
     {
-        private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
-        private readonly Mock<IUserService> _userServiceMock;
-        private readonly DefaultHttpContext _httpContext;
+        protected readonly DefaultHttpContext HttpContext = new();
 
-        public Mock<IUserService> UserServiceMock => _userServiceMock;
-        public DefaultHttpContext HttpContext => _httpContext;
-
-        public UserControllerFixture()
-        {
-            _httpContextAccessorMock = new Mock<IHttpContextAccessor>(MockBehavior.Strict);
-            _userServiceMock = new Mock<IUserService>(MockBehavior.Strict);
-            _httpContext = new DefaultHttpContext();
-
-            _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(_httpContext);
-        }
-
-        /// <summary>
-        /// Sets the authenticated user identity using the provided GUID.
-        /// </summary>
         public void SetUserIdentity(string userId)
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Role, "User")
+                new(ClaimTypes.NameIdentifier, userId),
+                new(ClaimTypes.Role, "User")
             };
-            var identity = new ClaimsIdentity(claims, "TestAuth");
-            _httpContext.User = new ClaimsPrincipal(identity);
+            HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
         }
 
-        public void SetUserIdentity()
-        {
-            SetUserIdentity(Guid.NewGuid().ToString());
-        }
+        public void SetUserIdentity() => SetUserIdentity(Guid.NewGuid().ToString());
 
-        public UsersController CreateController()
+        protected UsersController BuildController(IUserService service)
         {
-            var controller = new UsersController(_userServiceMock.Object);
-            controller.ControllerContext = new ControllerContext
+            return new UsersController(service)
             {
-                HttpContext = _httpContext
+                ControllerContext = new ControllerContext { HttpContext = HttpContext }
             };
-
-            return controller;
         }
+    }
+
+    // Unit tests
+    public class UserControllerMockFixture : UserControllerFixtureBase
+    {
+        public Mock<IUserService> UserServiceMock { get; } = new(MockBehavior.Strict);
+        public UsersController CreateController() => BuildController(UserServiceMock.Object);
+    }
+
+    // Integration tests
+    public class UserControllerFixture : UserControllerFixtureBase
+    {
+        private readonly IUserService _userService;
+        public UserControllerFixture(IUserService userService) => _userService = userService;
+        public UsersController CreateController() => BuildController(_userService);
     }
 }
