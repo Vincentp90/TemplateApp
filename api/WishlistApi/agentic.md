@@ -1,17 +1,6 @@
 Agent: ignore this file.
 
 Next prompts:  
-Add Tests\ControllerTests\UsersControllerIntegrationTests.cs. Here create one (and only one) integration test for every public method in WishlistApi\Controllers\UsersController.cs. In each unit test, do a happy path test.   
-In the arrange step:  
-1 Create a dbcontext with an inmemory database  
-2 Create UserRepository with the dbcontext  
-3 Create UserService with the created UserRepository  
-4 Create UserControllerFixture with the UserService
-5 Get a UserController object from the fixture
-In the Act step you call the controller method on the UserController method
-
-Create a dbcontext with an inmemory database, you can use UserQueriesTests.cs as an example for this. For calling the controller methods use UserControllerFixture, you can use UsersControllerUnitTests.cs as an example.
-
 auction placebid concurrency test, can you check if i already have this kind of test?
 
 How can i write a test for SteamUpdaterService UpdateAppListingsIfEmptyAsync?

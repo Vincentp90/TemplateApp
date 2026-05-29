@@ -1,6 +1,11 @@
 using Application;
+using Application.Queries;
+using DataAccess;
+using DataAccess.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -43,8 +48,25 @@ namespace Tests.Helpers
     // Integration tests
     public class UserControllerFixture : UserControllerFixtureBase
     {
+        private readonly WishlistDbContext? _context;
         private readonly IUserService _userService;
+
         public UserControllerFixture(IUserService userService) => _userService = userService;
+
+        public UserControllerFixture()
+        {
+            var options = new DbContextOptionsBuilder<WishlistDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
+            _context = new WishlistDbContext(options);
+            var userRepository = new UserRepository(_context);
+            var userQueries = new UserQueries(_context);
+            var cache = new MemoryCache(new MemoryCacheOptions());
+            _userService = new UserService(userRepository, cache, _context, userQueries);
+        }
+
+        public WishlistDbContext GetContext() => _context!;
+
         public UsersController CreateController() => BuildController(_userService);
     }
 }
