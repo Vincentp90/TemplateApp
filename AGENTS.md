@@ -12,3 +12,4 @@ Current year: 2026
 ### Development guidelines
 - When using a primary constructor, don't add private fields, just use the parameter directly
 - When you want to delete files, instead of deleting, put '// TODO DELETE THIS' at the top of the file
+- This is .NET 10 project so use .NET 10 features if suitable

@@ -1,8 +1,6 @@
 Agent: ignore this file.
 
 Next prompts:  
-auction placebid concurrency test, can you check if i already have this kind of test?
-
 How can i write a test for SteamUpdaterService UpdateAppListingsIfEmptyAsync?
 SteamUpdaterService UpdateAppListingsIfEmptyAsync is currently ignoring the DDD architecture. Move it's functionality to the AppListingService in the Application layer, in SteamUpdaterService simply call the new applistingservice method. Run tests at the end for verification
 
@@ -18,16 +16,7 @@ llamma.cpp commands:
 cd G:\llama
 
 Best working model:
-.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-k q8_0 --cache-type-v q5_1 --n-cpu-moe 22 --flash-attn on -b 2048 -ub 2048
-
-Very fast but needs more testing if not too stupid:
-.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ2_S-2.17bpw -c 32768 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-k q5_0 --cache-type-v q4_1 --flash-attn on -b 2048 -ub 2048
-
-continue codecompletion (not working well, much worse than windsurf)
-.\llama-server -hf bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF:Q4_K_M -c 4096 --no-mmap --cache-type-k q8_0 --cache-type-v q4_0 -ngl 99 --flash-attn on --no-ui
-
-Q6_K_L 
-.\llama-server.exe -hf bartowski/Qwen_Qwen3.6-35B-A3B-GGUF:Q6_K_L -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --flash-attn -b 2048 -ub 2048 --cache-type-k q8_0 --cache-type-v q5_1 --n-cpu-moe 32 --no-ui 
+.\llama-server -hf byteshape/Qwen3.6-35B-A3B-GGUF:Qwen3.6-35B-A3B-IQ4_XS-4.15bpw -c 65536 --mmproj-auto --temp 0.6 --top-k 20 --top-p 0.95 --min-p 0 --presence-penalty 0 --repeat-penalty 1 --parallel 1 --no-mmap --api-key anything --no-context-shift --cache-type-k q8_0 --cache-type-v q5_1 --flash-attn on -b 2048 -ub 2048 --n-cpu-moe 21
 
 ----
 
