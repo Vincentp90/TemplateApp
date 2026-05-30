@@ -16,6 +16,8 @@ using WishlistApi.Helpers;
 
 namespace Tests.ControllerTests
 {
+    //TODO how to organise a test like this. It's not a unit test since it tests 2 layers (API + application)
+    // but it's not really a full integration test either since it doesn't even go to the DB
     public class WishlistControllerTest
     {
         [Fact]
@@ -65,7 +67,7 @@ namespace Tests.ControllerTests
             };
 
             // Act
-            ActionResult<WishlistDTOs.Wishlist> actionResult = await controller.GetWishlistAsync();
+            ActionResult<Wishlist> actionResult = await controller.GetWishlistAsync();
 
             // Assert
             
@@ -76,7 +78,7 @@ namespace Tests.ControllerTests
             actionResult.Should().NotBeNull();
             var okResult = actionResult.Result as OkObjectResult;
             okResult.Should().NotBeNull();
-            var wl = okResult!.Value as WishlistDTOs.Wishlist;
+            var wl = okResult!.Value as Wishlist;
             wl.Should().NotBeNull();
             wl.Items.Count().Should().Be(1);
 
@@ -93,7 +95,7 @@ namespace Tests.ControllerTests
             actionResult.Should().NotBeNull();
             okResult = actionResult.Result as OkObjectResult;
             okResult.Should().NotBeNull();
-            wl = okResult!.Value as WishlistDTOs.Wishlist;
+            wl = okResult!.Value as Wishlist;
             wl.Should().NotBeNull();
             item = wl.Items.First();
 

@@ -116,7 +116,7 @@ namespace Tests.IntegrationTests
 
             // Assert
             response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadFromJsonAsync<WishlistDTOs.Stats>();
+            var content = await response.Content.ReadFromJsonAsync<Stats>();
             content.Should().NotBeNull();
             content.AvgTimeAdded.Days.Should().Be(0);
             content.AvgTimeBetweenAdded.Days.Should().Be(0);
@@ -223,7 +223,7 @@ namespace Tests.IntegrationTests
 
             // Assert
             response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadFromJsonAsync<WishlistDTOs.Wishlist>();
+            var content = await response.Content.ReadFromJsonAsync<Wishlist>();
             content.Should().NotBeNull();
             content.Items.Count().Should().Be(2);
             content.Items.Select(x => x.AppId).Should().BeEquivalentTo(new[] { appIdRandomOffset + 1, appIdRandomOffset + 2 });
@@ -233,7 +233,7 @@ namespace Tests.IntegrationTests
 
             // Assert
             response.EnsureSuccessStatusCode();
-            content = await response.Content.ReadFromJsonAsync<WishlistDTOs.Wishlist>();
+            content = await response.Content.ReadFromJsonAsync<Wishlist>();
             content.Should().NotBeNull();
             content.Items.Should().AllSatisfy(item =>
             {
@@ -270,7 +270,7 @@ namespace Tests.IntegrationTests
 
             // Verify the item was added
             response = await client.GetAsync("/wishlist");
-            var content = await response.Content.ReadFromJsonAsync<WishlistDTOs.Wishlist>();
+            var content = await response.Content.ReadFromJsonAsync<Wishlist>();
             content.Should().NotBeNull();
             content.Items.Count().Should().Be(1);
             content.Items.First().AppId.Should().Be(appIdRandomOffset + 1);
@@ -309,7 +309,7 @@ namespace Tests.IntegrationTests
 
             // Verify the item was removed and the other is still there
             response = await client.GetAsync("/wishlist");
-            var content = await response.Content.ReadFromJsonAsync<WishlistDTOs.Wishlist>();
+            var content = await response.Content.ReadFromJsonAsync<Wishlist>();
             content.Should().NotBeNull();
             content.Items.Count().Should().Be(1);
             content.Items.First().AppId.Should().Be(appIdRandomOffset + 2);
