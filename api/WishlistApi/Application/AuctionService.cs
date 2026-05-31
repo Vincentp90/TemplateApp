@@ -26,7 +26,7 @@ namespace Application
             var newAuction = new Domain.Auction(
                 dateAdded: DateTimeOffset.UtcNow,
                 startingPrice: 1.0m,
-                appListingId: app.appid
+                appListingId: app.Id
             );
 
             var latestAuction = await repository.GetLatestAuctionAsync();

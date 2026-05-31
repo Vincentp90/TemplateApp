@@ -22,12 +22,12 @@ namespace Tests.IntegrationTests
                 UseSnakeCaseNamingConvention().
                 Options;
             var _context = new WishlistDbContext(options);
-            var da = new AppListingDA(_context);
+            var repo = new AppListingRepository(_context);
 
             // warmup
             try
             {
-                await da.GetRandomAppListingAsync();
+                await repo.GetRandomAsync();
             }
             catch (InvalidOperationException e) 
             {
@@ -41,18 +41,18 @@ namespace Tests.IntegrationTests
             
             sw.Start();
             for (int i = 0; i < 50; i++)
-                await da.GetRandomAppListingAsync();
+                await repo.GetRandomAsync();
             sw.Stop();
 
             var originalTime = sw.ElapsedMilliseconds;
 
             // Repeat for alternative method
             /*
-            await da.GetRandomAppListingOldAsync();
+            await repo.GetRandomAsync();
 
             sw.Start();
             for (int i = 0; i < 50; i++)
-                b = await da.GetRandomAppListingOldAsync();
+                b = await repo.GetRandomAsync();
             sw.Stop();
 
             var secondTime = sw.ElapsedMilliseconds;*/

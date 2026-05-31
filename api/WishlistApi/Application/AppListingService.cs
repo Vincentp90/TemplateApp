@@ -1,11 +1,10 @@
-﻿using DataAccess.AppListings;
+﻿using Domain.Repositories;
 using Microsoft.Extensions.Configuration;
 using Domain;
 using AppListingEF = DataAccess.AppListings.AppListing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,39 +12,39 @@ namespace Application
 {
     public interface IAppListingService
     {
-        Task<List<AppListingEF>> SearchAppListingsAsync(string term);
-        Task<AppListingEF> GetRandomAppListingAsync();
+        Task<List<Domain.AppListing>> SearchAppListingsAsync(string term);
+        Task<Domain.AppListing> GetRandomAppListingAsync();
         Task EnsureAppListingsPopulatedAsync(CancellationToken cancellationToken = default);
     }
 
     public class AppListingService : IAppListingService
     {
-        private readonly IAppListingDA _appListingDA;
+        private readonly IAppListingRepository _appListingRepository;
         private readonly ISteamApiClient _steamApiClient;
         private readonly IConfiguration _configuration;
 
-        public AppListingService(IAppListingDA appListingDA, ISteamApiClient steamApiClient, IConfiguration configuration)
+        public AppListingService(IAppListingRepository appListingRepository, ISteamApiClient steamApiClient, IConfiguration configuration)
         {
-            _appListingDA = appListingDA;
+            _appListingRepository = appListingRepository;
             _steamApiClient = steamApiClient;
             _configuration = configuration;
         }
 
-        public async Task<AppListingEF> GetRandomAppListingAsync()
+        public async Task<Domain.AppListing> GetRandomAppListingAsync()
         {
-            return await _appListingDA.GetRandomAppListingAsync();
+            return await _appListingRepository.GetRandomAsync();
         }
 
-        public async Task<List<AppListingEF>> SearchAppListingsAsync(string term)
+        public async Task<List<Domain.AppListing>> SearchAppListingsAsync(string term)
         {
             if (string.IsNullOrEmpty(term) || term.Length < 3)
-                return new List<AppListingEF>();
-            return await _appListingDA.SearchAppListingsAsync(term);
+                return new List<Domain.AppListing>();
+            return await _appListingRepository.SearchAsync(term);
         }
 
         public async Task EnsureAppListingsPopulatedAsync(CancellationToken cancellationToken = default)
         {
-            if (await _appListingDA.HasAnyAsync())
+            if (await _appListingRepository.HasAnyAsync())
                 return;
 
             var appListings = await _steamApiClient.GetAppListingsAsync(_configuration["SteamAPIKEY"]!);
@@ -55,10 +54,10 @@ namespace Application
             var distinctApps = appListings.Apps
                 .GroupBy(a => a.AppId)
                 .Select(g => g.First())
-                .Select(a => new AppListingEF { appid = a.AppId, name = a.Name })
+                .Select(a => new Domain.AppListing(a.AppId, a.Name))
                 .ToList();
 
-            await _appListingDA.SaveAppListingsAsync(distinctApps);
+            await _appListingRepository.SaveAsync(distinctApps);
         }
     }
 }

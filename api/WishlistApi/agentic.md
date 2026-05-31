@@ -1,7 +1,9 @@
 Agent: ignore this file.
 
 Next prompts:  
-SteamUpdaterService UpdateAppListingsIfEmptyAsync is currently ignoring the DDD architecture. Move it's functionality to the AppListingService in the Application layer, in SteamUpdaterService simply call the new applistingservice method. Run tests at the end for verification. Make a plan.
+Add AppListingRepository. Refactor AppListingService to use the repository. Check one of the other repository for how it's defined and used. Make a plan.
+
+Shouldn't Domain.AppListing and Domain.SteamAppEntry be the same class (or record?) ?
 
 InternalsVisibleTo: where is it used
 

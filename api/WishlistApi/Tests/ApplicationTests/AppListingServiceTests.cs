@@ -1,5 +1,5 @@
 using Application;
-using DataAccess.AppListings;
+using Domain.Repositories;
 using Domain;
 using Microsoft.Extensions.Configuration;
 using Moq;
@@ -11,26 +11,26 @@ namespace Tests.ApplicationTests
         [Fact]
         public async Task EnsureAppListingsPopulatedAsync_DoesNothing_WhenAppListingsExist()
         {
-            var mockDa = new Mock<IAppListingDA>();
-            mockDa.Setup(da => da.HasAnyAsync()).ReturnsAsync(true);
+            var mockRepo = new Mock<IAppListingRepository>();
+            mockRepo.Setup(r => r.HasAnyAsync()).ReturnsAsync(true);
 
             var mockApiClient = new Mock<ISteamApiClient>();
             var mockConfig = new Mock<IConfiguration>();
 
-            var service = new AppListingService(mockDa.Object, mockApiClient.Object, mockConfig.Object);
+            var service = new AppListingService(mockRepo.Object, mockApiClient.Object, mockConfig.Object);
 
             await service.EnsureAppListingsPopulatedAsync();
 
-            mockDa.Verify(da => da.HasAnyAsync(), Times.Once());
+            mockRepo.Verify(r => r.HasAnyAsync(), Times.Once());
             mockApiClient.Verify(c => c.GetAppListingsAsync(It.IsAny<string>()), Times.Never());
-            mockDa.Verify(da => da.SaveAppListingsAsync(It.IsAny<IEnumerable<DataAccess.AppListings.AppListing>>()), Times.Never());
+            mockRepo.Verify(r => r.SaveAsync(It.IsAny<IEnumerable<Domain.AppListing>>()), Times.Never());
         }
 
         [Fact]
         public async Task EnsureAppListingsPopulatedAsync_SavesAppListings_WhenEmpty()
         {
-            var mockDa = new Mock<IAppListingDA>();
-            mockDa.Setup(da => da.HasAnyAsync()).ReturnsAsync(false);
+            var mockRepo = new Mock<IAppListingRepository>();
+            mockRepo.Setup(r => r.HasAnyAsync()).ReturnsAsync(false);
 
             var testApps = new List<SteamAppEntry>
             {
@@ -44,19 +44,19 @@ namespace Tests.ApplicationTests
             var mockConfig = new Mock<IConfiguration>();
             mockConfig.Setup(c => c["SteamAPIKEY"]).Returns("test-key");
 
-            var service = new AppListingService(mockDa.Object, mockApiClient.Object, mockConfig.Object);
+            var service = new AppListingService(mockRepo.Object, mockApiClient.Object, mockConfig.Object);
 
             await service.EnsureAppListingsPopulatedAsync();
 
             mockApiClient.Verify(c => c.GetAppListingsAsync("test-key"), Times.Once());
-            mockDa.Verify(da => da.SaveAppListingsAsync(It.IsAny<IEnumerable<DataAccess.AppListings.AppListing>>()), Times.Once());
+            mockRepo.Verify(r => r.SaveAsync(It.IsAny<IEnumerable<Domain.AppListing>>()), Times.Once());
         }
 
         [Fact]
         public async Task EnsureAppListingsPopulatedAsync_DeduplicatesApps()
         {
-            var mockDa = new Mock<IAppListingDA>();
-            mockDa.Setup(da => da.HasAnyAsync()).ReturnsAsync(false);
+            var mockRepo = new Mock<IAppListingRepository>();
+            mockRepo.Setup(r => r.HasAnyAsync()).ReturnsAsync(false);
 
             var duplicateApps = new List<SteamAppEntry>
             {
@@ -71,18 +71,18 @@ namespace Tests.ApplicationTests
             var mockConfig = new Mock<IConfiguration>();
             mockConfig.Setup(c => c["SteamAPIKEY"]).Returns("test-key");
 
-            var service = new AppListingService(mockDa.Object, mockApiClient.Object, mockConfig.Object);
+            var service = new AppListingService(mockRepo.Object, mockApiClient.Object, mockConfig.Object);
 
             await service.EnsureAppListingsPopulatedAsync();
 
-            mockDa.Verify(da => da.SaveAppListingsAsync(It.IsAny<IEnumerable<DataAccess.AppListings.AppListing>>()), Times.Once());
+            mockRepo.Verify(r => r.SaveAsync(It.IsAny<IEnumerable<Domain.AppListing>>()), Times.Once());
         }
 
         [Fact]
         public async Task EnsureAppListingsPopulatedAsync_ThrowsException_WhenApiClientReturnsNull()
         {
-            var mockDa = new Mock<IAppListingDA>();
-            mockDa.Setup(da => da.HasAnyAsync()).ReturnsAsync(false);
+            var mockRepo = new Mock<IAppListingRepository>();
+            mockRepo.Setup(r => r.HasAnyAsync()).ReturnsAsync(false);
 
             var mockApiClient = new Mock<ISteamApiClient>();
             mockApiClient.Setup(c => c.GetAppListingsAsync(It.IsAny<string>())).ReturnsAsync((SteamAppList?)null);
@@ -90,7 +90,7 @@ namespace Tests.ApplicationTests
             var mockConfig = new Mock<IConfiguration>();
             mockConfig.Setup(c => c["SteamAPIKEY"]).Returns("test-key");
 
-            var service = new AppListingService(mockDa.Object, mockApiClient.Object, mockConfig.Object);
+            var service = new AppListingService(mockRepo.Object, mockApiClient.Object, mockConfig.Object);
 
             var exception = await Assert.ThrowsAsync<Exception>(
                 () => service.EnsureAppListingsPopulatedAsync());
