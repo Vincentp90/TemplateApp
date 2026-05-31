@@ -5,6 +5,7 @@ using DataAccess.AppListings;
 using DataAccess.Auctions;
 using DataAccess.Users;
 using DataAccess.Wishlist;
+using Domain;
 using Domain.Helpers;
 using Domain.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

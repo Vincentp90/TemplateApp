@@ -1,18 +1,15 @@
+using Domain;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Text.Json;
+using DataAccess.AppListings;
 
 namespace WishlistApi.HostedServices
 {
-    public interface ISteamApiClient
-    {
-        Task<Root?> GetAppListingsAsync(string apiKey);
-    }
-
     public class SteamApiClient : ISteamApiClient
     {
         private const string _steamApiUrl = "https://api.steampowered.com/IStoreService/GetAppList/v1/";
 
-        public async Task<Root?> GetAppListingsAsync(string apiKey)
+        public async Task<SteamAppList?> GetAppListingsAsync(string apiKey)
         {
             using HttpClient client = new HttpClient();
             var url = QueryHelpers.AddQueryString(_steamApiUrl, new Dictionary<string, string?>
@@ -22,17 +19,24 @@ namespace WishlistApi.HostedServices
                 ["include_dlc"] = "false",
             });
             var response = await client.GetStringAsync(url);
-            var appListings = JsonSerializer.Deserialize<Root>(response);
-            return appListings;
+            var deserialized = JsonSerializer.Deserialize<Root>(response);
+            if (deserialized == null || deserialized.response == null)
+                return null;
+
+            var apps = deserialized.response.apps
+                .Select(a => new SteamAppEntry(a.appid, a.name))
+                .ToList();
+
+            return new SteamAppList(apps);
         }
     }
 
-    public class Root
+    internal class Root
     {
         public required AppList response { get; set; }
     }
 
-    public class AppList
+    internal class AppList
     {
         public required List<DataAccess.AppListings.AppListing> apps { get; set; }
     }

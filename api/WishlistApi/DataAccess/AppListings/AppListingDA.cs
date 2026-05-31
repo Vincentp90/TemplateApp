@@ -11,6 +11,8 @@ namespace DataAccess.AppListings
     {
         Task<List<AppListing>> SearchAppListingsAsync(string term);
         Task<AppListing> GetRandomAppListingAsync();
+        Task<bool> HasAnyAsync();
+        Task SaveAppListingsAsync(IEnumerable<AppListing> listings);
     }
 
     public class AppListingDA : IAppListingDA
@@ -37,6 +39,17 @@ namespace DataAccess.AppListings
                 .OrderBy(x => x.appid)
                 .Skip(index)
                 .FirstAsync();
+        }
+
+        public async Task<bool> HasAnyAsync()
+        {
+            return await _context.AppListings.AnyAsync();
+        }
+
+        public async Task SaveAppListingsAsync(IEnumerable<AppListing> listings)
+        {
+            _context.AppListings.AddRange(listings);
+            await _context.SaveChangesAsync();
         }
     }
 }
