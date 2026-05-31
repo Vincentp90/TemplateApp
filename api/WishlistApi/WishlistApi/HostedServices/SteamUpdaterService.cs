@@ -8,6 +8,11 @@ using System.Text.Json;
 
 namespace WishlistApi.HostedServices
 {
+    public interface ISteamApiClient
+    {
+        Task<Root?> GetAppListingsAsync(string apiKey);
+    }
+
     /// <summary>
     /// Keep the list of steam games in the db up to date
     /// </summary>
@@ -15,10 +20,12 @@ namespace WishlistApi.HostedServices
     {
         private const string _steamApiUrl = "https://api.steampowered.com/IStoreService/GetAppList/v1/";
         private readonly IServiceProvider _serviceProvider;
+        private readonly ISteamApiClient _steamApiClient;
 
-        public SteamUpdaterService(IServiceProvider serviceProvider) 
+        public SteamUpdaterService(IServiceProvider serviceProvider, ISteamApiClient steamApiClient) 
         {
             _serviceProvider = serviceProvider;
+            _steamApiClient = steamApiClient;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -34,7 +41,7 @@ namespace WishlistApi.HostedServices
             }
         }
 
-        private async Task UpdateAppListingsIfEmptyAsync(CancellationToken stoppingToken)
+        internal async Task UpdateAppListingsIfEmptyAsync(CancellationToken stoppingToken)
         {
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<WishlistDbContext>();// TODO only direct reference to DA layer left, nice way to fix?
@@ -42,7 +49,7 @@ namespace WishlistApi.HostedServices
 
             if (!await dbContext.AppListings.AnyAsync(stoppingToken))
             {
-                var appListings = await GetAppListingsFromSteamAsyncV1(config["SteamAPIKEY"]!);
+                var appListings = await _steamApiClient.GetAppListingsAsync(config["SteamAPIKEY"]!);
                 if (appListings == null)
                     throw new Exception("Failed to get game list from steam");
                 appListings.response.apps = appListings.response.apps
@@ -53,11 +60,25 @@ namespace WishlistApi.HostedServices
                 await dbContext.SaveChangesAsync(stoppingToken);
             }
         }
+    }
 
-        private async Task<Root?> GetAppListingsFromSteamAsyncV1(string apiKey)
+    public class Root
+    {
+        public required AppList response { get; set; }
+    }
+
+    public class AppList
+    {
+        public required List<AppListing> apps { get; set; }
+    }
+
+    public class SteamApiClient : ISteamApiClient
+    {
+        private const string _steamApiUrl = "https://api.steampowered.com/IStoreService/GetAppList/v1/";
+
+        public async Task<Root?> GetAppListingsAsync(string apiKey)
         {
-            //Prod
-            HttpClient client = new HttpClient();
+            using HttpClient client = new HttpClient();
             var url = QueryHelpers.AddQueryString(_steamApiUrl, new Dictionary<string, string?>
             {
                 ["key"] = apiKey,
@@ -66,21 +87,7 @@ namespace WishlistApi.HostedServices
             });
             var response = await client.GetStringAsync(url);
             var appListings = JsonSerializer.Deserialize<Root>(response);
-
-            //Dev
-            //TODO read steamapplistExample.json
-
             return appListings;
-        }
-
-        private class Root
-        {
-            public required AppList response { get; set; }
-        }
-
-        private class AppList
-        {
-            public required List<AppListing> apps { get; set; }
         }
     }
 }

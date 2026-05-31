@@ -4,6 +4,8 @@ Next prompts:
 How can i write a test for SteamUpdaterService UpdateAppListingsIfEmptyAsync?
 SteamUpdaterService UpdateAppListingsIfEmptyAsync is currently ignoring the DDD architecture. Move it's functionality to the AppListingService in the Application layer, in SteamUpdaterService simply call the new applistingservice method. Run tests at the end for verification
 
+InternalsVisibleTo: where is it used
+
 ----
 
 Todo:
