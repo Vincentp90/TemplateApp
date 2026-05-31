@@ -1,6 +1,5 @@
 ﻿using Application.Contracts;
 using DataAccess;
-using DataAccess.Auctions;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -21,7 +20,7 @@ namespace Application.Queries
             return auction == null ? null : new AuctionDto(
                 ID: auction.ID,
                 StartDate: auction.DateAdded,
-                EndDate: auction.DateAdded + Auction.Duration,
+                EndDate: auction.DateAdded + Domain.Auction.Duration,
                 UserHasBid: currentUserGuid != null && auction.User?.UUID == currentUserGuid,
                 StartingPrice: auction.StartingPrice,
                 CurrentPrice: auction.CurrentPrice,

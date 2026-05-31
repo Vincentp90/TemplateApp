@@ -8,6 +8,8 @@ namespace Domain
 {
     public class Auction
     {
+        public static TimeSpan Duration = TimeSpan.FromMinutes(30);
+
         public int Id { get; private set; }
         public decimal? CurrentPrice { get; internal set; }
         public decimal StartingPrice { get; internal set; }

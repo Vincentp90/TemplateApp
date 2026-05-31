@@ -1,7 +1,6 @@
 using Domain;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Text.Json;
-using DataAccess.AppListings;
 
 namespace WishlistApi.HostedServices
 {
@@ -38,6 +37,12 @@ namespace WishlistApi.HostedServices
 
     internal class AppList
     {
-        public required List<DataAccess.AppListings.AppListing> apps { get; set; }
+        public required List<AppEntry> apps { get; set; }
+    }
+
+    internal class AppEntry
+    {
+        public int appid { get; set; }
+        public required string name { get; set; }
     }
 }

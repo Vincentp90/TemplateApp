@@ -1,5 +1,4 @@
 ﻿using Application;
-using DataAccess.AppListings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

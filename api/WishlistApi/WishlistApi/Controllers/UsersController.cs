@@ -1,7 +1,6 @@
 ﻿using Application;
 using Application.Commands;
 using Application.Contracts;
-using DataAccess.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

@@ -1,6 +1,5 @@
 ﻿using Application;
-using DataAccess.AppListings;
-using DataAccess.Auctions;
+using Domain;
 
 namespace WishlistApi.HostedServices
 {

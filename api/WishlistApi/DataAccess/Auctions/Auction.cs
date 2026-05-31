@@ -13,8 +13,6 @@ namespace DataAccess.Auctions
 {
     public class Auction
     {
-        public static TimeSpan Duration = TimeSpan.FromMinutes(30);
-
         [Key]
         public int ID { get; set; }
         public DateTimeOffset DateAdded { get; set; }

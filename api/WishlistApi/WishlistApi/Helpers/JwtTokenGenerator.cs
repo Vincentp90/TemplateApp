@@ -1,5 +1,4 @@
 ﻿using Application.Commands;
-using DataAccess.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
