@@ -1,6 +1,6 @@
-﻿using DataAccess.AppListings;
-using DataAccess.Users;
-using DataAccess.Wishlist;
+﻿using Application;
+using Domain.Helpers;
+using Domain.Repositories;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,14 +10,14 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 using WishlistApi.Controllers;
 using WishlistApi.DTOs;
 using WishlistApi.Helpers;
 
 namespace Tests.ControllerTests
 {
+    //TODO how to organise a test like this. It's not a unit test since it tests 2 layers (API + application)
+    // but it's not really a full integration test either since it doesn't even go to the DB
     public class WishlistControllerTest
     {
         [Fact]
@@ -39,55 +39,53 @@ namespace Tests.ControllerTests
             var mockAccessor = new Mock<IHttpContextAccessor>();
             mockAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
-            var wlDAMock = new Mock<IWishlistItemDA>(MockBehavior.Strict);
-            wlDAMock.Setup(x => x.GetWishlistItemsAsync(3)).ReturnsAsync(
-                new List<WishlistItem>()
+            var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
+            repositoryMock.Setup(x => x.GetWishlistItemsAsync(3)).ReturnsAsync(
+                new List<Domain.WishlistItem>()
                 {
-                    new WishlistItem() { 
-                        appid = 1, 
-                        DateAdded = DateTimeOffset.Now, 
-                        ID = 2, 
-                        UserID = 3,
-                        AppListing = new AppListing(){ appid = 1, name = APPNAME }
-                    },
+                    new Domain.WishlistItem(
+                        id: 2,
+                        appId: 1,
+                        name: APPNAME,
+                        dateAdded: DateTimeOffset.Now,
+                        userId: 3
+                    ),
                 });
 
-            var userDAMock = new Mock<IUserDA>(MockBehavior.Strict);
-            userDAMock.Setup(x => x.GetInternalUserIdAsync(externalID)).ReturnsAsync(3);
+            var userServiceMock = new Mock<IUserService>(MockBehavior.Strict);
+            userServiceMock.Setup(x => x.GetInternalUserIdAsync(externalID)).ReturnsAsync(3);
 
-            IUserContext userContextMock = new UserContext(mockAccessor.Object, userDAMock.Object);
+            IUserContext userContextMock = new UserContext(mockAccessor.Object, userServiceMock.Object);
 
-            var controller = new WishlistController(userContextMock, wlDAMock.Object, null);
+            var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
+            uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+
+            var controller = new WishlistController(userContextMock, new WishlistService(repositoryMock.Object, uowMock.Object));
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = httpContext
             };
 
             // Act
-            ActionResult<WishlistDTOs.Wishlist> actionResult = await controller.GetWishlistAsync();
+            ActionResult<Wishlist> actionResult = await controller.GetWishlistAsync();
 
             // Assert
             
             // Check data access calls were only called once
-            wlDAMock.Verify(x => x.GetWishlistItemsAsync(3), Times.Once);
-            userDAMock.Verify(x => x.GetInternalUserIdAsync(externalID), Times.Once);
+            repositoryMock.Verify(x => x.GetWishlistItemsAsync(3), Times.Once);
+            userServiceMock.Verify(x => x.GetInternalUserIdAsync(externalID), Times.Once);
 
             actionResult.Should().NotBeNull();
             var okResult = actionResult.Result as OkObjectResult;
             okResult.Should().NotBeNull();
-            var wl = okResult!.Value as WishlistDTOs.Wishlist;
+            var wl = okResult!.Value as Wishlist;
             wl.Should().NotBeNull();
             wl.Items.Count().Should().Be(1);
 
-            var item = wl.Items.First() as IDictionary<string, object>;
-            item.Should().Contain("appid", 1);
-            item["appid"].Should().Be(1);
-
-            item.Should().ContainKey("dateadded");
-
-            item.Should().Contain("name", APPNAME);
-
-            item.Should().NotContainKey("UserID");// Don't return the internal user id
+            var item = wl.Items.First();
+            item.AppId.Should().Be(1);
+            item.DateAdded.Should().NotBeNull();
+            item.Name.Should().Be(APPNAME);
 
 
             // Act
@@ -97,14 +95,14 @@ namespace Tests.ControllerTests
             actionResult.Should().NotBeNull();
             okResult = actionResult.Result as OkObjectResult;
             okResult.Should().NotBeNull();
-            wl = okResult!.Value as WishlistDTOs.Wishlist;
+            wl = okResult!.Value as Wishlist;
             wl.Should().NotBeNull();
-            item = wl.Items.First() as IDictionary<string, object>;
+            item = wl.Items.First();
 
             // Verify that only the specified fields are returned
-            item.Should().ContainKey("appid");
-            item.Should().ContainKey("name");
-            item.Should().NotContainKey("dateadded");
+            item.AppId.Should().NotBeNull();            
+            item.Name.Should().NotBeNull();
+            item.DateAdded.Should().BeNull();
         }
     }
 }

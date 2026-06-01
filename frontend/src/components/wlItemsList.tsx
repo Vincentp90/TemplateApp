@@ -3,7 +3,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { api } from "../api";
 
-type AppListingDetailed = { appid: number; name: string; dateadded: string };
+type AppListingDetailed = { appId: number; name: string; dateAdded: string };
 
 export default function WLItemsList() {
   const { data: wishlistItems = [] } = useSuspenseQuery<AppListingDetailed[]>({
@@ -13,7 +13,7 @@ export default function WLItemsList() {
       const data = res.data.items;
       return data.map((item: AppListingDetailed) => ({
         name: item.name,
-        dateadded: item.dateadded,
+        dateAdded: item.dateAdded,
       }));
     },
   });
@@ -46,7 +46,7 @@ export default function WLItemsList() {
               } hover:bg-gray-400 transition-colors duration-200`}
             >
               <span className="min-w-0 truncate">{s.name}</span>
-              <span className="min-w-0 truncate text-right">{toLocalTime(s.dateadded)}</span>
+              <span className="min-w-0 truncate text-right">{toLocalTime(s.dateAdded)}</span>
             </div>
           ))}
         </div>

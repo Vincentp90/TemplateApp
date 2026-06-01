@@ -55,8 +55,8 @@ namespace Tests.IntegrationTests
         public async Task LoginTest()
         {
             // Arrange
-            var userName = new Guid().ToString();
-            var password = new Guid().ToString();
+            var userName = Guid.NewGuid().ToString();
+            var password = Guid.NewGuid().ToString();
 
             var login = new { Username = userName, Password = password };
             await _client.PostAsJsonAsync("/auth/register", login);

@@ -402,3 +402,4 @@ FodyWeavers.xsd
 
 *.env
 appsettings.Production.json
+*.csproj.lscache

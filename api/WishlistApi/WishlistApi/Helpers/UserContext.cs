@@ -1,4 +1,4 @@
-﻿using DataAccess.Users;
+﻿using Application;
 using System.Security.Claims;
 
 namespace WishlistApi.Helpers
@@ -8,26 +8,18 @@ namespace WishlistApi.Helpers
         Task<int> GetIdAsync();
     }
 
-    public class UserContext : IUserContext
+    public class UserContext(IHttpContextAccessor httpContextAccessor, IUserService userService) : IUserContext
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IUserDA _userDA;
         private int? _cachedId;
-
-        public UserContext(IHttpContextAccessor httpContextAccessor, IUserDA userDA)
-        {
-            _httpContextAccessor = httpContextAccessor;
-            _userDA = userDA;
-        }
 
         public async Task<int> GetIdAsync()
         {
             if (_cachedId.HasValue) return _cachedId.Value;
 
-            var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userIdClaim = httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim)) throw new Exception("Unauthorized");
 
-            _cachedId = await _userDA.GetInternalUserIdAsync(new Guid(userIdClaim));
+            _cachedId = await userService.GetInternalUserIdAsync(new Guid(userIdClaim));
             return _cachedId.Value;
         }
     }

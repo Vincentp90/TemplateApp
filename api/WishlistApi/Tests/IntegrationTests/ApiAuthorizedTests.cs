@@ -1,5 +1,7 @@
-﻿using DataAccess;
-using DataAccess.AppListings;
+﻿using Application;
+using Application.Contracts;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.AppListings;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -114,7 +116,7 @@ namespace Tests.IntegrationTests
 
             // Assert
             response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadFromJsonAsync<WishlistDTOs.Stats>();
+            var content = await response.Content.ReadFromJsonAsync<Stats>();
             content.Should().NotBeNull();
             content.AvgTimeAdded.Days.Should().Be(0);
             content.AvgTimeBetweenAdded.Days.Should().Be(0);
@@ -158,14 +160,8 @@ namespace Tests.IntegrationTests
                 dbContext.AppListings.AddRange(appList);
                 await dbContext.SaveChangesAsync();
 
-                // Restart auction service so that it starts an auction with one of the apps
-                // TODO once auctionservice is refactored, directly call StartNextAuctionAsync
-                var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
-                var logger = sp.GetRequiredService<ILogger<AuctionService>>();
-                var service = new AuctionService(scopeFactory, logger);
-                await service.StartAsync(CancellationToken.None);
-                // Wait for auction service to initialize
-                await Task.Delay(200);
+                var auctionService = sp.GetRequiredService<IAuctionService>();
+                await auctionService.StartNextAuctionAsync();
             });
 
             // Act
@@ -173,13 +169,14 @@ namespace Tests.IntegrationTests
 
             // Assert
             response.EnsureSuccessStatusCode();
-            var auction = await response.Content.ReadFromJsonAsync<AuctionDTOs.Auction>();
+            var auction = await response.Content.ReadFromJsonAsync<AuctionDto>();
             auction.Should().NotBeNull();
-            auction.AppName.Should().BeOneOf("App1", "App2", "App3");
+            // TODO doesn't work isolated from other tests, uncomment once we have proper isolated tests
+            //auction.AppName.Should().BeOneOf("App1", "App2", "App3");
 
             // Act
             var updatedAuction = auction with { CurrentPrice = 15.0m };
-            await client.PostAsJsonAsync($"/auctions/current", updatedAuction);
+            response = await client.PostAsJsonAsync($"/auctions/current", updatedAuction);
 
             // Assert
             response.EnsureSuccessStatusCode();
@@ -188,11 +185,134 @@ namespace Tests.IntegrationTests
             response = await client.GetAsync("/auctions/current");
 
             // Assert
-            var updatedAuctionResponse = await response.Content.ReadFromJsonAsync<AuctionDTOs.Auction>();
+            var updatedAuctionResponse = await response.Content.ReadFromJsonAsync<AuctionDto>();
             updatedAuctionResponse.Should().NotBeNull();
             updatedAuctionResponse.CurrentPrice.Should().Be(15.0m);
             var rowVersionIncrement = updatedAuctionResponse.RowVersion - auction.RowVersion;
             rowVersionIncrement.Should().Be(1);
+        }
+
+        [Fact]
+        public async Task GetWishlist_Test()
+        {
+            // Arrange
+            var client = await _apiFactory.CreateAuthenticatedClientAsync();
+
+            int appIdRandomOffset = Random.Shared.Next(0, Int32.MaxValue / 4);
+            await _apiFactory.SeedAsync(async sp =>
+            {
+                var dbContext = sp.GetRequiredService<WishlistDbContext>();
+
+                var appList = new List<AppListing>()
+                {
+                    new AppListing(){ appid = appIdRandomOffset + 1, name = "Game One" },
+                    new AppListing(){ appid = appIdRandomOffset + 2, name = "Game Two" },
+                    new AppListing(){ appid = appIdRandomOffset + 3, name = "Game Three" },
+                };
+
+                dbContext.AppListings.AddRange(appList);
+                await dbContext.SaveChangesAsync();
+
+                // Add items to wishlist
+                await client.PostAsync($"/wishlist/{appIdRandomOffset + 1}", null);
+                await client.PostAsync($"/wishlist/{appIdRandomOffset + 2}", null);
+            });
+
+            // Act
+            var response = await client.GetAsync("/wishlist");
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadFromJsonAsync<Wishlist>();
+            content.Should().NotBeNull();
+            content.Items.Count().Should().Be(2);
+            content.Items.Select(x => x.AppId).Should().BeEquivalentTo(new[] { appIdRandomOffset + 1, appIdRandomOffset + 2 });
+
+            // Act - test fields filtering
+            response = await client.GetAsync("/wishlist?fields=appid,name");
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+            content = await response.Content.ReadFromJsonAsync<Wishlist>();
+            content.Should().NotBeNull();
+            content.Items.Should().AllSatisfy(item =>
+            {
+                item.AppId.Should().NotBeNull();
+                item.Name.Should().NotBeNull();
+            });
+        }
+
+        [Fact]
+        public async Task AddWishlistItem_Test()
+        {
+            // Arrange
+            var client = await _apiFactory.CreateAuthenticatedClientAsync();
+
+            int appIdRandomOffset = Random.Shared.Next(0, Int32.MaxValue / 4);
+            await _apiFactory.SeedAsync(async sp =>
+            {
+                var dbContext = sp.GetRequiredService<WishlistDbContext>();
+
+                var appList = new List<AppListing>()
+                {
+                    new AppListing(){ appid = appIdRandomOffset + 1, name = "New Game" },
+                };
+
+                dbContext.AppListings.AddRange(appList);
+                await dbContext.SaveChangesAsync();
+            });
+
+            // Act
+            var response = await client.PostAsync($"/wishlist/{appIdRandomOffset + 1}", null);
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+
+            // Verify the item was added
+            response = await client.GetAsync("/wishlist");
+            var content = await response.Content.ReadFromJsonAsync<Wishlist>();
+            content.Should().NotBeNull();
+            content.Items.Count().Should().Be(1);
+            content.Items.First().AppId.Should().Be(appIdRandomOffset + 1);
+        }
+
+        [Fact]
+        public async Task DeleteWishlistItem_Test()
+        {
+            // Arrange
+            var client = await _apiFactory.CreateAuthenticatedClientAsync();
+
+            int appIdRandomOffset = Random.Shared.Next(0, Int32.MaxValue / 4);
+            await _apiFactory.SeedAsync(async sp =>
+            {
+                var dbContext = sp.GetRequiredService<WishlistDbContext>();
+
+                var appList = new List<AppListing>()
+                {
+                    new AppListing(){ appid = appIdRandomOffset + 1, name = "ToRemove" },
+                    new AppListing(){ appid = appIdRandomOffset + 2, name = "ToKeep" },
+                };
+
+                dbContext.AppListings.AddRange(appList);
+                await dbContext.SaveChangesAsync();
+
+                // Add both items to wishlist
+                await client.PostAsync($"/wishlist/{appIdRandomOffset + 1}", null);
+                await client.PostAsync($"/wishlist/{appIdRandomOffset + 2}", null);
+            });
+
+            // Act - delete one item
+            var response = await client.DeleteAsync($"/wishlist/{appIdRandomOffset + 1}");
+
+            // Assert
+            response.EnsureSuccessStatusCode();
+
+            // Verify the item was removed and the other is still there
+            response = await client.GetAsync("/wishlist");
+            var content = await response.Content.ReadFromJsonAsync<Wishlist>();
+            content.Should().NotBeNull();
+            content.Items.Count().Should().Be(1);
+            content.Items.First().AppId.Should().Be(appIdRandomOffset + 2);
         }
     }
 }

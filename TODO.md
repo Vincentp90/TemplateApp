@@ -1,8 +1,7 @@
 Things I'm going to try/add/learn more about later :
-- Apply DDD https://chatgpt.com/c/69f73138-654c-83eb-9d6d-71c580be4b5e, https://chatgpt.com/c/69f758ba-6b6c-83eb-aa9f-2c476025d909 https://gemini.google.com/app/65bf18af82a25e99
-
-- CQRS learn more and apply?
-- Auctions unit tests
+- Auction: add end date to entity, remove static mutable Domain.Auction.Duration
+- Auction OCC: remove client side part since we also have the admin form which is more suitable for RowVersion round-trip, auction use case fits better with only server side OCC
+- DDD add domain event example https://gemini.google.com/app/f3480cdb192b1625
 - Add general functionality:
     - Delete profile (GDPR right to forget)
 - Add auditing: keep track who changed profile details https://chatgpt.com/c/699b338d-c0b0-8326-b440-035f78f30823

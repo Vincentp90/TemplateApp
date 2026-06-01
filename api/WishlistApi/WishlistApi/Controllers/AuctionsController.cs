@@ -1,15 +1,15 @@
-﻿using DataAccess.Auctions;
-using DataAccess.Users;
-using DataAccess.Wishlist;
+﻿using Application;
+using Application.Commands;
+using Application.Contracts;
+using Application.Queries;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
 using System.Data;
 using System.Dynamic;
 using System.Security.Claims;
-using WishlistApi.DTOs;
 using WishlistApi.Helpers;
 
 namespace WishlistApi.Controllers
@@ -21,79 +21,43 @@ namespace WishlistApi.Controllers
     [ApiController]
     [Authorize]
     [Route("[controller]")]
-    public class AuctionsController : ControllerBase
+    public class AuctionsController(IUserContext userContext, IAuctionService auctionService, IAuctionQueries auctionQueries, IHubContext<AuctionHub> hub) : ControllerBase
     {
-        private readonly IUserContext _userContext;
-        private readonly IUserDA _userDA;
-        private readonly IAuctionDA _auctionDA;        
-        private readonly IHubContext<AuctionHub> _hub;
-        private readonly IConfiguration _config;
-
-        public AuctionsController(IUserContext userContext, IAuctionDA auctionDA, IUserDA userDA, IHubContext<AuctionHub> hub, IConfiguration config)
-        {
-            _userContext = userContext;
-            _auctionDA = auctionDA;
-            _userDA = userDA;
-            _hub = hub;
-            _config = config;
-        }
-
         [HttpGet("current")]
-        public async Task<ActionResult<AuctionDTOs.Auction>> GetCurrentAuctionAsync()
+        public async Task<ActionResult<AuctionDto>> GetCurrentAuctionAsync()
         {
-            var auction = await _auctionDA.GetLatestAuctionAsync();
+            var userClaimNameId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Guid? userGuid = userClaimNameId == null ? null : new Guid(userClaimNameId);
+            var auction = await auctionQueries.GetCurrentAuctionAsync(userGuid);
             if(auction == null)
                 return NoContent();
 
-            return Ok(new AuctionDTOs.Auction(
-                ID: auction.ID,
-                StartDate: auction.DateAdded,
-                EndDate: auction.DateAdded + Auction.Duration,
-                UserHasBid: (auction.User?.UUID.ToString() == User.FindFirstValue(ClaimTypes.NameIdentifier)),
-                StartingPrice: auction.StartingPrice,
-                CurrentPrice: auction.CurrentPrice,
-                AppID: auction.appid,
-                AppName: auction.AppListing.name,
-                RowVersion: auction.RowVersion
-            ));
+            return Ok(auction);
         }
 
         [HttpPost("current")]
-        public async Task<ActionResult> PostAuctionAsync(AuctionDTOs.Auction auction)
+        public async Task<ActionResult> PostAuctionAsync(AuctionDto auction)
         {
-            int internalUserId = await _userContext.GetIdAsync();
+            int internalUserId = await userContext.GetIdAsync();
+
+            if(auction.CurrentPrice == null)
+                return BadRequest("CurrentPrice is required");
 
             try
             {
-                await _auctionDA.UpdateAuctionBidAsync(new Auction { 
-                    ID = auction.ID, 
-                    CurrentPrice = auction.CurrentPrice, 
-                    RowVersion = auction.RowVersion,
-                    UserID = internalUserId
-                });
-                _ = _hub.Clients.All.SendAsync("AuctionUpdated");
+                await auctionService.PlaceBidAsync(new PlaceBidCommand(
+                    AuctionId: auction.ID, 
+                    Amount: auction.CurrentPrice.Value, 
+                    RowVersion: auction.RowVersion,
+                    UserId: internalUserId
+                ));
+                _ = hub.Clients.All.SendAsync("AuctionUpdated");
                 return Ok();
             }
-            catch(DbUpdateConcurrencyException)
+            catch (DomainException)
             {
+                // We could later do something more intelligent with this instead of handling it the same as a concurrency issue
                 return StatusCode(StatusCodes.Status409Conflict);
-            }
-        }
-
-        [HttpGet("current/SimulateBid")]
-        public async Task<ActionResult> PostSimulateBidAsync()
-        {
-            var user = await GetSimulationUser();
-
-            try
-            {
-                Auction auction = (await _auctionDA.GetLatestAuctionAsync())!;
-                var newPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
-                auction.CurrentPrice = (auction.CurrentPrice ?? auction.StartingPrice) + 10.0M;
-                auction.UserID = user.ID;
-                await _auctionDA.UpdateAuctionBidAsync(auction);
-                _ = _hub.Clients.All.SendAsync("AuctionUpdated");
-                return Ok();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -101,17 +65,27 @@ namespace WishlistApi.Controllers
             }
         }
 
-        private async Task<User> GetSimulationUser()
+        /// <summary>
+        /// Simulate another user bidding, to more easily demonstrate optimistic concurrency
+        /// </summary>
+        /// <returns>Ok(200)</returns>
+        [HttpGet("current/SimulateBid")]
+        public async Task<ActionResult> PostSimulateBidAsync()
         {
-            const string username = "SimulateAuctionUser";
-            string password = _config["SimUserPassword"]!;
-            var user = await _userDA.LoginUserAsync(username, password);
-            if (user == null)
+            try
             {
-                await _userDA.AddUserAsync(username, password);
-                user = await _userDA.LoginUserAsync(username, password);
+                await auctionService.SimulateBid();
+                _ = hub.Clients.All.SendAsync("AuctionUpdated");
+                return Ok();
             }
-            return user!;
+            catch (DomainException)
+            {
+                return StatusCode(StatusCodes.Status409Conflict);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode(StatusCodes.Status409Conflict);
+            }
         }
     }
 }

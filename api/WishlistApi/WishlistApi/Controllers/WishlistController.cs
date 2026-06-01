@@ -1,12 +1,8 @@
-﻿using Application.Wishlist;
-using DataAccess.AppListings;
-using DataAccess.Users;
-using DataAccess.Wishlist;
+﻿using Application;
+using Application.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
-using System.Dynamic;
-using System.Security.Claims;
 using WishlistApi.DTOs;
 using WishlistApi.Helpers;
 
@@ -18,18 +14,16 @@ namespace WishlistApi.Controllers
     public class WishlistController : ControllerBase
     {
         private readonly IUserContext _userContext;
-        private readonly IWishlistItemDA _wishlistItemDA;
         private readonly IWishlistService _wishlistService;        
 
-        public WishlistController(IUserContext userContext, IWishlistItemDA wishlistItemDA, IWishlistService wishlistService)
+        public WishlistController(IUserContext userContext, IWishlistService wishlistService)
         {
             _userContext = userContext;
-            _wishlistItemDA = wishlistItemDA;
             _wishlistService = wishlistService;            
         }
 
         [HttpGet()]
-        public async Task<ActionResult<WishlistDTOs.Wishlist>> GetWishlistAsync([FromQuery] string? fields = null)
+        public async Task<ActionResult<Wishlist>> GetWishlistAsync([FromQuery] string? fields = null)
         {
             int internalUserId = await _userContext.GetIdAsync();
 
@@ -38,29 +32,25 @@ namespace WishlistApi.Controllers
                                 .ToHashSet();
             bool includeAll = fieldList.Count == 0;
             
-            var result = (await _wishlistItemDA.GetWishlistItemsAsync(internalUserId)).Select(x => 
-            {
-                //TODO better way to do this? DTO and leave fields empty when not included?
-                var obj = new ExpandoObject();
-                var item = obj as IDictionary<string, object>;
-                if (includeAll || fieldList.Contains("appid"))
-                    item["appid"] = x.appid;
-                if(includeAll || fieldList.Contains("dateadded"))
-                    item["dateadded"] = x.DateAdded;
-                if (x.AppListing != null && (includeAll || fieldList.Contains("name")))
-                    item["name"] = x.AppListing.name;
-                return obj;
-            });
-            return Ok(new WishlistDTOs.Wishlist( Items: result ));
+            bool Has(string field) => includeAll || fieldList.Contains(field);
+
+            var result = (await _wishlistService.GetWishlistItemsAsync(internalUserId))
+                .Select(x => new WishlistItemDto(
+                    AppId: Has("appid") ? x.AppId : null,
+                    DateAdded: Has("dateadded") ? x.DateAdded : null,
+                    Name: Has("name") ? x.AppName : null
+                ));
+
+            return Ok(new Wishlist(result));
         }
 
         [HttpGet("stats")]
-        public async Task<ActionResult<WishlistDTOs.Stats>> GetWishlistStatsAsync()
+        public async Task<ActionResult<Stats>> GetWishlistStatsAsync()
         {
             int internalUserId = await _userContext.GetIdAsync();
 
             var stats = await _wishlistService.GetWishlistStatsAsync(internalUserId);
-            return Ok(new WishlistDTOs.Stats(
+            return Ok(new Stats(
                 AvgTimeAdded: stats.AvgTimeAdded,
                 AvgTimeBetweenAdded: stats.AvgTimeBetweenAdded,
                 OldestItem: stats.OldestItem,
@@ -75,17 +65,12 @@ namespace WishlistApi.Controllers
             int internalUserId = await _userContext.GetIdAsync();
             try
             {
-                await _wishlistItemDA.AddWishlistItemAsync(new WishlistItem()
-                {
-                    UserID = internalUserId,
-                    appid = appId
-                });
+                await _wishlistService.AddToWishlistAsync(new AddToWishlistCommand(UserId: internalUserId, AppId: appId));
             }
             catch (DuplicateNameException ex)
             {
                 return StatusCode(StatusCodes.Status409Conflict, ex.Message);
             }
-
             return Ok();
         }
 
@@ -94,7 +79,7 @@ namespace WishlistApi.Controllers
         public async Task<ActionResult> DeleteAppFromWishlistAsync(int appId)
         {
             int internalUserId = await _userContext.GetIdAsync();
-            await _wishlistItemDA.DeleteWishlistItemAsync(internalUserId, appId);
+            await _wishlistService.DeleteWishlistItemAsync(internalUserId, appId);
             return Ok();
         }
     }

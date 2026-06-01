@@ -1,0 +1,11 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "bash": {
+      "*": "ask",
+      "dotnet test api/WishlistApi/WishlistApi.sln": "allow",
+      "dotnet test api/WishlistApi/WishlistApi.sln 2>&1": "allow",
+      "dotnet build api/WishlistApi/WishlistApi.sln 2>&1": "allow"
+    }
+  }
+}

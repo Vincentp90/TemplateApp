@@ -1,10 +1,10 @@
-﻿using DataAccess.Users;
+﻿using Application;
+using Application.Commands;
+using Application.Contracts;
+using Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.Metrics;
-using System.Net;
 using System.Security.Claims;
 using WishlistApi.DTOs;
 
@@ -13,17 +13,10 @@ namespace WishlistApi.Controllers
     [ApiController]
     [Authorize]
     [Route("[controller]")]
-    public class UsersController : ControllerBase
+    public class UsersController(IUserService userService) : ControllerBase
     {
-        private readonly IUserDA _userDA;
-
-        public UsersController(IUserDA userDA)
-        {
-            _userDA = userDA;
-        }
-
         [HttpGet("me")]
-        public async Task<ActionResult<UserDTOs.UserDetails>> Index()
+        public async Task<ActionResult<UserDetailsDTO>> GetUserMeAsync()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -34,29 +27,27 @@ namespace WishlistApi.Controllers
 
         [HttpGet("{UserId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<UserDTOs.UserDetails>> Index([FromRoute] string UserId)
+        public async Task<ActionResult<UserDetailsDTO>> GetUserAsync([FromRoute] string UserId)
         {
             return await GetUserDetailsDTO(UserId);
         }
 
-        private async Task<ActionResult<UserDTOs.UserDetails>> GetUserDetailsDTO(string UserId)
+        private async Task<ActionResult<UserDetailsDTO>> GetUserDetailsDTO(string UserId)
         {
-            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(UserId));
-
-            var userWithDetails = await _userDA.GetUserDetailsAsync(internalUserId);
-            return Ok(new UserDTOs.UserDetails(
-                RowVersion: userWithDetails.RowVersion,
-                Email: userWithDetails.User.Username,
-                FirstName: userWithDetails.FirstName,
-                LastName: userWithDetails.LastName,
-                Country: userWithDetails.Country,
-                City: userWithDetails.City,
-                Address: userWithDetails.Address
+            var user = await userService.GetUserAsync(new GetUserCommand(new Guid(UserId)));
+            return Ok(new UserDetailsDTO(
+                RowVersion: user.Details.RowVersion,
+                Email: user.Username,
+                FirstName: user.Details.Name.FirstName,
+                LastName: user.Details.Name.LastName,
+                Country: user.Details.Location.Country,
+                City: user.Details.Location.City,
+                Address: user.Details.Location.Street
             ));
         }
 
         [HttpPatch("me")]
-        public async Task<ActionResult> PatchUserAsync(UserDTOs.UserDetails userDetailsDTO)
+        public async Task<ActionResult> PatchUserAsync(UserDetailsDTO userDetailsDTO)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -66,26 +57,21 @@ namespace WishlistApi.Controllers
 
         [HttpPatch("{UserId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<UserDTOs.UserDetails>> PatchUserAsync(UserDTOs.UserDetails userDetailsDTO, [FromRoute] string UserId)
+        public async Task<ActionResult> PatchUserAsync(UserDetailsDTO userDetailsDTO, [FromRoute] string UserId)
         {
             return await UpdateUserDetails(userDetailsDTO, UserId);
         }
 
-        private async Task<ActionResult> UpdateUserDetails(UserDTOs.UserDetails userDetailsDTO, string userId)
+        private async Task<ActionResult> UpdateUserDetails(UserDetailsDTO userDetailsDTO, string userId)
         {
-            int internalUserId = await _userDA.GetInternalUserIdAsync(new Guid(userId));
-            var userDetailsEntity = await _userDA.GetUserDetailsAsync(internalUserId);
             try
             {
-                userDetailsEntity.RowVersion = userDetailsDTO.RowVersion;
-
-                userDetailsEntity.FirstName = userDetailsDTO.FirstName;
-                userDetailsEntity.LastName = userDetailsDTO.LastName;
-                userDetailsEntity.Country = userDetailsDTO.Country;
-                userDetailsEntity.City = userDetailsDTO.City;
-                userDetailsEntity.Address = userDetailsDTO.Address;
-
-                await _userDA.UpdateUserDetailsAsync(userDetailsEntity);
+                await userService.UpdateUserDetailsAsync(new UpdateUserDetailsCommand(
+                    RowVersion: userDetailsDTO.RowVersion,
+                    ExternalUserId: new Guid(userId),
+                    Name: new FullName(userDetailsDTO.FirstName, userDetailsDTO.LastName),
+                    Location: new Address(userDetailsDTO.Country, userDetailsDTO.City, userDetailsDTO.Address)
+                    ));
                 return Ok();
             }
             catch (DbUpdateConcurrencyException)
@@ -98,13 +84,9 @@ namespace WishlistApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult> GetAllUsersAsync(int page, int limit)
         {
-            var users = await _userDA.GetUsersAsync(page, limit);
+            var users = await userService.GetUsersAsync(page, limit);
             var hasNextPage = users.Count > limit;
-            var usersDTO = users.Take(limit).Select(u => new
-            {
-                uuid = u.UUID,
-                username = u.Username
-            }).ToList();
+            var usersDTO = users.Take(limit).ToList();
             return Ok(new
             {
                 items = usersDTO,

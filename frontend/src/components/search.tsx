@@ -9,6 +9,7 @@ import { Loading02Icon } from "hugeicons-react";
 import WlButton from './tiny/wlButton';
 
 type AppListing = { appid: number; name: string };
+type AppListingDTO = { appId: number; name: string };// the downside of directly writing and reading AppListing as lowercase fields straight from steam API to the db
 const wlQueryKey = ['wishlist'];
 
 
@@ -48,8 +49,8 @@ export default function Search() {
     queryFn: async () => {
       const res = await api.get(`/wishlist?fields=appid,name`);
       const data = res.data.items;
-      return data.map((item: AppListing) => ({
-        appid: item.appid,
+      return data.map((item: AppListingDTO) => ({
+        appid: item.appId,
         name: item.name,
       }));
     },

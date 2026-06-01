@@ -1,9 +1,13 @@
-using Application.Wishlist;
-using DataAccess;
-using DataAccess.AppListings;
-using DataAccess.Auctions;
-using DataAccess.Users;
-using DataAccess.Wishlist;
+using Application;
+using Application.Queries;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.AppListings;
+using Infrastructure.Persistence.Auctions;
+using Infrastructure.Persistence.Users;
+using Infrastructure.Persistence.Wishlist;
+using Domain;
+using Domain.Helpers;
+using Domain.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -13,6 +17,7 @@ using System.Text;
 using WishlistApi.Controllers;
 using WishlistApi.Helpers;
 using WishlistApi.HostedServices;
+using Infrastructure.ExternalServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,20 +67,30 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddDbContext<WishlistDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")).UseSnakeCaseNamingConvention());
-
+builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<WishlistDbContext>());
+builder.Services.AddScoped<ISteamApiClient, SteamApiClient>();
 builder.Services.AddHostedService<SteamUpdaterService>();
 
-builder.Services.AddScoped<IAppListingDA, AppListingDA>();
-builder.Services.AddScoped<IWishlistItemDA, WishlistItemDA>();
-builder.Services.AddScoped<IUserDA, UserDA>();
-builder.Services.AddScoped<IAuctionDA, AuctionDA>();
+builder.Services.AddScoped<IAppListingRepository, AppListingRepository>();
+builder.Services.AddScoped<IWishlistItemRepository, WishlistItemRepository>();
+builder.Services.AddScoped<IAuctionRepository, AuctionRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
+builder.Services.AddScoped<IAuctionQueries, AuctionQueries>();
+builder.Services.AddScoped<IUserQueries, UserQueries>();
+
+builder.Services.AddScoped<IAppListingService, AppListingService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWishlistService, WishlistService>();
+builder.Services.AddScoped<IAuctionService, AuctionService>();
 
+
+builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, UserContext>();
 
-builder.Services.AddHostedService<AuctionService>();
+builder.Services.AddHostedService<AuctionBackgroundService>();
 
 string jwtKey = builder.Configuration.GetValue<string>("Jwt:Key") ?? throw new Exception("Missing Jwt:Key in appsettings.json");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
