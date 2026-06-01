@@ -1,4 +1,4 @@
-﻿using DataAccess.Migrations;
+﻿using Infrastructure.Persistence.Migrations;
 using Domain;
 using Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace DataAccess.Auctions
+namespace Infrastructure.Persistence.Auctions
 {
     public class AuctionRepository(WishlistDbContext context) : IAuctionRepository
     {

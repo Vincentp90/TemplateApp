@@ -1,6 +1,6 @@
 using Application.Contracts;
-using DataAccess;
-using DataAccess.Users;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.Users;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Tests.Helpers;

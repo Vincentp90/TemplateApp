@@ -17,7 +17,7 @@ Installation steps:
 - cd api/WishlistApi
     - Get a steam API key: https://steamcommunity.com/dev/apikey
     - For dev use dotnet user-secrets to store the apikey with command: dotnet user-secrets set "SteamAPIKEY" "yourapikeyhere"
-    - dotnet ef database update --project DataAccess --startup-project WishlistApi
+    - dotnet ef database update --project Infrastructure --startup-project WishlistApi
 - Run backend API in VS (debug, any cpu, http) not https!
     - http://localhost:5186/swagger/index.html
 
@@ -49,4 +49,4 @@ Run for prod:
 
 Adding new EF migration:
 - cd api/WishlistApi
-- dotnet ef migrations add UserDetails --project DataAccess --startup-project WishlistApi
+- dotnet ef migrations add UserDetails --project Infrastructure --startup-project WishlistApi

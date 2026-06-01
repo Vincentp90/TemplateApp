@@ -1,5 +1,5 @@
 using Application.Contracts;
-using DataAccess;
+using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Queries;

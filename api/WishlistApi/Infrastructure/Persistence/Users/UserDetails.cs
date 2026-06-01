@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
-namespace DataAccess.Users
+namespace Infrastructure.Persistence.Users
 {
     public class UserDetails
     {

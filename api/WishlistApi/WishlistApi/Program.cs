@@ -1,10 +1,10 @@
 using Application;
 using Application.Queries;
-using DataAccess;
-using DataAccess.AppListings;
-using DataAccess.Auctions;
-using DataAccess.Users;
-using DataAccess.Wishlist;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.AppListings;
+using Infrastructure.Persistence.Auctions;
+using Infrastructure.Persistence.Users;
+using Infrastructure.Persistence.Wishlist;
 using Domain;
 using Domain.Helpers;
 using Domain.Repositories;

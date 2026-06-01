@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace DataAccess.AppListings
+namespace Infrastructure.Persistence.AppListings
 {
     public class AppListing
     {

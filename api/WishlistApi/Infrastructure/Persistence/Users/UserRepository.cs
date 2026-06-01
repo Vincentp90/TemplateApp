@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace DataAccess.Users
+namespace Infrastructure.Persistence.Users
 {
     public class UserRepository(WishlistDbContext context) : IUserRepository
     {

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
 
-namespace DataAccess.Users
+namespace Infrastructure.Persistence.Users
 {
     public class User
     {

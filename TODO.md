@@ -3,6 +3,7 @@ Things I'm going to try/add/learn more about later :
     - Move DA logic to application
     - Add domain layer, move suitable logic from application to domain layer
 - CQRS learn more and apply?
+- Auction: add end date to entity, remove static mutable Domain.Auction.Duration
 - Auction OCC: remove client side part since we also have the admin form which is more suitable for RowVersion round-trip, auction use case fits better with only server side OCC
 - Add general functionality:
     - Delete profile (GDPR right to forget)

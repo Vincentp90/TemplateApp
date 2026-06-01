@@ -2,13 +2,13 @@
 using System.Xml;
 using System;
 using Microsoft.EntityFrameworkCore;
-using DataAccess.AppListings;
-using DataAccess.Wishlist;
-using DataAccess.Users;
-using DataAccess.Auctions;
+using Infrastructure.Persistence.AppListings;
+using Infrastructure.Persistence.Wishlist;
+using Infrastructure.Persistence.Users;
+using Infrastructure.Persistence.Auctions;
 using Domain.Helpers;
 
-namespace DataAccess
+namespace Infrastructure.Persistence
 {
     public class WishlistDbContext : DbContext, IUnitOfWork
     {

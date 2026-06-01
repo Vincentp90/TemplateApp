@@ -1,7 +1,7 @@
 using Application;
 using Application.Commands;
-using DataAccess;
-using DataAccess.Auctions;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.Auctions;
 using Domain;
 using Domain.Repositories;
 using FluentAssertions;
@@ -39,10 +39,10 @@ namespace Tests.ApplicationTests
 
         void Seed(WishlistDbContext ctx)
         {
-            ctx.Users.Add(new DataAccess.Users.User { ID = 1, Username = "bidder1" });
-            ctx.Users.Add(new DataAccess.Users.User { ID = 2, Username = "bidder2" });
-            ctx.AppListings.Add(new DataAccess.AppListings.AppListing { appid = 1, name = "Test App" });
-            ctx.Auctions.Add(new DataAccess.Auctions.Auction
+            ctx.Users.Add(new Infrastructure.Persistence.Users.User { ID = 1, Username = "bidder1" });
+            ctx.Users.Add(new Infrastructure.Persistence.Users.User { ID = 2, Username = "bidder2" });
+            ctx.AppListings.Add(new Infrastructure.Persistence.AppListings.AppListing { appid = 1, name = "Test App" });
+            ctx.Auctions.Add(new Infrastructure.Persistence.Auctions.Auction
             {
                 DateAdded = DateTimeOffset.UtcNow,
                 StartingPrice = 10m,

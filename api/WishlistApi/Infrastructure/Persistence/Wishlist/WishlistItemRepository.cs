@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 
-namespace DataAccess.Wishlist
+namespace Infrastructure.Persistence.Wishlist
 {
     public class WishlistItemRepository(WishlistDbContext context) : IWishlistItemRepository
     {

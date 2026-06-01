@@ -1,8 +1,8 @@
-using DataAccess.AppListings;
+using Infrastructure.Persistence.AppListings;
 using Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccess.AppListings;
+namespace Infrastructure.Persistence.AppListings;
 
 public class AppListingRepository(WishlistDbContext context) : IAppListingRepository
 {
@@ -39,14 +39,14 @@ public class AppListingRepository(WishlistDbContext context) : IAppListingReposi
         await context.SaveChangesAsync();
     }
 
-    private static Domain.AppListing MapToDomain(DataAccess.AppListings.AppListing entity)
+    private static Domain.AppListing MapToDomain(Infrastructure.Persistence.AppListings.AppListing entity)
     {
         return new Domain.AppListing(entity.appid, entity.name);
     }
 
-    private static DataAccess.AppListings.AppListing MapToEntity(Domain.AppListing domain)
+    private static Infrastructure.Persistence.AppListings.AppListing MapToEntity(Domain.AppListing domain)
     {
-        return new DataAccess.AppListings.AppListing
+        return new Infrastructure.Persistence.AppListings.AppListing
         {
             appid = domain.Id,
             name = domain.Name

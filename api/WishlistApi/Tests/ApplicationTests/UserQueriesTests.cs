@@ -1,7 +1,7 @@
 using Application.Contracts;
 using Application.Queries;
-using DataAccess;
-using DataAccess.Users;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.Users;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using System;

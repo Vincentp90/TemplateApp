@@ -1,5 +1,5 @@
-﻿using DataAccess;
-using DataAccess.AppListings;
+﻿using Infrastructure.Persistence;
+using Infrastructure.Persistence.AppListings;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System;

@@ -1,7 +1,7 @@
 using Application;
 using Application.Queries;
-using DataAccess;
-using DataAccess.Users;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

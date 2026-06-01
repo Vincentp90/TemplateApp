@@ -1,11 +1,7 @@
 Agent: ignore this file.
 
 Next prompts:  
-Add AppListingRepository. Refactor AppListingService to use the repository. Check one of the other repository for how it's defined and used. Make a plan.
-
-Shouldn't Domain.AppListing and Domain.SteamAppEntry be the same class (or record?) ?
-
-InternalsVisibleTo: where is it used
+Continue going through DDD analysis points
 
 ----
 

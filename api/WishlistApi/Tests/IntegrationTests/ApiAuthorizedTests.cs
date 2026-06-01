@@ -1,7 +1,7 @@
 ﻿using Application;
 using Application.Contracts;
-using DataAccess;
-using DataAccess.AppListings;
+using Infrastructure.Persistence;
+using Infrastructure.Persistence.AppListings;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

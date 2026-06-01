@@ -1,6 +1,6 @@
-﻿using DataAccess;
-using DataAccess.AppListings;
-using DataAccess.Auctions;
+﻿using Infrastructure.Persistence;
+using Infrastructure.Persistence.AppListings;
+using Infrastructure.Persistence.Auctions;
 using Domain.Helpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;

@@ -1,8 +1,8 @@
 ﻿using Application.Commands;
 using Application.Contracts;
 using Application.Queries;
-using DataAccess.Users;
-using DataAccess.Wishlist;
+using Infrastructure.Persistence.Users;
+using Infrastructure.Persistence.Wishlist;
 using Domain.Helpers;
 using Domain.Repositories;
 using Microsoft.Extensions.Caching.Memory;

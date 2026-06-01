@@ -1,9 +1,9 @@
-﻿using DataAccess.AppListings;
-using DataAccess.Users;
+﻿using Infrastructure.Persistence.AppListings;
+using Infrastructure.Persistence.Users;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DataAccess.Wishlist
+namespace Infrastructure.Persistence.Wishlist
 {
     public class WishlistItem
     {
