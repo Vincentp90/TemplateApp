@@ -1,6 +1,8 @@
 Agent: ignore this file.
 
 Next prompts:  
+Domain entities are lacking behavior. Can you go through domain and application and see if there is any domain logic in application that should be moved to domain?
+
 Continue going through DDD analysis points
 
 ----

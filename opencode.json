@@ -3,7 +3,7 @@
   "permission": {
     "bash": {
       "*": "ask",
-      "dotnet test api/WishlistApi/WishlistApi.sln*": "allow"
+      "dotnet test api/WishlistApi/WishlistApi.sln": "allow"
     }
   }
 }

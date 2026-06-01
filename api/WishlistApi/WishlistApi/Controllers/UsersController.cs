@@ -1,6 +1,7 @@
 ﻿using Application;
 using Application.Commands;
 using Application.Contracts;
+using Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -37,11 +38,11 @@ namespace WishlistApi.Controllers
             return Ok(new UserDetailsDTO(
                 RowVersion: user.Details.RowVersion,
                 Email: user.Username,
-                FirstName: user.Details.FirstName,
-                LastName: user.Details.LastName,
-                Country: user.Details.Country,
-                City: user.Details.City,
-                Address: user.Details.Address
+                FirstName: user.Details.Name.FirstName,
+                LastName: user.Details.Name.LastName,
+                Country: user.Details.Location.Country,
+                City: user.Details.Location.City,
+                Address: user.Details.Location.Street
             ));
         }
 
@@ -68,11 +69,8 @@ namespace WishlistApi.Controllers
                 await userService.UpdateUserDetailsAsync(new UpdateUserDetailsCommand(
                     RowVersion: userDetailsDTO.RowVersion,
                     ExternalUserId: new Guid(userId),
-                    FirstName: userDetailsDTO.FirstName,
-                    LastName: userDetailsDTO.LastName,
-                    Country: userDetailsDTO.Country,
-                    City: userDetailsDTO.City,
-                    Address: userDetailsDTO.Address
+                    Name: new FullName(userDetailsDTO.FirstName, userDetailsDTO.LastName),
+                    Location: new Address(userDetailsDTO.Country, userDetailsDTO.City, userDetailsDTO.Address)
                     ));
                 return Ok();
             }

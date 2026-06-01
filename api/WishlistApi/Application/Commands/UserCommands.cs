@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Domain.ValueObjects;
 
 namespace Application.Commands
 {
     public record UpdateUserDetailsCommand(
         Guid ExternalUserId,
         uint RowVersion,
-        string? FirstName,
-        string? LastName,
-        string? Country,
-        string? City,
-        string? Address);
+        FullName Name,
+        Address Location);
 
     public record GetUserCommand(Guid ExternalUserId);
 }

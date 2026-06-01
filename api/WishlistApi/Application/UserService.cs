@@ -1,14 +1,14 @@
 ﻿using Application.Commands;
 using Application.Contracts;
 using Application.Queries;
-using Infrastructure.Persistence.Users;
-using Infrastructure.Persistence.Wishlist;
 using Domain.Helpers;
 using Domain.Repositories;
+using Domain.ValueObjects;
+using Infrastructure.Persistence.Users;
+using Infrastructure.Persistence.Wishlist;
 using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Application
 {
@@ -57,13 +57,8 @@ namespace Application
         {
             int internalUserId = await GetInternalUserIdAsync(command.ExternalUserId);
             var user = await userRepo.GetUserAsync(internalUserId);
-            
-            user.UpdateDetails(
-                command.FirstName,
-                command.LastName,
-                command.Country,
-                command.City,
-                command.Address);
+
+            user.UpdateDetails(command.Name, command.Location);
 
             await userRepo.UpdateUserAsync(user);
 

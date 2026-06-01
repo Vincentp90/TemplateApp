@@ -1,6 +1,7 @@
 using Application;
 using Application.Commands;
 using Application.Contracts;
+using Domain.ValueObjects;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,7 @@ public class UsersControllerUnitTests
         // Arrange
         var fixture = new UserControllerMockFixture();
         var userId = Guid.NewGuid();
-        var userDetails = new Domain.UserDetails("John", "Doe", "France", "Paris", "123 Main St", 0);
+        var userDetails = new Domain.UserDetails(new FullName("John", "Doe"), new Address("France", "Paris", "123 Main St"), 0);
         var user = new Domain.User(1, "testuser", userId,
             Array.Empty<byte>(), Array.Empty<byte>(), "Admin", userDetails);
 
@@ -100,7 +101,7 @@ public class UsersControllerUnitTests
         // Arrange
         var fixture = new UserControllerMockFixture();
         var userId = Guid.NewGuid();
-        var userDetails = new Domain.UserDetails("John", "Doe", "France", "Paris", "123 Main St", 0);
+        var userDetails = new Domain.UserDetails(new FullName("John", "Doe"), new Address("France", "Paris", "123 Main St"), 0);
         var user = new Domain.User(1, "testuser", userId,
             Array.Empty<byte>(), Array.Empty<byte>(), "User", userDetails);
 

@@ -1,9 +1,9 @@
 ﻿using Domain.Repositories;
+using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace Infrastructure.Persistence.Users
 {
@@ -27,7 +27,7 @@ namespace Infrastructure.Persistence.Users
                 .FirstAsync();
         }
 
-        private static readonly Expression<Func<UserDetails, Domain.User>> ToDomain =
+        private static readonly Expression<Func<Infrastructure.Persistence.Users.UserDetails, Domain.User>> ToDomain =
             u => new Domain.User(
                 id: u.ID,
                 username: u.User.Username,
@@ -36,11 +36,8 @@ namespace Infrastructure.Persistence.Users
                 passwordSalt: u.User.PasswordSalt,
                 role: u.User.Role,
                 details: new Domain.UserDetails(
-                    firstName: u.FirstName,
-                    lastName: u.LastName,
-                    country: u.Country,
-                    city: u.City,
-                    address: u.Address,
+                    name: new FullName(u.FirstName, u.LastName),
+                    address: new Address(u.Country, u.City, u.Address),
                     rowVersion: u.RowVersion
                 )
             );
@@ -68,11 +65,11 @@ namespace Infrastructure.Persistence.Users
         {
             var entity = await context.UserDetails.Include(u => u.User).FirstAsync(u => u.ID == user.Id);
 
-            entity.FirstName = user.Details.FirstName;
-            entity.LastName = user.Details.LastName;
-            entity.Country = user.Details.Country;
-            entity.City = user.Details.City;
-            entity.Address = user.Details.Address;
+            entity.FirstName = user.Details.Name.FirstName;
+            entity.LastName = user.Details.Name.LastName;
+            entity.Country = user.Details.Location.Country;
+            entity.City = user.Details.Location.City;
+            entity.Address = user.Details.Location.Street;
 
             // We don't update User fields because they should be immutable except password
             // Changing password has separate flow (doesn't exist atm)

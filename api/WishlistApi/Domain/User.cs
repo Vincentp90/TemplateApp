@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text;
+using Domain.ValueObjects;
 
 namespace Domain
 {
+    // User is aggregate root for User + UserDetails
+    // In a real production app they should probably be separate roots because auth performance is much better when we can query User from a single table instead of joining User + UserDetails
+    // I have no complex enough other domain models, so we keep it like this as an example of aggregate root
     public class User
     {
         public int Id { get; }
@@ -35,47 +39,32 @@ namespace Domain
             Details = details;
         }
 
-        public void UpdateDetails(string? firstName, string? lastName, string? country, string? city, string? address)
+        public void UpdateDetails(FullName name, Address location)
         {
-            Details.Update(firstName, lastName, country, city, address);
+            Details.Update(name, location);
         }
     }
-
+    
     public class UserDetails
     {
-        public string? FirstName { get; private set; }
-        public string? LastName { get; private set; }
-        public string? Country { get; private set; }
-        public string? City { get; private set; }
-        public string? Address { get; private set; }//TODO as value object
+        public FullName Name { get; private set; } = new(null, null);
+        public Address Location { get; private set; } = new(null, null, null);
 
         public uint RowVersion { get; private set; }
 
         public UserDetails() { }
 
-        public UserDetails(
-            string? firstName,
-            string? lastName,
-            string? country,
-            string? city,
-            string? address,
-            uint rowVersion)
+        public UserDetails(FullName name, Address address, uint rowVersion)
         {
-            FirstName = firstName;
-            LastName = lastName;
-            Country = country;
-            City = city;
-            Address = address;
+            Name = name;
+            Location = address;
             RowVersion = rowVersion;
         }
 
-        public void Update(string? firstName, string? lastName, string? country, string? city, string? address)
+        public void Update(FullName name, Address address)
         {
-            FirstName = firstName;
-            LastName = lastName;
-            Country = country;
-            City = city;
-            Address = address;
+            Name = name;
+            Location = address;
         }
     }
 }
