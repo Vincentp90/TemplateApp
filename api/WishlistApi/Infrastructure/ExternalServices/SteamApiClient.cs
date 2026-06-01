@@ -2,7 +2,7 @@ using Domain;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Text.Json;
 
-namespace WishlistApi.HostedServices
+namespace Infrastructure.ExternalServices
 {
     public class SteamApiClient : ISteamApiClient
     {

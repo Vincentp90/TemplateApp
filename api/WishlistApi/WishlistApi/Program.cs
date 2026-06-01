@@ -17,6 +17,7 @@ using System.Text;
 using WishlistApi.Controllers;
 using WishlistApi.Helpers;
 using WishlistApi.HostedServices;
+using Infrastructure.ExternalServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
