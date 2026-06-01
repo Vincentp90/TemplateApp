@@ -1,3 +1,6 @@
+using Domain.Exceptions;
+using Domain.Repositories;
+
 namespace Domain;
 
 public class WishlistItem
@@ -26,6 +29,17 @@ public class WishlistItem
         UserId = userId;
         Id = 0;
         AppName = string.Empty;
+    }
+
+    public static async Task<WishlistItem> AddAsync(
+        IWishlistItemRepository repository,
+        int userId,
+        int appId)
+    {
+        if (await repository.AppIsOnWishlistAsync(userId, appId))
+            throw new DomainException("Item already on wishlist");
+
+        return new WishlistItem(appId, DateTimeOffset.UtcNow, userId);
     }
 
     public static WishlistStats CalculateStats(IReadOnlyCollection<WishlistItem> items)

@@ -9,6 +9,7 @@ namespace Domain
     public class Auction
     {
         public static TimeSpan Duration = TimeSpan.FromMinutes(30);
+        public const decimal MinimumStartingPrice = 1.0m;
 
         public int Id { get; private set; }
         public decimal? CurrentPrice { get; internal set; }
@@ -73,6 +74,15 @@ namespace Domain
 
             CurrentPrice = amount;
             UserId = bidderUserId;
+        }
+
+        public static Auction CreateNext(int appListingId)
+        {
+            return new Auction(
+                dateAdded: DateTimeOffset.UtcNow,
+                startingPrice: MinimumStartingPrice,
+                appListingId: appListingId
+            );
         }
     }
 
