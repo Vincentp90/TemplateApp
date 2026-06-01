@@ -9,18 +9,20 @@ namespace WishlistApi.HostedServices
     /// </summary>
     public class SteamUpdaterService : BackgroundService
     {
-        private readonly IAppListingService _appListingService;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public SteamUpdaterService(IAppListingService appListingService)
+        public SteamUpdaterService(IServiceScopeFactory scopeFactory)
         {
-            _appListingService = appListingService;
+            _scopeFactory = scopeFactory;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                await _appListingService.EnsureAppListingsPopulatedAsync(stoppingToken);
+                using var scope = _scopeFactory.CreateScope();
+                var appListingService = scope.ServiceProvider.GetRequiredService<IAppListingService>();
+                await appListingService.EnsureAppListingsPopulatedAsync(stoppingToken);
 
                 // TODO add db table to keep track of last update
                 // update existing data if longer than X ago
