@@ -1,2 +1,3 @@
 steamapplist.json
 /obj/DataAccess.EntityFrameworkCore.targets
+BenchmarkDotNet.Artifacts/
