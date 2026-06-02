@@ -28,16 +28,14 @@ namespace Application
 
     public class UserService(IUserRepository userRepo, IMemoryCache cache, IUnitOfWork unitOfWork, IUserQueries userQueries) : IUserService
     {
+        //TODO this should be ValueTask because then cache hits will be faster, synchronous execution will be without Task wrapping
         public async Task<int> GetInternalUserIdAsync(Guid externalUserId)
         {
-            // Check cache first
             if (cache.TryGetValue(externalUserId, out int id))
                 return id;
 
-            // Fetch from repository (DDD pattern)
             id = await userRepo.GetInternalUserIdAsync(externalUserId);
 
-            // Cache the result
             cache.Set(externalUserId, id, new MemoryCacheEntryOptions { Size = 1 });
             return id;
         }

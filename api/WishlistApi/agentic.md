@@ -1,6 +1,13 @@
 Agent: ignore this file.
 
 Next prompts:  
+Do the plan in PerfBenchmarksPlan.md
+
+Make a comparison of performance between UserContext scoped id caching and without (temporarily change the code to test). Maybe the scoped caching is useless because of the memory cache. Use the Benchmarks project to run the tests.
+
+UserContext, UserService see the ValueTask todo. Do you see possible issues with changing this to a valuetask?
+
+Test performance with ValueTask
 
 ----
 
