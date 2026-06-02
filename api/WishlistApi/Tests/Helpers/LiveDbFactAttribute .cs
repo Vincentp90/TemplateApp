@@ -4,6 +4,7 @@ using System.Text;
 
 namespace Tests.Helpers
 {
+    //TODO this can be removed?
     public static class TestCategories
     {
         public const string LiveDb = "LiveDb";
