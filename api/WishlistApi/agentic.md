@@ -1,14 +1,23 @@
 Agent: ignore this file.
 
 Next prompts:  
-Do the plan in PerfBenchmarksPlan.md
-
-Make a comparison of performance between UserContext scoped id caching and without (temporarily change the code to test). Maybe the scoped caching is useless because of the memory cache. Use the Benchmarks project to run the tests.
+warnings Benchmarks build
+    f:\dev\TemplateApp\api\WishlistApi\Benchmarks\Program.cs(2,39): warning CS0436: The type 'Program' in 'f:\dev\TemplateApp\api\WishlistApi\Benchmarks\Program.cs' conflicts with the imported type 'Program' in 'WishlistApi, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'. Using the type defined in 'f:\dev\TemplateApp\api\WishlistApi\Benchmarks\Program.cs'. [f:\dev\TemplateApp\api\WishlistApi\Benchmarks\Benchmarks.csproj]
+review UserContextBenchmarks.cs
 
 UserContext, UserService see the ValueTask todo. Do you see possible issues with changing this to a valuetask?
 
 Test performance with ValueTask
 
+| Method                              | Job        | InvocationCount | UnrollFactor | Mean            | Error         | StdDev        | Median          | Allocated |
+|------------------------------------ |----------- |---------------- |------------- |----------------:|--------------:|--------------:|----------------:|----------:|
+| GetIdAsync_UserContextFieldCacheHit | DefaultJob | Default         | 16           |        10.46 ns |      0.226 ns |      0.261 ns |        10.32 ns |         - |
+| GetIdAsync_CacheMiss                | Job-CNUJVU | 1               | 1            | 1,096,795.92 ns | 30,521.101 ns | 89,031.492 ns | 1,073,900.00 ns |   54968 B |
+| GetIdAsync_MemoryCacheHit           | Job-CNUJVU | 1               | 1            |     8,334.04 ns |    225.827 ns |    644.297 ns |     7,950.00 ns |      72 B |
+
+$env:DOTNET_ENVIRONMENT="Test"; dotnet run --project api/WishlistApi/Benchmarks -c Release --filter "*"
+$env:DOTNET_ENVIRONMENT=Test; dotnet run --project api/WishlistApi/Benchmarks -c Release
+set DOTNET_ENVIRONMENT=Test && dotnet run --project api/WishlistApi/Benchmarks -c Release
 ----
 
 Todo:

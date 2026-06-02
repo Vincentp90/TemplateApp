@@ -15,7 +15,7 @@ namespace WishlistApi.Helpers
         //TODO this should be ValueTask because then cache hits will be faster, synchronous execution will be without Task wrapping
         public async Task<int> GetIdAsync()
         {
-            // Not sure if this caching here has a point, we already have a memory cache in GetInternalUserIdAsync
+            // According to the benchmarks, this caching here has a point, a bit faster than hitting memory cache in GetInternalUserIdAsync (10 vs 8000 ns)
             if (_cachedId.HasValue) return _cachedId.Value;
 
             var userIdClaim = httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
