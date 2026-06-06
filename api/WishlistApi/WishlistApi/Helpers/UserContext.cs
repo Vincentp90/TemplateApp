@@ -5,19 +5,29 @@ namespace WishlistApi.Helpers
 {
     public interface IUserContext
     {
-        Task<int> GetIdAsync();
+        ValueTask<int> GetIdAsync();
     }
 
     public class UserContext(IHttpContextAccessor httpContextAccessor, IUserService userService) : IUserContext
     {
         private int? _cachedId;
 
-        //TODO this should be ValueTask because then cache hits will be faster, synchronous execution will be without Task wrapping
-        public async Task<int> GetIdAsync()
+        // Task vs ValueTask performance, respectively for cache miss, memorycache hit, cachedId hit
+        // Task:        1.10 ms, 8.33 µs, 10.46 ns
+        // ValueTask:   1.05 ms, 8.64 µs,  6.06 ns
+        // ValueTask is clearly faster when hitting cachedId, for the memorycache case it's probably negligible compared to the other overhead when doing a memorycache lookup
+        public ValueTask<int> GetIdAsync()
         {
-            // According to the benchmarks, this caching here has a point, a bit faster than hitting memory cache in GetInternalUserIdAsync (10 vs 8000 ns)
-            if (_cachedId.HasValue) return _cachedId.Value;
+            if (_cachedId.HasValue)
+            {
+                return new ValueTask<int>(_cachedId.Value);
+            }
 
+            return GetIdAsyncInternal();
+        }
+
+        private async ValueTask<int> GetIdAsyncInternal()
+        {
             var userIdClaim = httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim)) throw new Exception("Unauthorized");
 

@@ -14,7 +14,7 @@ namespace Application
 {
     public interface IUserService
     {
-        Task<int> GetInternalUserIdAsync(Guid guid);
+        ValueTask<int> GetInternalUserIdAsync(Guid guid);
         /// <summary>
         /// Get a page of users
         /// </summary>
@@ -28,14 +28,19 @@ namespace Application
 
     public class UserService(IUserRepository userRepo, IMemoryCache cache, IUnitOfWork unitOfWork, IUserQueries userQueries) : IUserService
     {
-        //TODO this should be ValueTask because then cache hits will be faster, synchronous execution will be without Task wrapping
-        public async Task<int> GetInternalUserIdAsync(Guid externalUserId)
+        public ValueTask<int> GetInternalUserIdAsync(Guid externalUserId)
         {
             if (cache.TryGetValue(externalUserId, out int id))
-                return id;
+            {
+                return new ValueTask<int>(id);
+            }
 
-            id = await userRepo.GetInternalUserIdAsync(externalUserId);
+            return GetInternalUserIdAsyncInternal(externalUserId);
+        }
 
+        private async ValueTask<int> GetInternalUserIdAsyncInternal(Guid externalUserId)
+        {
+            int id = await userRepo.GetInternalUserIdAsync(externalUserId);
             cache.Set(externalUserId, id, new MemoryCacheEntryOptions { Size = 1 });
             return id;
         }

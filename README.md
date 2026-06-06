@@ -50,3 +50,6 @@ Run for prod:
 Adding new EF migration:
 - cd api/WishlistApi
 - dotnet ef migrations add UserDetails --project Infrastructure --startup-project WishlistApi
+
+Running performance tests:
+- $env:DOTNET_ENVIRONMENT="Test"; dotnet run --project api/WishlistApi/Benchmarks -c Release --filter "*"
