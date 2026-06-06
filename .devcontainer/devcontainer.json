@@ -1,0 +1,23 @@
+{
+  "name": "My App",
+  "dockerComposeFile": "../docker-compose.devcontainer.yml",
+  "service": "api",
+  "workspaceFolder": "/workspace",
+  "forwardPorts": [5186, 5432],
+  "portsAttributes": {
+    "5173": {
+      "label": "React",
+      "onAutoForward": "silent"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": []
+    }
+  },
+  "remoteEnv": {
+    "TESTCONTAINERS_HOST_OVERRIDE": "host.docker.internal",
+    "NODE_ENV": "devcontainer",
+    "ASPNETCORE_ENVIRONMENT": "Devcontainer"
+  }
+}

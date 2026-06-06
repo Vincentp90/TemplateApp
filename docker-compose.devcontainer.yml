@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:18.1
+    restart: always
+    shm_size: 128mb
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: example
+    volumes:
+      - db_data:/var/lib/postgresql
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8085:8080
+
+  react:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports: ["5173:5173"]
+    volumes:
+      - .:/workspace
+      - react_node_modules:/workspace/frontend/node_modules  # hides host node_modules
+    working_dir: /workspace/frontend
+    command: npm run dev -- --host --mode devcontainer
+    environment:
+      - NODE_ENV=devcontainer
+
+  api:
+    build: 
+      context: ./api/WishlistApi
+      dockerfile: Dockerfile.dev
+    depends_on:
+      - db  
+    ports: ["5186:5186"]    
+    volumes: 
+      - .:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace/api/WishlistApi/WishlistApi
+    command: dotnet watch run --no-launch-profile --urls http://0.0.0.0:5186
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Devcontainer
+      - ASPNETCORE_URLS=http://+:5186
+
+volumes:
+  db_data:
+  react_node_modules:

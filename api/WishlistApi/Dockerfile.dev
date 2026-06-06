@@ -1,0 +1,4 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+WORKDIR /workspace/api/WishlistApi
+COPY WishlistApi/WishlistApi.csproj ./
+RUN dotnet restore
