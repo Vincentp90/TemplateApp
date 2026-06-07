@@ -1,0 +1,16 @@
+{
+  "providers": {
+    "llamacpp": {
+      "baseUrl": "http://host.docker.internal:8080/v1",
+      "api": "openai-completions",
+      "apiKey": "anything",
+      "models": [
+        { 
+          "id": "Qwen3.6-35B-A3B",
+          "contextWindow": 64000,
+          "maxTokens": 16000
+       }
+      ]
+    }
+  }
+}

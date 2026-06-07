@@ -12,12 +12,14 @@
   },
   "customizations": {
     "vscode": {
-      "extensions": []
+      "extensions": ["ms-vscode.vscode-dev-containers"]
     }
   },
   "remoteEnv": {
     "TESTCONTAINERS_HOST_OVERRIDE": "host.docker.internal",
     "NODE_ENV": "devcontainer",
     "ASPNETCORE_ENVIRONMENT": "Devcontainer"
-  }
+  },
+  "features": { "ghcr.io/devcontainers/features/node:2.0.0": {} },
+  "postCreateCommand": "mkdir -p ~/.pi/agent && ln -sf ${containerWorkspaceFolder}/.pi/agent/models.json ~/.pi/agent/models.json && npm install -g @earendil-works/pi-coding-agent"
 }
