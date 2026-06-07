@@ -17,7 +17,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-const isDev = import.meta.env.MODE === "development";
+const isDev = import.meta.env.MODE === "development" || import.meta.env.MODE === "devcontainer";
 
 export default function LoginForm() {
     const [action, setAction] = useState<string>("login");

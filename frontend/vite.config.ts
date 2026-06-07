@@ -28,4 +28,17 @@ export default defineConfig({
       "src/tests/playwright/**"
     ]
   },
+  server: {
+    watch: {
+      usePolling: true,
+      interval: 1000
+    },
+    proxy: {
+      '/api': {
+        target: 'http://api:5186',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
+  }
 })

@@ -1,0 +1,25 @@
+{
+  "name": "My App",
+  "dockerComposeFile": "../docker-compose.devcontainer.yml",
+  "service": "api",
+  "workspaceFolder": "/workspace",
+  "forwardPorts": [5186, 5432],
+  "portsAttributes": {
+    "5173": {
+      "label": "React",
+      "onAutoForward": "silent"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-vscode.vscode-dev-containers"]
+    }
+  },
+  "remoteEnv": {
+    "TESTCONTAINERS_HOST_OVERRIDE": "host.docker.internal",
+    "NODE_ENV": "devcontainer",
+    "ASPNETCORE_ENVIRONMENT": "Devcontainer"
+  },
+  "features": { "ghcr.io/devcontainers/features/node:2.0.0": {} },
+  "postCreateCommand": "mkdir -p ~/.pi/agent && ln -sf ${containerWorkspaceFolder}/.pi/agent/models.json ~/.pi/agent/models.json && npm install -g @earendil-works/pi-coding-agent"
+}
