@@ -1,6 +1,4 @@
 Things I'm going to try/add/learn more about later :
-- move to devcontainers + pi
-- Make overview of all automatic tests and how to run them, make SKILL.md for keeping overview up-to-date
 - Auction: add end date to entity, remove static mutable Domain.Auction.Duration
 - Auction OCC: remove client side part since we also have the admin form which is more suitable for RowVersion round-trip, auction use case fits better with only server side OCC
 - DDD add domain event example https://gemini.google.com/app/f3480cdb192b1625

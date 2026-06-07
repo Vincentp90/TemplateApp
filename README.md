@@ -5,28 +5,24 @@ This is a template for a typical business CRUD app. The goal is to have a templa
 - Stable: An app made from this template should still be easy to run and maintain 10 years from now
 - Popular: Popular doesn't mean best in my opinion, but it greatly helps with development and diagnosing issues when you are googling/asking an LLM about a popular technology because there is a lot more information about it, people who encountered the same issues
 
-Installation steps:
-- Install Node.js v22
-    - cd frontend
-    - npm run dev
-    - http://localhost:5173
-- docker-compose up -d (postgres)
-    - Adminer: http://localhost:8080/
-    - username postgres
-    - password example
+## Installation steps
 - cd api/WishlistApi
     - Get a steam API key: https://steamcommunity.com/dev/apikey
     - For dev use dotnet user-secrets to store the apikey with command: dotnet user-secrets set "SteamAPIKEY" "yourapikeyhere"
-    - dotnet ef database update --project Infrastructure --startup-project WishlistApi
-- Run backend API in VS (debug, any cpu, http) not https!
-    - http://localhost:5186/swagger/index.html
+    - Note: Since switching to dev container I haven't verified if this actually still works this way
+- Build and open as dev container in VS Code
+- All of the following should be available with the dev container running and hot reload active:
+- Frontend at: http://localhost:5173
+- Swagger UI at: http://localhost:5186/swagger/index.html
+- Adminer at: http://localhost:8085/
+    - username postgres
+    - password example
 
-
-CRUD app template
+## CRUD app template
 - React frontend
     - Tanstack Query, Router
     - TypeScript, ESLint, Tailwind CSS, Vite, React Hook Form with Zod for validations, Zustand
-    - Vitest (to run tests: npm run test)
+    - Vitest
 - ASP.NET Web Api backend
     - REST 
     - Entity Framework code first
@@ -35,21 +31,22 @@ CRUD app template
 - JWT-based authorization
 - PostgreSQL
 - docker compose
-    - For development we only use docker to run postgres and adminer
-    - For production setup everything is running as containers, with additionally:
+    - For development we use a devcontainer
+    - For production setup we additionally run:
         - Reverse proxy nginx
         - React frontend served from an internal nginx instance
 - Topic: Enhanced Steam Wishlist (consuming steam api https://api.steampowered.com/ISteamApps/GetAppList/v2/)
-    - In the app you can make wishlist
+    - In the app you can make a wishlist
     - If you have an account it will remember your wishlist
 
-Run for prod:
+## Run with prod setup:
 - docker compose -p templateapp_prod -f docker-compose.prod.yml up -d (run command twice if the backend crashed, TODO fix)
-- http://localhost
+- Frontend at: http://localhost
 
-Adding new EF migration:
+## Adding new EF migration:
 - cd api/WishlistApi
 - dotnet ef migrations add UserDetails --project Infrastructure --startup-project WishlistApi
 
-Running performance tests:
-- $env:DOTNET_ENVIRONMENT="Test"; dotnet run --project api/WishlistApi/Benchmarks -c Release --filter "*"
+## Tests overview
+
+[docs/TESTS.md](docs/TESTS.md)
