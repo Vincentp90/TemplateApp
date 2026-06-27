@@ -12,7 +12,7 @@
   },
   "customizations": {
     "vscode": {
-      "extensions": ["ms-vscode.vscode-dev-containers"]
+      "extensions": ["ms-vscode.vscode-dev-containers", "ms-dotnettools.csharp"]
     }
   },
   "remoteEnv": {
