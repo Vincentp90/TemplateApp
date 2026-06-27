@@ -3,7 +3,7 @@
   "dockerComposeFile": "../docker-compose.devcontainer.yml",
   "service": "api",
   "workspaceFolder": "/workspace",
-  "forwardPorts": [5186, 5432],
+  "forwardPorts": [5186, 5432, 8085, 5173],
   "portsAttributes": {
     "5173": {
       "label": "React",
