@@ -4,8 +4,6 @@ using Application.Queries;
 using Domain.Helpers;
 using Domain.Repositories;
 using Domain.ValueObjects;
-using Infrastructure.Persistence.Users;
-using Infrastructure.Persistence.Wishlist;
 using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
@@ -26,7 +24,7 @@ namespace Application
         Task UpdateUserDetailsAsync(UpdateUserDetailsCommand command);
     }
 
-    public class UserService(IUserRepository userRepo, IMemoryCache cache, IUnitOfWork unitOfWork, IUserQueries userQueries) : IUserService
+    public class UserService(IUserRepository userRepo, IMemoryCache cache, IUnitOfWork unitOfWork, IUserReadModel userReadModel) : IUserService
     {
         public ValueTask<int> GetInternalUserIdAsync(Guid externalUserId)
         {
@@ -53,7 +51,7 @@ namespace Application
 
         public async Task<List<UserSummaryDto>> GetUsersAsync(int page, int limit)
         {
-            return await userQueries.GetUsersAsync(page, limit);
+            return await userReadModel.GetUsersAsync(page, limit);
         }
 
         public async Task UpdateUserDetailsAsync(UpdateUserDetailsCommand command)

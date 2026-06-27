@@ -1,7 +1,6 @@
 using Application.Contracts;
-using Application.Queries;
 using Infrastructure.Persistence;
-using Infrastructure.Persistence.Users;
+using Infrastructure.ReadAdapters;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -15,13 +14,13 @@ namespace Tests.ApplicationTests
     public class UserQueriesTests
     {
         private WishlistDbContext _context;
-        private UserQueries _queries;
+        private UserReadAdapter _queries;
 
         public UserQueriesTests()
         {
             var options = CreateNewContext();
             _context = new WishlistDbContext(options);
-            _queries = new UserQueries(_context);
+            _queries = new UserReadAdapter(_context);
         }
 
         private static DbContextOptions<WishlistDbContext> CreateNewContext()
@@ -40,7 +39,7 @@ namespace Tests.ApplicationTests
 
             for (int i = 1; i <= count; i++)
             {
-                var user = new User
+                var user = new Infrastructure.Persistence.Users.User
                 {
                     Username = $"user{i}@test.com",
                     PasswordHash = passwordHash,
@@ -191,7 +190,7 @@ namespace Tests.ApplicationTests
 
             var passwordHash = SHA256.Create().ComputeHash("password"u8.ToArray());
             var passwordSalt = new byte[32];
-            var user = new User
+            var user = new Infrastructure.Persistence.Users.User
             {
                 Username = expectedUsername,
                 UUID = expectedUuid,

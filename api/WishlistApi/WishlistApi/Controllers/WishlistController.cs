@@ -1,9 +1,8 @@
-﻿using Application;
+using Application;
 using Application.Commands;
+using Application.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
-using WishlistApi.DTOs;
 using WishlistApi.Helpers;
 
 namespace WishlistApi.Controllers
@@ -67,7 +66,7 @@ namespace WishlistApi.Controllers
             {
                 await _wishlistService.AddToWishlistAsync(new AddToWishlistCommand(UserId: internalUserId, AppId: appId));
             }
-            catch (DuplicateNameException ex)
+            catch (Domain.Exceptions.DomainException ex)
             {
                 return StatusCode(StatusCodes.Status409Conflict, ex.Message);
             }

@@ -27,4 +27,9 @@
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Watch Remove="bin\**" />
+    <Watch Remove="obj\**" />
+  </ItemGroup>
+
 </Project>

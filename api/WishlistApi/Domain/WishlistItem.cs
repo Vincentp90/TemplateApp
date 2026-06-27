@@ -1,5 +1,4 @@
 using Domain.Exceptions;
-using Domain.Repositories;
 
 namespace Domain;
 
@@ -31,14 +30,8 @@ public class WishlistItem
         AppName = string.Empty;
     }
 
-    public static async Task<WishlistItem> AddAsync(
-        IWishlistItemRepository repository,
-        int userId,
-        int appId)
+    public static WishlistItem CreateNew(int userId, int appId)
     {
-        if (await repository.AppIsOnWishlistAsync(userId, appId))
-            throw new DomainException("Item already on wishlist");
-
         return new WishlistItem(appId, DateTimeOffset.UtcNow, userId);
     }
 

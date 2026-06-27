@@ -38,19 +38,28 @@ namespace Infrastructure.Persistence.Auctions
 
         public async Task<Domain.Auction?> GetLatestAuctionAsync()
         {
-            return await context.Auctions
+            var entity = await context.Auctions
                 .OrderByDescending(x => x.ID)
-                .Select(auction => new Domain.Auction(
-                    id: auction.ID,
-                    dateAdded: auction.DateAdded,
-                    currentPrice: auction.CurrentPrice,
-                    startingPrice: auction.StartingPrice,
-                    status: auction.Status,
-                    userId: auction.UserID,
-                    appListingId: auction.appid,
-                    rowVersion: auction.RowVersion
-                ))
                 .FirstOrDefaultAsync();
+
+            if (entity == null)
+                return null;
+
+            return MapToDomain(entity);
+        }
+
+        private static Domain.Auction MapToDomain(Infrastructure.Persistence.Auctions.Auction entity)
+        {
+            return Domain.Auction.FromData(
+                id: entity.ID,
+                dateAdded: entity.DateAdded,
+                currentPrice: entity.CurrentPrice,
+                startingPrice: entity.StartingPrice,
+                status: entity.Status,
+                userId: entity.UserID,
+                appListingId: entity.appid,
+                rowVersion: entity.RowVersion
+            );
         }
 
         public void AddAuction(Domain.Auction auction)

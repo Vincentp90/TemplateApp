@@ -5,6 +5,7 @@ using Infrastructure.Persistence.AppListings;
 using Infrastructure.Persistence.Auctions;
 using Infrastructure.Persistence.Users;
 using Infrastructure.Persistence.Wishlist;
+using Infrastructure.ReadAdapters;
 using Domain;
 using Domain.Helpers;
 using Domain.Repositories;
@@ -76,8 +77,8 @@ builder.Services.AddScoped<IWishlistItemRepository, WishlistItemRepository>();
 builder.Services.AddScoped<IAuctionRepository, AuctionRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-builder.Services.AddScoped<IAuctionQueries, AuctionQueries>();
-builder.Services.AddScoped<IUserQueries, UserQueries>();
+builder.Services.AddScoped<IAuctionReadModel, AuctionReadAdapter>();
+builder.Services.AddScoped<IUserReadModel, UserReadAdapter>();
 
 builder.Services.AddScoped<IAppListingService, AppListingService>();
 builder.Services.AddScoped<IUserService, UserService>();

@@ -10,8 +10,8 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Security.Claims;
+using Application.Contracts;
 using WishlistApi.Controllers;
-using WishlistApi.DTOs;
 using WishlistApi.Helpers;
 
 namespace Tests.ControllerTests

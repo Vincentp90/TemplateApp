@@ -1,12 +1,10 @@
-﻿using Application;
+using Application;
 using Application.Commands;
 using Application.Contracts;
 using Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using WishlistApi.DTOs;
 
 namespace WishlistApi.Controllers
 {
@@ -16,26 +14,26 @@ namespace WishlistApi.Controllers
     public class UsersController(IUserService userService) : ControllerBase
     {
         [HttpGet("me")]
-        public async Task<ActionResult<UserDetailsDTO>> GetUserMeAsync()
+        public async Task<ActionResult<UserDetailsDto>> GetUserMeAsync()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
                 return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
 
-            return await GetUserDetailsDTO(userId);
+            return await GetUserDetailsDto(userId);
         }
 
         [HttpGet("{UserId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<UserDetailsDTO>> GetUserAsync([FromRoute] string UserId)
+        public async Task<ActionResult<UserDetailsDto>> GetUserAsync([FromRoute] string UserId)
         {
-            return await GetUserDetailsDTO(UserId);
+            return await GetUserDetailsDto(UserId);
         }
 
-        private async Task<ActionResult<UserDetailsDTO>> GetUserDetailsDTO(string UserId)
+        private async Task<ActionResult<UserDetailsDto>> GetUserDetailsDto(string UserId)
         {
             var user = await userService.GetUserAsync(new GetUserCommand(new Guid(UserId)));
-            return Ok(new UserDetailsDTO(
+            return Ok(new UserDetailsDto(
                 RowVersion: user.Details.RowVersion,
                 Email: user.Username,
                 FirstName: user.Details.Name.FirstName,
@@ -47,36 +45,36 @@ namespace WishlistApi.Controllers
         }
 
         [HttpPatch("me")]
-        public async Task<ActionResult> PatchUserAsync(UserDetailsDTO userDetailsDTO)
+        public async Task<ActionResult> PatchUserAsync(UserDetailsDto userDetailsDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
                 return StatusCode(StatusCodes.Status500InternalServerError, "Authenticated user has no ID claim");
-            return await UpdateUserDetails(userDetailsDTO, userId);
+            return await UpdateUserDetails(userDetailsDto, userId);
         }
 
         [HttpPatch("{UserId}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> PatchUserAsync(UserDetailsDTO userDetailsDTO, [FromRoute] string UserId)
+        public async Task<ActionResult> PatchUserAsync(UserDetailsDto userDetailsDto, [FromRoute] string UserId)
         {
-            return await UpdateUserDetails(userDetailsDTO, UserId);
+            return await UpdateUserDetails(userDetailsDto, UserId);
         }
 
-        private async Task<ActionResult> UpdateUserDetails(UserDetailsDTO userDetailsDTO, string userId)
+        private async Task<ActionResult> UpdateUserDetails(UserDetailsDto userDetailsDto, string userId)
         {
             try
             {
                 await userService.UpdateUserDetailsAsync(new UpdateUserDetailsCommand(
-                    RowVersion: userDetailsDTO.RowVersion,
+                    RowVersion: userDetailsDto.RowVersion,
                     ExternalUserId: new Guid(userId),
-                    Name: new FullName(userDetailsDTO.FirstName, userDetailsDTO.LastName),
-                    Location: new Address(userDetailsDTO.Country, userDetailsDTO.City, userDetailsDTO.Address)
+                    Name: new FullName(userDetailsDto.FirstName, userDetailsDto.LastName),
+                    Location: new Address(userDetailsDto.Country, userDetailsDto.City, userDetailsDto.Address)
                     ));
                 return Ok();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
             {
-                return StatusCode(StatusCodes.Status409Conflict);
+                return StatusCode(StatusCodes.Status409Conflict, "Concurrency conflict");
             }
         }
 

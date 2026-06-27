@@ -11,7 +11,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Tests.Helpers;
-using WishlistApi.DTOs;
+
 using WishlistApi.HostedServices;
 
 namespace Tests.IntegrationTests

@@ -1,4 +1,4 @@
-﻿using Infrastructure.Persistence;
+using Infrastructure.Persistence;
 using Infrastructure.Persistence.AppListings;
 using Infrastructure.Persistence.Auctions;
 using Domain.Helpers;
@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
+
 using System.Text;
 using WishlistApi.HostedServices;
 
@@ -28,35 +28,28 @@ namespace Tests.DataAccessTests
             });
             ctx.SaveChanges();
 
-            var existing = new Domain.Auction(
-                id: 1,
-                dateAdded: DateTimeOffset.Now,
-                currentPrice: 150m,
-                startingPrice: 100m,
-                status: Domain.AuctionStatus.Open,
-                userId: null,
-                appListingId: 4,
-                rowVersion: 2
-            );
+            var existing = new Infrastructure.Persistence.Auctions.Auction
+            {
+                ID = 1,
+                DateAdded = DateTimeOffset.Now,
+                CurrentPrice = 150m,
+                StartingPrice = 100m,
+                Status = Domain.AuctionStatus.Open,
+                UserID = null,
+                appid = 4,
+                RowVersion = 2
+            };
 
-            repo.AddAuction(existing);
+            ctx.Auctions.Add(existing);
             await uow.SaveChangesAsync();
 
             var bid = await repo.GetLatestAuctionAsync();
             bid.Should().NotBeNull();
-            // Note: CurrentPrice and UserId are init-only, reassign with constructor for test mutation
-            var mutated = new Domain.Auction(
-                id: bid.Id,
-                dateAdded: bid.DateAdded,
-                currentPrice: 200m,
-                startingPrice: bid.StartingPrice,
-                status: Domain.AuctionStatus.Open,
-                userId: 3,
-                appListingId: bid.AppListingId,
-                rowVersion: bid.RowVersion
-            );
-            repo.Update(mutated, mutated.RowVersion);
-            //repo.Update(bid, bid.RowVersion);
+            
+            // Mutate the domain object using PlaceBid (which sets both CurrentPrice and UserId)
+            bid.PlaceBid(bidderUserId: 3, amount: 200m);
+            
+            repo.Update(bid, bid.RowVersion);
             await uow.SaveChangesAsync();
 
             var updated = await ctx.Auctions.FindAsync(1);
