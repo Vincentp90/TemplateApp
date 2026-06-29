@@ -22,7 +22,7 @@ namespace WishlistApi.Controllers
         }
 
         [HttpGet()]
-        public async Task<ActionResult<Wishlist>> GetWishlistAsync([FromQuery] string? fields = null)
+        public async Task<ActionResult<Wishlist>> GetWishlistAsync([FromQuery] string? fields = null)// TODO replace fields filtering with OData
         {
             int internalUserId = await _userContext.GetIdAsync();
 
