@@ -1,4 +1,4 @@
-﻿using Application;
+using Application;
 using Application.Commands;
 using Application.Contracts;
 using Application.Queries;
@@ -6,9 +6,6 @@ using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-using System.Data;
-using System.Dynamic;
 using System.Security.Claims;
 using WishlistApi.Helpers;
 
@@ -21,14 +18,14 @@ namespace WishlistApi.Controllers
     [ApiController]
     [Authorize]
     [Route("[controller]")]
-    public class AuctionsController(IUserContext userContext, IAuctionService auctionService, IAuctionQueries auctionQueries, IHubContext<AuctionHub> hub) : ControllerBase
+    public class AuctionsController(IUserContext userContext, IAuctionService auctionService, IAuctionReadModel auctionReadModel, IHubContext<AuctionHub> hub) : ControllerBase
     {
         [HttpGet("current")]
         public async Task<ActionResult<AuctionDto>> GetCurrentAuctionAsync()
         {
             var userClaimNameId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             Guid? userGuid = userClaimNameId == null ? null : new Guid(userClaimNameId);
-            var auction = await auctionQueries.GetCurrentAuctionAsync(userGuid);
+            var auction = await auctionReadModel.GetCurrentAuctionAsync(userGuid);
             if(auction == null)
                 return NoContent();
 
@@ -59,9 +56,9 @@ namespace WishlistApi.Controllers
                 // We could later do something more intelligent with this instead of handling it the same as a concurrency issue
                 return StatusCode(StatusCodes.Status409Conflict);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
             {
-                return StatusCode(StatusCodes.Status409Conflict);
+                return StatusCode(StatusCodes.Status409Conflict, "Concurrency conflict");
             }
         }
 
@@ -82,9 +79,9 @@ namespace WishlistApi.Controllers
             {
                 return StatusCode(StatusCodes.Status409Conflict);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
             {
-                return StatusCode(StatusCodes.Status409Conflict);
+                return StatusCode(StatusCodes.Status409Conflict, "Concurrency conflict");
             }
         }
     }

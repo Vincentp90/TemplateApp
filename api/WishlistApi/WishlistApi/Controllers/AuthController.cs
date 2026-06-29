@@ -1,13 +1,11 @@
-﻿using Application;
+using Application;
 using Application.Commands;
+using Application.Contracts;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using System.Text;
 using WishlistApi.Helpers;
-using WishlistApi.DTOs;
 
 namespace WishlistApi.Controllers
 {

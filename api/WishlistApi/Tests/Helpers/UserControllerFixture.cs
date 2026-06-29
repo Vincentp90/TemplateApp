@@ -1,7 +1,7 @@
 using Application;
-using Application.Queries;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Users;
+using Infrastructure.ReadAdapters;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -60,9 +60,9 @@ namespace Tests.Helpers
                 .Options;
             _context = new WishlistDbContext(options);
             var userRepository = new UserRepository(_context);
-            var userQueries = new UserQueries(_context);
+            var userReadModel = new UserReadAdapter(_context);
             var cache = new MemoryCache(new MemoryCacheOptions());
-            _userService = new UserService(userRepository, cache, _context, userQueries);
+            _userService = new UserService(userRepository, cache, _context, userReadModel);
         }
 
         public WishlistDbContext GetContext() => _context!;

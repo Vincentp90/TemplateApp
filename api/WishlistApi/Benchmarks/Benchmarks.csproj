@@ -17,4 +17,9 @@
     <ProjectReference Include="..\Tests\Tests.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Watch Remove="bin\**" />
+    <Watch Remove="obj\**" />
+  </ItemGroup>
+
 </Project>

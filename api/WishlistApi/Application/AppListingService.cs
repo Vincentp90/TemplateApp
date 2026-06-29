@@ -1,7 +1,6 @@
 ﻿using Domain.Repositories;
 using Microsoft.Extensions.Configuration;
 using Domain;
-using AppListingEF = Infrastructure.Persistence.AppListings.AppListing;
 using System;
 using System.Collections.Generic;
 using System.Linq;

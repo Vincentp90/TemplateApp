@@ -21,30 +21,9 @@ namespace Domain
         // To be removed once we stop doing client side OCC
         public uint RowVersion { get; internal set; }
 
-        // Default constructor for creating new auctions (used by Application layer)
+        // Parameterless constructor for EF Core
         public Auction()
         {
-        }
-
-        // Constructor for mapping from Data Access layer (GetLatestAuctionAsync)
-        public Auction(
-            int id,
-            DateTimeOffset dateAdded,
-            decimal? currentPrice,
-            decimal startingPrice,
-            AuctionStatus status,
-            int? userId,
-            int appListingId,
-            uint rowVersion)
-        {
-            Id = id;
-            DateAdded = dateAdded;
-            CurrentPrice = currentPrice;
-            StartingPrice = startingPrice;
-            Status = status;
-            UserId = userId;
-            AppListingId = appListingId;
-            RowVersion = rowVersion;
         }
 
         // Constructor for creating new auctions (used by Application layer)
@@ -83,6 +62,33 @@ namespace Domain
                 startingPrice: MinimumStartingPrice,
                 appListingId: appListingId
             );
+        }
+
+        /// <summary>
+        /// Factory method for Infrastructure to map EF entities to domain objects.
+        /// </summary>
+        internal static Auction FromData(
+            int id,
+            DateTimeOffset dateAdded,
+            decimal? currentPrice,
+            decimal startingPrice,
+            AuctionStatus status,
+            int? userId,
+            int appListingId,
+            uint rowVersion)
+        {
+            var auction = new Auction()
+            {
+                Id = id,
+                DateAdded = dateAdded,
+                CurrentPrice = currentPrice,
+                StartingPrice = startingPrice,
+                Status = status,
+                UserId = userId,
+                AppListingId = appListingId,
+                RowVersion = rowVersion
+            };
+            return auction;
         }
     }
 

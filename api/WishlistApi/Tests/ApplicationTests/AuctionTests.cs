@@ -1,4 +1,4 @@
-﻿using Application;
+using Application;
 using Application.Commands;
 using Domain;
 using Domain.Exceptions;
@@ -9,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Moq;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Tests.ApplicationTests
@@ -57,15 +56,15 @@ namespace Tests.ApplicationTests
             // Arrange
             var auctionRepoMock = new Mock<IAuctionRepository>(MockBehavior.Strict);
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
-            var currentAuction = new Domain.Auction(
+            var currentAuction = Domain.Auction.FromData(
                 id: 2,
                 dateAdded: DateTimeOffset.Now.AddDays(-10),
                 currentPrice: null,
                 startingPrice: 10,
-                status: Domain.AuctionStatus.Open,
+                status: AuctionStatus.Open,
                 userId: null,
                 appListingId: 1,
-                rowVersion: 1
+                rowVersion: 0
             );
             auctionRepoMock.Setup(x => x.GetLatestAuctionAsync()).ReturnsAsync(currentAuction);
             auctionRepoMock.Setup(x => x.GetOpenAuction(2)).ReturnsAsync(currentAuction);
@@ -96,15 +95,15 @@ namespace Tests.ApplicationTests
             // Arrange
             var auctionRepoMock = new Mock<IAuctionRepository>(MockBehavior.Strict);
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
-            var currentAuction = new Domain.Auction(
+            var currentAuction = Domain.Auction.FromData(
                 id: 2,
                 dateAdded: DateTimeOffset.Now.AddDays(-10),
                 currentPrice: 20,
                 startingPrice: 10,
-                status: Domain.AuctionStatus.Open,
+                status: AuctionStatus.Open,
                 userId: null,
                 appListingId: 1,
-                rowVersion: 1
+                rowVersion: 0
             );
             auctionRepoMock.Setup(x => x.GetLatestAuctionAsync()).ReturnsAsync(currentAuction);
             auctionRepoMock.Setup(x => x.GetOpenAuction(1)).ReturnsAsync(currentAuction);

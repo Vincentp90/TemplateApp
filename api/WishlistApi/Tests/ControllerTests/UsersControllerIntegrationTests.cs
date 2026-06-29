@@ -4,7 +4,7 @@ using Infrastructure.Persistence.Users;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Tests.Helpers;
-using WishlistApi.DTOs;
+
 
 namespace Tests.ControllerTests;
 
@@ -28,7 +28,7 @@ public class UsersControllerIntegrationTests
         // Assert
         var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
         okResult.Should().NotBeNull();
-        var dto = okResult.Value as UserDetailsDTO;
+        var dto = okResult.Value as UserDetailsDto;
         dto.Should().NotBeNull();
         dto!.Email.Should().Be(username);
     }
@@ -51,7 +51,7 @@ public class UsersControllerIntegrationTests
         // Assert
         var okResult = result.Result as Microsoft.AspNetCore.Mvc.OkObjectResult;
         okResult.Should().NotBeNull();
-        var dto = okResult.Value as UserDetailsDTO;
+        var dto = okResult.Value as UserDetailsDto;
         dto.Should().NotBeNull();
         dto!.Email.Should().Be(username);
     }
@@ -68,7 +68,7 @@ public class UsersControllerIntegrationTests
         fixture.SetUserIdentity(userId.ToString());
         var controller = fixture.CreateController();
 
-        var dto = new UserDetailsDTO(
+        var dto = new UserDetailsDto(
             RowVersion: 0,
             Email: "updated@example.com",
             FirstName: "Updated",
@@ -98,7 +98,7 @@ public class UsersControllerIntegrationTests
         fixture.SetUserIdentity(adminUserId.ToString());
         var controller = fixture.CreateController();
 
-        var dto = new UserDetailsDTO(
+        var dto = new UserDetailsDto(
             RowVersion: 0,
             Email: "adminupdated@example.com",
             FirstName: "Admin",

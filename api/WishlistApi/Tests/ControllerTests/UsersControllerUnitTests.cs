@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Tests.Helpers;
-using WishlistApi.DTOs;
+
 
 namespace Tests.ControllerTests.UsersController;
 
@@ -35,7 +35,7 @@ public class UsersControllerUnitTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var returnedUser = Assert.IsType<UserDetailsDTO>(okResult.Value);
+        var returnedUser = Assert.IsType<UserDetailsDto>(okResult.Value);
         Assert.Equal("John", returnedUser.FirstName);
         Assert.Equal("Doe", returnedUser.LastName);
     }
@@ -116,7 +116,7 @@ public class UsersControllerUnitTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var returnedUser = Assert.IsType<UserDetailsDTO>(okResult.Value);
+        var returnedUser = Assert.IsType<UserDetailsDto>(okResult.Value);
         Assert.Equal("John", returnedUser.FirstName);
         Assert.Equal("Doe", returnedUser.LastName);
     }
@@ -148,7 +148,7 @@ public class UsersControllerUnitTests
             .Returns(Task.CompletedTask);
 
         var controller = fixture.CreateController();
-        var dto = new UserDetailsDTO(
+        var dto = new UserDetailsDto(
             RowVersion: 1,
             Email: "test@example.com",
             FirstName: "Updated",
@@ -173,7 +173,7 @@ public class UsersControllerUnitTests
         var fixture = new UserControllerMockFixture();
         // Don't set user identity - simulate no authentication claims
         var controller = fixture.CreateController();
-        var dto = new UserDetailsDTO(
+        var dto = new UserDetailsDto(
             RowVersion: 1,
             Email: "test@example.com",
             FirstName: "Test",
@@ -201,7 +201,7 @@ public class UsersControllerUnitTests
             .Returns(Task.CompletedTask);
 
         var controller = fixture.CreateController();
-        var dto = new UserDetailsDTO(
+        var dto = new UserDetailsDto(
             RowVersion: 5,
             Email: "admin@example.com",
             FirstName: "AdminUpdated",
@@ -230,7 +230,7 @@ public class UsersControllerUnitTests
             .ThrowsAsync(new DbUpdateConcurrencyException("Concurrency conflict"));
 
         var controller = fixture.CreateController();
-        var dto = new UserDetailsDTO(
+        var dto = new UserDetailsDto(
             RowVersion: 1,
             Email: "test@example.com",
             FirstName: "Test",
@@ -244,7 +244,7 @@ public class UsersControllerUnitTests
         var result = await controller.PatchUserAsync(dto, Guid.NewGuid().ToString());
 
         // Assert
-        var statusCodeResult = Assert.IsType<StatusCodeResult>(result);
-        Assert.Equal(409, statusCodeResult.StatusCode);
+        var objectResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(409, objectResult.StatusCode);
     }
 }

@@ -22,8 +22,10 @@ namespace Application
 
         public async Task AddToWishlistAsync(AddToWishlistCommand command)
         {
-            var wishlistItem = await Domain.WishlistItem.AddAsync(wishlistItemRepository, command.UserId, command.AppId);
+            if (await wishlistItemRepository.AppIsOnWishlistAsync(command.UserId, command.AppId))
+                throw new Domain.Exceptions.DomainException("Item already on wishlist");
 
+            var wishlistItem = Domain.WishlistItem.CreateNew(command.UserId, command.AppId);
             await wishlistItemRepository.AddWishlistItemAsync(wishlistItem);
             await unitOfWork.SaveChangesAsync();
         }
