@@ -1,4 +1,10 @@
 services:
+  rabbitmq:
+    image: rabbitmq:4.2-management
+    restart: on-failure:3
+    ports:
+      - "15672:15672"  # Management UI
+
   db:
     image: postgres:18.1
     restart: on-failure:3
