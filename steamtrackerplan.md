@@ -4,6 +4,42 @@ Hexagonal (ports & adapters) DDD with C# API + React frontend + RabbitMQ single 
 
 ---
 
+## Scope constraint — fundamental rule
+
+> **SteamTracker only tracks prices for games already on a user's wishlist.**
+> Adding a game to the wishlist automatically enables price tracking. Removing it stops tracking. There is no separate "watch" concept.
+
+This means:
+- The existing app's `WishlistItem` is the source of truth for *what to track*
+- `Game` in this domain is a **price-tracking projection** of `WishlistItem` — it doesn't maintain its own list
+- An `AlertRule` can only exist for a `(UserId, AppId)` pair that has a matching `WishlistItem`
+- The scheduler enqueues price-check jobs from SteamTracker's own local wishlist replica (see ACL below)
+
+---
+
+## Anti-corruption layer — no shared database tables
+
+SteamTracker does **not** read the existing app's `wishlist_items` table directly. Instead, the two services communicate exclusively via RabbitMQ events. This means:
+
+- Schema changes in the existing app never silently break SteamTracker
+- SteamTracker owns its own local replica of which games are being tracked
+- The boundary between services is explicit and versioned (the event contract)
+
+### How SteamTracker consumes them
+
+> **Prerequisite**: The changes in [steamtracker-existing-app-changes.md](steamtracker-existing-app-changes.md) must be completed before SteamTracker development begins. The existing app publishes `WishlistItemAdded` and `WishlistItemRemoved` events to a `wishlist.events` RabbitMQ exchange.
+
+SteamTracker has a dedicated `WishlistSyncWorker` (a second `BackgroundService`) that:
+- Consumes `WishlistItemAdded` → upserts a `TrackedGame` record locally
+- Consumes `WishlistItemRemoved` → marks the `TrackedGame` as inactive (soft delete), deactivates its `AlertRule`s
+
+```
+Exchange: wishlist.events         (published by existing app)
+  → Queue: steamtracker.wishlist-sync   (consumed by WishlistSyncWorker)
+```
+
+---
+
 ## Project structure
 
 ```
@@ -13,7 +49,7 @@ SteamTracker/
 │   ├── SteamTracker.Application/     # Use cases + port interfaces
 │   ├── SteamTracker.Infrastructure/  # Adapters: EF, RabbitMQ, Steam HTTP
 │   ├── SteamTracker.API/             # ASP.NET Web API (primary adapter)
-│   └── SteamTracker.Worker/          # BackgroundService (primary adapter)
+│   └── SteamTracker.Worker/          # BackgroundService: price checker + wishlist sync
 └── tests/
     ├── SteamTracker.Domain.Tests/
     ├── SteamTracker.Application.Tests/
@@ -26,49 +62,81 @@ The key hexagonal rule: **Domain and Application have zero references to Infrast
 
 ## Phase 1 — Domain model
 
-**Aggregates / entities**
+### Relationship to WishlistItem
+
+SteamTracker never touches the existing app's tables. Instead it maintains its own `TrackedGame` — a local ACL projection populated by wishlist events:
 
 ```
-Game (aggregate root)
-  - AppId           : SteamAppId (value object)
-  - Name            : string
-  - CurrentPrice    : Money? (value object — nullable until first fetch)
+WishlistItemAdded event               TrackedGame (SteamTracker's local replica)
+  - UserId                              - AppId        : SteamAppId
+  - AppId       ──── drives ──────►     - IsActive      : bool
+  - AddedAt                             - TrackedSince  : DateTimeOffset
+```
+
+`TrackedGame` is distinct from `Game` (which holds price data). They share `AppId` as identity:
+
+```
+TrackedGame   — "should we be fetching prices for this AppId?"
+Game          — "what is the current price for this AppId?"
+```
+
+### Aggregates / entities
+
+```
+TrackedGame (aggregate root)
+  - AppId        : SteamAppId
+  - IsActive     : bool
+  - TrackedSince : DateTimeOffset
+
+  + static TrackedGame StartTracking(SteamAppId, DateTimeOffset)
+  + void StopTracking()   # raises TrackingStoppedEvent, deactivates alert rules
+
+Game (aggregate root — price data, one per unique AppId)
+  - AppId           : SteamAppId
+  - Name            : string          # resolved from Steam API on first price fetch
+  - CurrentPrice    : Money?
   - LastCheckedAt   : DateTimeOffset?
 
-PriceSnapshot (entity, child of Game)
+  + void ApplyPriceUpdate(Money newPrice, string name, DateTimeOffset at)
+  # raises PriceUpdatedEvent
+
+PriceSnapshot (entity, child of Game — append-only)
   - SnapshotId      : Guid
   - Price           : Money
   - DiscountPercent : int
   - CapturedAt      : DateTimeOffset
 
-AlertRule (aggregate root)
-  - AlertRuleId     : Guid
-  - UserId          : UserId (value object)
-  - AppId           : SteamAppId
-  - TriggerBelowPrice : Money          # alert fires when price <= this
-  - IsActive        : bool
-  - LastTriggeredAt : DateTimeOffset?
+AlertRule (aggregate root — per user, per wishlisted game)
+  - AlertRuleId       : Guid
+  - UserId            : UserId
+  - AppId             : SteamAppId
+  - TriggerBelowPrice : Money
+  - IsActive          : bool
+  - LastTriggeredAt   : DateTimeOffset?
 
   + bool ShouldTrigger(Money currentPrice)
   + void MarkTriggered(DateTimeOffset at)
+  + void Deactivate()   # called when WishlistItemRemoved is received
 ```
 
-**Value objects**
+### Value objects
 
 ```
 SteamAppId  — wraps int, validates > 0
 Money       — Amount (decimal) + Currency (ISO string, default "EUR")
+              + static Money.Free for F2P games
 UserId      — wraps Guid
 ```
 
-**Domain events** (raised by aggregates, published by infrastructure)
+### Domain events
 
 ```
-PriceUpdatedEvent    { AppId, OldPrice, NewPrice, CapturedAt }
-AlertTriggeredEvent  { AlertRuleId, UserId, AppId, Price }
+PriceUpdatedEvent      { AppId, OldPrice, NewPrice, CapturedAt }
+AlertTriggeredEvent    { AlertRuleId, UserId, AppId, Price }
+TrackingStoppedEvent   { AppId }   # triggers alert rule deactivation
 ```
 
-**Domain service**
+### Domain service
 
 ```
 PriceAlertEvaluator
@@ -80,32 +148,39 @@ PriceAlertEvaluator
 
 ## Phase 2 — Application layer (ports)
 
-### Driving ports (called by API / Worker)
+### Driving ports (called by API / Workers)
 
 ```csharp
-// Use cases the API exposes
-IWatchGameUseCase           WatchGame(UserId, SteamAppId)
-IUnwatchGameUseCase         UnwatchGame(UserId, SteamAppId)
-ISetAlertRuleUseCase        SetAlertRule(UserId, SteamAppId, Money threshold)
-IGetWatchlistQueryHandler   GetWatchlist(UserId) → WatchlistDto[]
+// Alert rules — validated against local TrackedGame (not the external wishlist table)
+ISetAlertRuleUseCase          SetAlertRule(UserId, SteamAppId, Money threshold)
+IDeleteAlertRuleUseCase       DeleteAlertRule(UserId, Guid alertRuleId)
 
-// Use case the Worker calls after consuming a job
-IProcessPriceCheckUseCase   ProcessPriceCheck(SteamAppId, Money fetchedPrice)
+// Wishlist price view — joins local TrackedGame + Game price data per user
+IGetWishlistWithPricesQuery   GetWishlistWithPrices(UserId) → WishlistItemWithPriceDto[]
+
+// Called by PriceCheckWorker after fetching from Steam
+IProcessPriceCheckUseCase     ProcessPriceCheck(SteamAppId, Money price, string name)
+
+// Called by WishlistSyncWorker when ACL events arrive
+IHandleWishlistItemAddedUseCase   Handle(WishlistItemAddedMessage)
+IHandleWishlistItemRemovedUseCase Handle(WishlistItemRemovedMessage)
 ```
 
 ### Driven ports (implemented by Infrastructure)
 
 ```csharp
-// Persistence
-IGameRepository             Get(SteamAppId), Save(Game)
-IAlertRuleRepository        GetActiveRulesFor(SteamAppId), Save(AlertRule)
+// SteamTracker's own persistence — no external table reads
+ITrackedGameRepository        GetActive() → IEnumerable<TrackedGame>
+                              Get(SteamAppId), Save(TrackedGame)
+IGameRepository               Get(SteamAppId), Save(Game)
+IAlertRuleRepository          GetActiveRulesFor(SteamAppId), GetForUser(UserId), Save(AlertRule)
 
 // Messaging
-IPriceCheckJobPublisher     Enqueue(SteamAppId)       // used by scheduler
-INotificationPublisher      Notify(AlertTriggeredEvent)
+IPriceCheckJobPublisher       Enqueue(SteamAppId)
+INotificationPublisher        Notify(AlertTriggeredEvent)
 
 // External
-ISteamStoreClient           FetchPrice(SteamAppId) → Money
+ISteamStoreClient             FetchPrice(SteamAppId) → (Money? Price, string Name)?
 ```
 
 ---
@@ -114,75 +189,78 @@ ISteamStoreClient           FetchPrice(SteamAppId) → Money
 
 ### Persistence — EF Core + Postgres
 
-- One `DbContext` in Infrastructure, maps aggregates to tables
-- `GameRepository` and `AlertRuleRepository` implement their ports
-- Migrations: separate project or EF migrations inside Infrastructure
-- Price snapshots stored as append-only table (no updates, only inserts)
-
-**Schema (simplified)**
+SteamTracker has its **own schema** with no foreign keys into the existing app's tables:
 
 ```
-games              (app_id PK, name, current_price, currency, last_checked_at)
-price_snapshots    (id PK, app_id FK, price, currency, discount_pct, captured_at)
-alert_rules        (id PK, user_id, app_id, trigger_below, currency, is_active, last_triggered_at)
+tracked_games      (app_id PK, is_active, tracked_since)
+games              (app_id PK, current_price, currency, last_checked_at)
+price_snapshots    (id PK, app_id FK→games, price, currency, discount_pct, captured_at)
+                   UNIQUE INDEX on (app_id, captured_at)      ← idempotency guard
+alert_rules        (id PK, user_id, app_id FK→tracked_games, trigger_below, currency, is_active, last_triggered_at)
 ```
 
-### Messaging — RabbitMQ
+`SetAlertRule` validates that `TrackedGame` exists and `IsActive = true` before creating an `AlertRule` — this replaces the old FK constraint into `wishlist_items`.
 
-**Exchange / queue layout**
+### Messaging — RabbitMQ (full picture)
 
 ```
+# Published by existing app — consumed by SteamTracker's WishlistSyncWorker
+Exchange: wishlist.events
+  → Queue: steamtracker.wishlist-sync
+
+# Internal to SteamTracker
 Exchange: steamtracker.direct
-  → Queue: price-check-jobs     (worker consumes)
-  → Queue: notifications        (notification service consumes)
+  → Queue: price-check-jobs       (consumed by PriceCheckWorker)
+  → Queue: notifications          (consumed by notification service)
 
 Dead-letter exchange: steamtracker.dlx
-  → Queue: price-check-dead     (failed jobs land here for inspection)
+  → Queue: price-check-dead
+  → Queue: wishlist-sync-dead
 ```
 
-**Message contracts** (record types in Application, serialized as JSON)
+**Message contracts**
 
 ```csharp
+// Inbound from existing app (ACL boundary)
+record WishlistItemAddedMessage(string UserId, int AppId, DateTimeOffset AddedAt);
+record WishlistItemRemovedMessage(string UserId, int AppId, DateTimeOffset RemovedAt);
+
+// Internal
 record PriceCheckJob(int AppId, DateTimeOffset EnqueuedAt);
 record NotificationMessage(Guid AlertRuleId, string UserId, int AppId, decimal Price, string Currency);
 ```
-
-**`RabbitMqPriceCheckJobPublisher`** — implements `IPriceCheckJobPublisher`
-
-**`RabbitMqNotificationPublisher`** — implements `INotificationPublisher`
 
 ### Steam HTTP adapter
 
 **`SteamStoreHttpClient`** — implements `ISteamStoreClient`
 
-- Calls `https://store.steampowered.com/api/appdetails?appids={id}&filters=price_overview`
-- Maps `price_overview.final` (in cents) to `Money`
-- Returns `null` if game is free or not yet released (handle in use case)
-- Throws `SteamRateLimitException` on 429 (caught by Worker, message nacked with delay)
+- `https://store.steampowered.com/api/appdetails?appids={id}&filters=price_overview&cc=de&l=german`
+- `cc=de&l=german` ensures consistent EUR pricing regardless of worker IP
+- Returns `(Money.Free, name)` if `price_overview` is absent (F2P game)
+- Returns `null` on unexpected shape (handle as skip in use case)
+- Throws `SteamRateLimitException` on 429
 
 ---
 
-## Phase 4 — Worker (BackgroundService)
+## Phase 4 — Workers (BackgroundServices)
+
+### PriceCheckWorker
 
 ```csharp
-public class PriceCheckWorker : BackgroundService
-{
-    // Consumes from RabbitMQ
-    // For each message:
-    //   1. Call ISteamStoreClient.FetchPrice(appId)
-    //   2. On success  → IProcessPriceCheckUseCase.ProcessPriceCheck(appId, price), ack message
-    //   3. On 429      → nack with requeue after delay (use RabbitMQ TTL dead-letter trick)
-    //   4. On 5xx/timeout → nack, let dead-letter queue catch it after N retries
-}
+// For each PriceCheckJob message:
+//   1. Acquire rate-limit token (blocks if near Steam's 200/5min limit)
+//   2. Call ISteamStoreClient.FetchPrice(appId) → (price, name)
+//   3. On success     → IProcessPriceCheckUseCase.ProcessPriceCheck(appId, price, name), ack
+//   4. On 429         → nack, requeue after TTL delay
+//   5. On 5xx/timeout → nack, dead-letter after N retries
 ```
 
-**Rate limiting strategy** — token bucket inside the worker
+**Rate limiter** — token bucket, .NET 7+ built-in
 
 ```csharp
-// SemaphoreSlim or System.Threading.RateLimiting (built-in .NET 7+)
-using var rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
+new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
 {
-    TokenLimit = 180,           // stay below 200 hard limit
+    TokenLimit = 180,
     ReplenishmentPeriod = TimeSpan.FromMinutes(5),
     TokensPerPeriod = 180,
     QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
@@ -190,20 +268,33 @@ using var rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOpt
 });
 ```
 
-**Retry policy** — Polly (or built-in resilience via Microsoft.Extensions.Http.Resilience)
+**Retry policy** — Polly / Microsoft.Extensions.Http.Resilience
 
 ```
-Retry: 3 attempts, exponential backoff (2s, 4s, 8s) for transient HTTP errors
+Retry: 3 attempts, exponential backoff (2s, 4s, 8s)
 Circuit breaker: open after 5 consecutive failures, half-open after 30s
 ```
 
-### Scheduler
-
-Use `PeriodicTimer` (simple) or Quartz.NET (if you need per-game intervals):
+### WishlistSyncWorker
 
 ```csharp
-// Simple version: every 24h, enqueue all watched games
-// Advanced version: Quartz.NET job reads watched game list and enqueues in batches
+// Consumes from steamtracker.wishlist-sync queue
+// WishlistItemAdded   → IHandleWishlistItemAddedUseCase.Handle(msg)
+//                       upserts TrackedGame, triggers first price-check job
+// WishlistItemRemoved → IHandleWishlistItemRemovedUseCase.Handle(msg)
+//                       sets TrackedGame.IsActive = false, deactivates AlertRules
+```
+
+Both workers live in `SteamTracker.Worker` and share the same host process.
+
+### Scheduler
+
+Every 24h, reads `ITrackedGameRepository.GetActive()` and enqueues **one job per unique AppId**:
+
+```csharp
+var activeAppIds = await _trackedGameRepo.GetActive();
+foreach (var game in activeAppIds.DistinctBy(g => g.AppId))
+    await _publisher.Enqueue(game.AppId);
 ```
 
 ---
@@ -211,50 +302,126 @@ Use `PeriodicTimer` (simple) or Quartz.NET (if you need per-game intervals):
 ## Phase 5 — API surface
 
 ```
-POST   /watchlist/{appId}          → WatchGameUseCase
-DELETE /watchlist/{appId}          → UnwatchGameUseCase
-GET    /watchlist                   → GetWatchlistQueryHandler
-POST   /alert-rules                 → SetAlertRuleUseCase  { appId, triggerBelowPrice }
-DELETE /alert-rules/{id}            → DeleteAlertRuleUseCase
+# Alert rules (validated against local TrackedGame)
+POST   /wishlist/{appId}/alert-rule       → SetAlertRuleUseCase  { triggerBelowPrice }
+DELETE /wishlist/{appId}/alert-rule/{id}  → DeleteAlertRuleUseCase
+
+# Enriched wishlist view (local TrackedGame + Game price data, filtered by UserId)
+GET    /wishlist/prices                   → GetWishlistWithPricesQuery
 ```
 
-Auth: JWT bearer (existing setup in your app — just add `[Authorize]` + extract `UserId` from claims).
+Auth: JWT bearer — extract `UserId` from claims, pass into use cases.
 
 ---
 
 ## Phase 6 — React frontend
 
-Minimal additions to existing app:
+Changes are **additive to the existing wishlist UI**, not a separate page:
 
-- `WatchlistPage` — lists watched games with current price + last checked timestamp
-- `AlertRuleModal` — set a price threshold per game
-- `useWatchlist()` hook — fetches `/watchlist`, polls every 60s or uses SignalR for push
-- Price displayed as badge: green (on sale), gray (full price), amber (price unknown)
+- Add a price badge to each existing `WishlistItem` card: green (on sale), gray (full price), amber (not yet fetched)
+- Add a "Set alert" button per item → `AlertRuleModal` with price threshold input
+- `useWishlistPrices()` hook — fetches `GET /wishlist/prices`, merges with existing wishlist state
+- Optional: SignalR push for real-time price updates without polling
 
-Optional: SignalR hub in the API that pushes `PriceUpdatedEvent` to connected clients so the UI updates without polling.
+---
+
+## Test strategy
+
+### Framework
+xUnit + FluentAssertions + **Moq** (matching the existing app's test stack).
+
+### TDD — tests first
+**Every piece of logic starts with a failing test.** The implementation order below is structured around this:
+- Domain logic: write failing tests → implement the aggregate / domain service → make them pass.
+- Use cases: write failing tests against mocked ports → implement the use case → make them pass.
+- Infrastructure adapters: write failing integration tests → implement the adapter → make them pass.
+- Workers: write failing tests for the worker logic → implement the BackgroundService → make them pass.
+
+Never write implementation code without a failing test first. If you can't write a failing test, the code doesn't need to exist.
+
+### Pyramid
+
+**Domain.Tests** — pure C#, no mocks, no framework dependencies. These are the fastest tests and the most reliable.
+
+| What | Why |
+|------|-----|
+| `PriceAlertEvaluator.Evaluate` | Trigger / no-trigger boundary cases (price == threshold, below, above) |
+| `AlertRule.ShouldTrigger` | Boundary conditions — exact match, just below, just above |
+| `AlertRule.MarkTriggered` | Sets `LastTriggeredAt`, does nothing if already triggered |
+| `Game.ApplyPriceUpdate` | State transitions — first price, subsequent updates, event raising |
+| `Money.Free` comparisons | `Free < Money`, `Free == Money.Free`, `Free > Money` |
+| `SteamAppId` validation | Rejects ≤ 0, accepts valid IDs |
+| `UserId` value object | Wraps Guid correctly |
+
+**Application.Tests** — use cases with **mocked ports** (Moq). No real database, no real HTTP, no real RabbitMQ.
+
+| What | How |
+|------|-----|
+| `SetAlertRuleUseCase` | Mock `ITrackedGameRepository` — verify it throws when game not tracked, creates rule when it exists |
+| `DeleteAlertRuleUseCase` | Mock `IAlertRuleRepository` — verify delete is called, throws when rule not found |
+| `IProcessPriceCheckUseCase` | Mock `IGameRepository`, `IAlertRuleRepository`, `INotificationPublisher` — verify price is saved, alerts evaluated, notifications dispatched |
+| `IHandleWishlistItemAddedUseCase` | Mock repositories — verify upsert on `TrackedGame`, verify price-check job enqueued |
+| `IHandleWishlistItemRemovedUseCase` | Mock repositories — verify `TrackedGame` deactivated, `AlertRule`s deactivated |
+| `GetWishlistWithPricesQuery` | Mock repositories — verify join between `TrackedGame` + `Game` + `WishlistItem` |
+
+**Integration.Tests** — **real Postgres via testcontainers**, **real RabbitMQ via testcontainers**. These are slower but catch real integration bugs.
+
+| What | How |
+|------|-----|
+| Repository CRUD | `GameRepository`, `AlertRuleRepository`, `TrackedGameRepository` — save, get, update |
+| Idempotency | Duplicate `PriceCheckJob` produces exactly one `PriceSnapshot` (unique index enforced) |
+| WishlistSyncWorker | End-to-end: consume `WishlistItemAdded` → `TrackedGame` row created, price-check job enqueued |
+| PriceCheckWorker | End-to-end: consume `PriceCheckJob` → mock Steam API → price saved, alerts evaluated |
+| Scheduler | Trigger 24h cycle → verify jobs enqueued for all active `TrackedGame`s |
+
+### Testing the workers
+BackgroundService testing is notoriously tricky. The approach:
+- **Don't test `BackgroundService` itself** — test the logic it calls (the use cases, the scheduler, the rate limiter).
+- **Test the scheduler** as a standalone component: inject a `PeriodicTimer` mock or use `Task.Delay` with a timeout, verify jobs are enqueued.
+- **Test the rate limiter** in isolation: verify it blocks when tokens are exhausted, replenishes over time.
+- **Test the worker's message handling** by calling `ProcessMessage` directly (extract the handler into a separate method or interface that the worker delegates to).
 
 ---
 
 ## Implementation order
 
+Each step starts with **failing tests**, then implementation, then the tests pass before moving on.
+
 ```
-1. Domain model + domain tests (no infra, pure C#)
-2. Port interfaces in Application
-3. Use case implementations + unit tests (mock ports)
-4. EF Core + Postgres adapter + migration
-5. SteamStoreHttpClient adapter + integration test (real HTTP, sandboxed)
-6. RabbitMQ adapters (publisher + consumer)
-7. Worker BackgroundService with rate limiter
-8. API controllers wired to use cases
-9. React frontend additions
-10. End-to-end test: enqueue → worker fetches → alert fires → notification sent
+Phase 1 — Domain (TDD)
+  1. Write failing domain tests → implement Game, TrackedGame, PriceSnapshot, AlertRule
+  2. Write failing domain tests → implement PriceAlertEvaluator
+  3. Write failing domain tests → implement value objects (SteamAppId, Money, UserId)
+  # All tests pass, no infrastructure yet
+
+Phase 2 — Application layer (TDD)
+  4. Write port interfaces (Application layer)
+  5. Write failing use case tests (mocked ports with Moq) → implement SetAlertRule, DeleteAlertRule
+  6. Write failing use case tests → implement ProcessPriceCheck (joins Game + AlertRule + Notification)
+  7. Write failing use case tests → implement HandleWishlistItemAdded, HandleWishlistItemRemoved
+  8. Write failing query tests → implement GetWishlistWithPrices
+  # All use case tests pass with mocks
+
+Phase 3 — Infrastructure (TDD)
+  9. Write failing integration tests (testcontainers: Postgres + RabbitMQ)
+ 10. Implement EF Core adapters for TrackedGame, Game, AlertRule + migrations
+ 11. Implement WishlistSyncWorker + rate limiter + scheduler
+ 12. Implement SteamStoreHttpClient (mock HTTP in unit test, real HTTP in integration test)
+ 13. Implement RabbitMQ publisher/consumer adapters + integration tests
+
+Phase 4 — Wire it up
+ 14. Implement API controllers (POST /alert-rule, GET /wishlist/prices)
+ 15. Wire workers into DI, connect scheduler → publisher → worker → use case → notification
+ 16. React frontend additions to existing wishlist UI
+ 17. End-to-end: wishlist add → event → TrackedGame → scheduler → price fetch → alert fires
 ```
 
 ---
 
 ## Key decisions to revisit later
 
-- **Multiple workers**: When you scale out, move rate limiting from the worker process into a shared token bucket (Redis + Lua script or a dedicated rate-limit microservice). Each worker instance then holds no local state.
-- **Idempotency**: `ProcessPriceCheck` should be idempotent — if the same job is delivered twice (RabbitMQ at-least-once), inserting a duplicate `PriceSnapshot` with the same `(app_id, captured_at)` should be a no-op. Add a unique index on `(app_id, captured_at)` and catch `UniqueConstraintException` in the repo.
-- **Currency**: Steam returns prices in the store's local currency based on IP. Consider fixing the worker's outbound IP or passing `cc=de&l=german` query params to get EUR consistently.
-- **Free-to-play games**: `price_overview` is absent in the API response. Domain should model `Money.Free` explicitly rather than nullable.
+- **Multiple workers**: Move rate limiting from in-process token bucket to a shared Redis token bucket (Lua script). Each worker instance holds no local state and the 200/5min cap is shared across all instances.
+- **Idempotency**: `ProcessPriceCheck` is idempotent by design — the `UNIQUE INDEX on (app_id, captured_at)` means duplicate deliveries are a no-op. Catch `UniqueConstraintException` in the repo and swallow it. `WishlistSyncWorker` uses upsert semantics for the same reason.
+- **Event replay / backfill**: If SteamTracker is deployed after users already have items in their wishlist, those items will never generate `WishlistItemAdded` events. Add a one-time backfill endpoint in the existing app, or accept that only new wishlist additions get tracked.
+- **F2P games**: `price_overview` is absent in the Steam response. `Money.Free` is a first-class value — `AlertRule.ShouldTrigger(Money.Free)` always returns false.
+- **Game removed from all wishlists**: When `TrackedGame.IsActive = false` for all users, the scheduler naturally stops enqueuing it. Consider a nightly job to prune stale `games` rows.
