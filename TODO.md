@@ -1,3 +1,8 @@
+Microservices/message queue exercise:
+https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
+SteamTracker
+Ask pi to review plan, and see that it correctly only checks prices for games that are selected in the wishlist.
+
 Things I'm going to try/add/learn more about later :
 - Auction: add end date to entity, remove static mutable Domain.Auction.Duration
 - Auction OCC: remove client side part since we also have the admin form which is more suitable for RowVersion round-trip, auction use case fits better with only server side OCC
