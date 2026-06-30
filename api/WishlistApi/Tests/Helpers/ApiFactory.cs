@@ -1,4 +1,6 @@
-﻿using Infrastructure.Persistence;
+﻿using Application;
+using Infrastructure.Messaging;
+using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -43,14 +45,23 @@ namespace Tests.Helpers
                     services.Remove(svc);
 
                 // Replace DB connection string
-                var descriptor = services.SingleOrDefault(
+                var dbDescriptor = services.SingleOrDefault(
                     d => d.ServiceType == typeof(DbContextOptions<WishlistDbContext>));
 
-                if (descriptor != null)
-                    services.Remove(descriptor);
+                if (dbDescriptor != null)
+                    services.Remove(dbDescriptor);
 
                 services.AddDbContext<WishlistDbContext>(options =>
                     options.UseNpgsql(_db.GetConnectionString()).UseSnakeCaseNamingConvention());
+
+                // Replace RabbitMQ with a no-op publisher so integration tests don't need a real broker
+                var rmqFactoryDescriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(IRabbitMqConnectionFactory));
+                if (rmqFactoryDescriptor != null)
+                    services.Remove(rmqFactoryDescriptor);
+
+                services.AddSingleton<IRabbitMqConnectionFactory>(_ => new NoOpRabbitMqConnectionFactory());
+                services.AddScoped<IEventPublisher>(_ => new NoOpRabbitMqEventPublisher());
             });
         }
 

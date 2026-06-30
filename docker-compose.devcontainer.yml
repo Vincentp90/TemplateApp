@@ -40,7 +40,7 @@ services:
       - .:/workspace
       - /var/run/docker.sock:/var/run/docker.sock
     working_dir: /workspace/api/WishlistApi/WishlistApi
-    command: dotnet watch run --no-launch-profile --urls http://0.0.0.0:5186
+    command: dotnet run --no-launch-profile --urls http://0.0.0.0:5186
     environment:
       - ASPNETCORE_ENVIRONMENT=Devcontainer
       - ASPNETCORE_URLS=http://+:5186

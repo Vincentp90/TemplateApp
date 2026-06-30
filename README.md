@@ -11,9 +11,12 @@ This is a template for a typical business CRUD app. The goal is to have a templa
     - For dev use dotnet user-secrets to store the apikey with command: dotnet user-secrets set "SteamAPIKEY" "yourapikeyhere"
     - Note: Since switching to dev container I haven't verified if this actually still works this way
 - Build and open as dev container in VS Code
-- All of the following should be available with the dev container running and hot reload active:
+- All of the following should be available with the dev container running:
 - Frontend at: http://localhost:5173
+    - Hot reload active
 - Swagger UI at: http://localhost:5186/swagger/index.html
+    - no hot reload due to issue with build (System.ArgumentException: An item with the same key has already been added)
+    - To restart after code changes: docker compose restart api 
 - Adminer at: http://localhost:8085/
     - username postgres
     - password example

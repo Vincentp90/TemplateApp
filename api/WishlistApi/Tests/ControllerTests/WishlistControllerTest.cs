@@ -60,7 +60,8 @@ namespace Tests.ControllerTests
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
-            var controller = new WishlistController(userContextMock, new WishlistService(repositoryMock.Object, uowMock.Object));
+            var eventPublisherMock = new Mock<IEventPublisher>();
+            var controller = new WishlistController(userContextMock, new WishlistService(repositoryMock.Object, uowMock.Object, eventPublisherMock.Object));
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = httpContext

@@ -81,5 +81,29 @@ namespace WishlistApi.Controllers
             await _wishlistService.DeleteWishlistItemAsync(internalUserId, appId);
             return Ok();
         }
+
+        /// <summary>
+        /// Backfill: publishes WishlistItemAdded events for all wishlist items.
+        /// Used to sync SteamTracker when the service is deployed after users already have items.
+        /// </summary>
+        [HttpPost("_backfill")]
+        public async Task<ActionResult> BackfillAsync()
+        {
+            int internalUserId = await _userContext.GetIdAsync();
+
+            var items = await _wishlistService.GetWishlistItemsAsync(internalUserId);
+
+            if (!items.Any())
+            {
+                return new ObjectResult(new { Count = 0 }) { StatusCode = 202 };
+            }
+
+            foreach (var item in items)
+            {
+                await _wishlistService.PublishBackfillEventAsync(item);
+            }
+
+            return new ObjectResult(new { Count = items.Count }) { StatusCode = 202 };
+        }
     }
 }

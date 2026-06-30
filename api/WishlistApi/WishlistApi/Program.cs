@@ -6,6 +6,7 @@ using Infrastructure.Persistence.Auctions;
 using Infrastructure.Persistence.Users;
 using Infrastructure.Persistence.Wishlist;
 using Infrastructure.ReadAdapters;
+using Infrastructure.Messaging;
 using Domain;
 using Domain.Helpers;
 using Domain.Repositories;
@@ -84,6 +85,14 @@ builder.Services.AddScoped<IAppListingService, AppListingService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWishlistService, WishlistService>();
+
+// RabbitMQ infrastructure
+builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.SectionName));
+builder.Services.AddSingleton<IRabbitMqConnectionFactory, RabbitMqConnectionFactory>();
+builder.Services.AddScoped<IEventPublisher>(sp =>
+    new RabbitMqEventPublisher(
+        sp.GetRequiredService<IRabbitMqConnectionFactory>(),
+        "wishlist.events"));
 builder.Services.AddScoped<IAuctionService, AuctionService>();
 
 
