@@ -54,14 +54,13 @@ namespace Tests.Helpers
                 services.AddDbContext<WishlistDbContext>(options =>
                     options.UseNpgsql(_db.GetConnectionString()).UseSnakeCaseNamingConvention());
 
-                // Replace RabbitMQ with a no-op publisher so integration tests don't need a real broker
-                var rmqFactoryDescriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(IRabbitMqConnectionFactory));
-                if (rmqFactoryDescriptor != null)
-                    services.Remove(rmqFactoryDescriptor);
+                // Replace MassTransit with a no-op publisher so integration tests don't need a real broker
+                var massTransitDescriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(MassTransit.IPublishEndpoint));
+                if (massTransitDescriptor != null)
+                    services.Remove(massTransitDescriptor);
 
-                services.AddSingleton<IRabbitMqConnectionFactory>(_ => new NoOpRabbitMqConnectionFactory());
-                services.AddScoped<IEventPublisher>(_ => new NoOpRabbitMqEventPublisher());
+                services.AddScoped<IEventPublisher>(_ => new NoOpEventPublisher());
             });
         }
 

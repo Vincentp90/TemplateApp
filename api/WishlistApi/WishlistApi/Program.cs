@@ -7,6 +7,7 @@ using Infrastructure.Persistence.Users;
 using Infrastructure.Persistence.Wishlist;
 using Infrastructure.ReadAdapters;
 using Infrastructure.Messaging;
+using MassTransit;
 using Domain;
 using Domain.Helpers;
 using Domain.Repositories;
@@ -86,13 +87,33 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWishlistService, WishlistService>();
 
-// RabbitMQ infrastructure
-builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.SectionName));
-builder.Services.AddSingleton<IRabbitMqConnectionFactory, RabbitMqConnectionFactory>();
-builder.Services.AddScoped<IEventPublisher>(sp =>
-    new RabbitMqEventPublisher(
-        sp.GetRequiredService<IRabbitMqConnectionFactory>(),
-        "wishlist.events"));
+// MassTransit + RabbitMQ infrastructure
+builder.Services.AddMassTransit(x =>
+{
+    x.SetKebabCaseEndpointNameFormatter();
+
+    x.AddConsumer<EventConsumer>();
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        var rmq = builder.Configuration.GetSection("RabbitMq");
+        var host = rmq.GetValue<string>("Host") ?? "localhost";
+        var port = rmq.GetValue<int?>("Port") ?? 5672;
+        var vhost = rmq.GetValue<string>("VirtualHost") ?? "/";
+        var username = rmq.GetValue<string>("Username") ?? "";
+        var password = rmq.GetValue<string>("Password") ?? "";
+        var url = $"amqp://{host}:{port}{vhost}";
+        cfg.Host(url, h =>
+        {
+            if (!string.IsNullOrEmpty(username))
+                h.Username(username);
+            if (!string.IsNullOrEmpty(password))
+                h.Password(password);
+        });
+    });
+});
+
+builder.Services.AddScoped<IEventPublisher, MassTransitEventPublisher>();
 builder.Services.AddScoped<IAuctionService, AuctionService>();
 
 
