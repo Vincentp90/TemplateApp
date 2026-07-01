@@ -1,5 +1,5 @@
 ### Environment
-Linux + Bash
+Linux + Bash dev container
 Current year: 2026
 
 ### Important:
