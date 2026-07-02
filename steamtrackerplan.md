@@ -196,9 +196,12 @@ ISteamStoreClient             FetchPrice(SteamAppId) → (Money? Price, string N
 - [x] RabbitMQ publishers: `PriceCheckJobPublisher`, `NotificationPublisher` (async API, RabbitMQ.Client 7.x)
 - [x] DI registration for all infrastructure services
 - [x] Testcontainers shared fixtures: `PostgresContainerFixture`, `RabbitMqContainerFixture` (singleton per test run)
-- [x] `SkipTestException` shared between test files
 - [x] `DispatchConsumersAsync` removal for RabbitMQ.Client 7.x
 - [x] Deprecated testcontainers constructors fixed (`PostgreSqlBuilder` / `RabbitMqBuilder` builder pattern)
+- [x] `AlertRule.AppId` value converter added to `OnModelCreating` (was missing)
+- [x] `GameRepository.SaveAsync` fixed: persists new `PriceSnapshot` entities on updates
+- [x] `PostgresContainerFixture.CreateDbContext()` fixed: uses `UseInternalServiceProvider()` with `AddEntityFrameworkNpgsql()` for EF Core 9+
+- [x] `SkipTestException` removed — integration tests fail naturally when Docker is unavailable
 
 ### Persistence — EF Core + Postgres
 
@@ -501,17 +504,6 @@ public sealed class RabbitMqContainerFixture : IAsyncLifetime
 }
 ```
 
-Tests that need Docker check availability and skip gracefully:
-
-```csharp
-private void SkipIfNoDocker()
-{
-    if (!_dockerAvailable)
-        throw new SkipTestException("Docker not available");
-}
-```
-
-This pattern matches the existing app's `ApiFactory` approach.
 
 ---
 
@@ -558,8 +550,7 @@ Phase 4 — Wire it up
 |-----------|--------|-------|
 | Domain model (entities, value objects, events, services) | ✅ Complete | 54 pass |
 | Application layer (use cases, ports) | ✅ Complete | 17 pass |
-| Infrastructure — EF Core + Postgres | ✅ Complete | 22 pass (6 skipped without Docker) |
-| Infrastructure — RabbitMQ publishers | ✅ Complete | 0 pass (2 failing — see known issue) |
+| Infrastructure — EF Core + Postgres + RabbitMQ | ✅ Complete | 28 pass (includes Postgres + RabbitMQ integration) |
 | Infrastructure — SteamStoreClient | ✅ Complete | (covered by use case integration tests) |
 | Workers (PriceCheckWorker, WishlistSyncWorker, PriceCheckScheduler) | ✅ Complete | (no dedicated unit tests yet) |
 | API endpoints (Minimal API) | ✅ Complete | (no dedicated integration tests yet) |
@@ -567,17 +558,16 @@ Phase 4 — Wire it up
 | JWT authentication | ⬜ TODO | — |
 | End-to-end integration | ⬜ TODO | — |
 
-**Total: 71 passing, 6 skipped, 2 failing**
+**Total: 99 passing, 0 skipped, 0 failing**
 
 ## Known issues / TODO
 
-1. **RabbitMQ integration tests** — anonymous types produce wrong JSON casing. Fix: use typed DTOs with `JsonNamingPolicy.CamelCase`.
-2. **Worker unit tests** — `PriceCheckConsumer` and `WishlistSyncConsumer` should have dedicated tests for their `HandleBasicDeliverAsync` logic.
-3. **Scheduler tests** — `PriceCheckScheduler` should be tested with a mockable timer or configurable interval.
-4. **API integration tests** — Minimal API endpoints should be tested via `WebApplicationFactory` (similar to the existing app's `ApiFactory`).
-5. **JWT auth** — `UserId` currently passed as route/query parameter; replace with JWT bearer token extraction.
-6. **React frontend** — Price badges, alert modals, and wishlist price hook.
-7. **End-to-end** — wishlist add → event → TrackedGame → scheduler → price fetch → alert fires.
+1. **Worker unit tests** — `PriceCheckConsumer` and `WishlistSyncConsumer` should have dedicated tests for their `HandleBasicDeliverAsync` logic.
+2. **Scheduler tests** — `PriceCheckScheduler` should be tested with a mockable timer or configurable interval.
+3. **API integration tests** — Minimal API endpoints should be tested via `WebApplicationFactory` (similar to the existing app's `ApiFactory`).
+4. **JWT auth** — `UserId` currently passed as route/query parameter; replace with JWT bearer token extraction.
+5. **React frontend** — Price badges, alert modals, and wishlist price hook.
+6. **End-to-end** — wishlist add → event → TrackedGame → scheduler → price fetch → alert fires.
 
 ### Worker improvements
 
@@ -590,9 +580,11 @@ Phase 4 — Wire it up
 
 ### Test infrastructure fixes
 
-- Fixed `SkipTestException` shared between `PostgresRepositoryIntegrationTests` and `RabbitMqIntegrationTests`
 - Fixed `DispatchConsumersAsync` property removal for RabbitMQ.Client 7.x
 - Fixed deprecated testcontainers constructors (`RabbitMqBuilder` / `PostgreSqlBuilder`)
+- Fixed `PostgresContainerFixture.CreateDbContext()` — EF Core 9+ requires `UseInternalServiceProvider()` with `AddEntityFrameworkNpgsql()`
+- Fixed `AlertRule.AppId` missing value converter in `OnModelCreating`
+- Fixed `GameRepository.SaveAsync` — new `PriceSnapshot` entities now persisted on updates
 
 ### Build fix (RabbitMQ.Client 7.x migration)
 
@@ -618,25 +610,10 @@ The build was failing due to RabbitMQ.Client 7.x API changes:
 
 ### Test results
 
-All **71 tests pass** (plus 6 skipped due to no Docker, 2 failing):  
+All **99 tests pass** (0 skipped, 0 failing):  
 - **54 domain tests** — all pass (pure C#, no mocks)
 - **17 application tests** — all pass (Moq mocks)
-- **22 infrastructure tests** — all pass (InMemory + UseCasesIntegrationTests)
-- **6 infrastructure tests** — skipped (Postgres roundtrip tests require Docker/testcontainers)
-- **2 RabbitMQ integration tests** — failing (JSON property naming mismatch — see below)
-
-#### Known test issue: RabbitMQ integration tests
-
-The `RabbitMqIntegrationTests` publish anonymous types via `JsonSerializer.Serialize()` which produces property names in their declared casing (e.g., `AppId`), but the test assertions expect lower-case (`appId`, `message`, `price`). Fix: use `JsonSerializerOptions` with `PropertyNameCaseInsensitive = true` or define named DTOs.
-
-```csharp
-// Fix: use named DTOs instead of anonymous types
-var message = new TestMessage { AppId = 42, Message = "hello" };
-var bodyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
-// Then assert on the matching property names
-```
-
-Alternatively, use `JsonSerializer.Deserialize<T>()` with a typed DTO instead of `JsonElement.GetProperty()`.
+- **28 infrastructure tests** — all pass (real Postgres + RabbitMQ via testcontainers)
 
 ### ⬜ React frontend additions (TODO)
 
