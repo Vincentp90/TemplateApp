@@ -31,6 +31,9 @@ public class SteamTrackerDbContext : DbContext
         modelBuilder.Entity<TrackedGame>()
             .HasIndex(tg => tg.AppId);
 
+        modelBuilder.Entity<AlertRule>().Property(ar => ar.AppId)
+            .HasConversion(v => v.Value, v => new SteamAppId(v));
+
         modelBuilder.Entity<AlertRule>()
             .HasIndex(ar => new { ar.UserId, ar.AppId });
 

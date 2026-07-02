@@ -35,6 +35,17 @@ public class GameRepository : IGameRepository
             // Detach the tracked copy and attach the passed entity as modified
             _context.Entry(existing).State = EntityState.Detached;
             _context.Entry(game).State = EntityState.Modified;
+
+            // Persist only PriceSnapshots that don't already exist in the DB
+            foreach (var snapshot in game.PriceSnapshots)
+            {
+                var existingSnapshot = await _context.PriceSnapshots
+                    .AnyAsync(s => s.SnapshotId == snapshot.SnapshotId, cancellationToken);
+                if (!existingSnapshot)
+                {
+                    _context.PriceSnapshots.Add(snapshot);
+                }
+            }
         }
 
         await _context.SaveChangesAsync(cancellationToken);

@@ -11,50 +11,26 @@ namespace SteamTracker.Infrastructure.Tests.Repositories;
 /// <summary>
 /// Integration tests using real Postgres via testcontainers.
 /// These tests verify EF Core mappings against a real database.
-/// Skipped when Docker is not available.
 /// </summary>
 public class PostgresRepositoryIntegrationTests : IAsyncLifetime
 {
     private SteamTrackerDbContext? _context;
-    private bool _dockerAvailable;
 
     public async Task InitializeAsync()
     {
-        _dockerAvailable = false;
-        try
-        {
-            await PostgresContainerFixture.Instance.Container.StartAsync();
-            _context = PostgresContainerFixture.Instance.CreateDbContext();
-            _dockerAvailable = true;
-        }
-        catch
-        {
-            // Docker not available — tests will be skipped
-        }
+        await PostgresContainerFixture.Instance.Container.StartAsync();
+        _context = PostgresContainerFixture.Instance.CreateDbContext();
     }
 
     public async Task DisposeAsync()
     {
-        if (_context is not null)
-        {
-            _context.Dispose();
-            await PostgresContainerFixture.Instance.Container.StopAsync();
-        }
-    }
-
-    private void SkipIfNoDocker()
-    {
-        if (!_dockerAvailable)
-        {
-            throw new SkipTestException("Docker not available");
-        }
+        _context?.Dispose();
+        await PostgresContainerFixture.Instance.Container.StopAsync();
     }
 
     [Fact]
     public async Task GameRepository_roundtrip_with_real_postgres()
     {
-        SkipIfNoDocker();
-
         // Arrange
         var appId = new SteamAppId(123456);
         var repository = new GameRepository(_context!);
@@ -79,8 +55,6 @@ public class PostgresRepositoryIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task TrackedGameRepository_roundtrip_with_real_postgres()
     {
-        SkipIfNoDocker();
-
         // Arrange
         var appId = new SteamAppId(789);
         var repository = new TrackedGameRepository(_context!);
@@ -108,8 +82,6 @@ public class PostgresRepositoryIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task AlertRuleRepository_roundtrip_with_real_postgres()
     {
-        SkipIfNoDocker();
-
         // Arrange
         var ruleId = Guid.NewGuid();
         var appId = new SteamAppId(42);
@@ -138,8 +110,6 @@ public class PostgresRepositoryIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Multiple_price_snapshots_are_persisted()
     {
-        SkipIfNoDocker();
-
         // Arrange
         var appId = new SteamAppId(999);
         var repository = new GameRepository(_context!);

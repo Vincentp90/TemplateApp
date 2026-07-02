@@ -1,16 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SteamTracker.Infrastructure.Data;
 using Testcontainers.PostgreSql;
 
 namespace SteamTracker.Infrastructure.Tests.TestContainers;
-
-/// <summary>
-/// Exception used to signal that tests should be skipped.
-/// </summary>
-public class SkipTestException : Exception
-{
-    public SkipTestException(string message) : base(message) { }
-}
 
 /// <summary>
 /// Shared fixture for a Postgres container. Created once per test run.
@@ -43,12 +36,17 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
 
     public SteamTrackerDbContext CreateDbContext()
     {
+        var services = new ServiceCollection();
+        services.AddEntityFrameworkNpgsql();
+        var provider = services.BuildServiceProvider();
+
         var options = new DbContextOptionsBuilder<SteamTrackerDbContext>()
             .UseNpgsql(ConnectionString, o => o.EnableRetryOnFailure())
+            .UseInternalServiceProvider(provider)
             .Options;
 
         var context = new SteamTrackerDbContext(options);
-        context.Database.Migrate();
+        context.Database.EnsureCreated();
         return context;
     }
 }

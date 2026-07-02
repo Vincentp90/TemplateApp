@@ -9,58 +9,37 @@ namespace SteamTracker.Infrastructure.Tests.Messaging;
 /// <summary>
 /// Integration tests for RabbitMQ messaging using testcontainers.
 /// These tests verify exchange/queue declarations and message publishing/consuming.
-/// Skipped when Docker is not available.
 /// </summary>
 public class RabbitMqIntegrationTests : IAsyncLifetime
 {
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
     private IChannel? _channel;
     private ConnectionFactory? _factory;
-    private bool _dockerAvailable;
 
     public async Task InitializeAsync()
     {
-        _dockerAvailable = false;
-        try
-        {
-            await RabbitMqContainerFixture.Instance.Container.StartAsync();
+        await RabbitMqContainerFixture.Instance.Container.StartAsync();
 
-            _factory = new ConnectionFactory
-            {
-                Uri = new Uri(RabbitMqContainerFixture.Instance.Container.GetConnectionString()),
-            };
-
-            var connection = await _factory.CreateConnectionAsync();
-            _channel = await connection.CreateChannelAsync();
-            _dockerAvailable = true;
-        }
-        catch
+        _factory = new ConnectionFactory
         {
-            // Docker not available — tests will be skipped
-        }
-    }
+            Uri = new Uri(RabbitMqContainerFixture.Instance.Container.GetConnectionString()),
+        };
 
-    private void SkipIfNoDocker()
-    {
-        if (!_dockerAvailable)
-        {
-            throw new SkipTestException("Docker not available");
-        }
+        var connection = await _factory.CreateConnectionAsync();
+        _channel = await connection.CreateChannelAsync();
     }
 
     public async Task DisposeAsync()
     {
         if (_channel is not null)
-        {
             await _channel.DisposeAsync();
-        }
         await RabbitMqContainerFixture.Instance.Container.StopAsync();
     }
 
     [Fact]
     public async Task Publish_and_consume_message()
     {
-        SkipIfNoDocker();
-
         // Arrange
         var queueName = $"test-queue-{Guid.NewGuid():N}";
         var exchangeName = $"test-exchange-{Guid.NewGuid():N}";
@@ -70,7 +49,7 @@ public class RabbitMqIntegrationTests : IAsyncLifetime
         await _channel.QueueBindAsync(queueName, exchangeName, "test-routing-key");
 
         var message = new { AppId = 42, Message = "hello" };
-        var bodyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        var bodyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, JsonOptions));
 
         // Act
         await _channel.BasicPublishAsync(
@@ -92,8 +71,6 @@ public class RabbitMqIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Durable_exchange_and_queue_persist()
     {
-        SkipIfNoDocker();
-
         // Arrange
         var exchangeName = $"durable-exchange-{Guid.NewGuid():N}";
         var queueName = $"durable-queue-{Guid.NewGuid():N}";
@@ -110,8 +87,6 @@ public class RabbitMqIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Topic_exchange_with_routing_key()
     {
-        SkipIfNoDocker();
-
         // Arrange
         var exchangeName = $"topic-exchange-{Guid.NewGuid():N}";
         var queueName = $"topic-queue-{Guid.NewGuid():N}";
@@ -121,7 +96,7 @@ public class RabbitMqIntegrationTests : IAsyncLifetime
         await _channel.QueueBindAsync(queueName, exchangeName, "alert.#");
 
         var message = new { AlertRuleId = Guid.NewGuid(), Price = 15m };
-        var bodyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        var bodyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, JsonOptions));
 
         // Act
         await _channel.BasicPublishAsync(

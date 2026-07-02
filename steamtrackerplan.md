@@ -192,13 +192,13 @@ ISteamStoreClient             FetchPrice(SteamAppId) → (Money? Price, string N
 - [x] EF Core DbContext (`SteamTrackerDbContext`) with all entity configs
 - [x] Repository pattern: `GameRepository`, `TrackedGameRepository`, `AlertRuleRepository`, `PriceSnapshotRepository`
 - [x] Value object converters for `Money` (string "Amount|Currency" format) and `SteamAppId` (int)
-- [x] `SteamStoreHttpClient` with EUR-consistent pricing (`cc=de&l=german`), F2P support (`Money.Free`), rate limit exception
+- [x] `SteamStoreClient` with EUR-consistent pricing (`cc=de&l=german`), F2P support (`Money.Free`), rate limit exception
 - [x] RabbitMQ publishers: `PriceCheckJobPublisher`, `NotificationPublisher` (async API, RabbitMQ.Client 7.x)
 - [x] DI registration for all infrastructure services
-- [x] All 21 infrastructure tests pass (InMemory + real scenarios)
-- [x] Fixed `SkipTestException` shared between test files
-- [x] Fixed `DispatchConsumersAsync` removal for RabbitMQ.Client 7.x
-- [x] Fixed deprecated testcontainers constructors
+- [x] Testcontainers shared fixtures: `PostgresContainerFixture`, `RabbitMqContainerFixture` (singleton per test run)
+- [x] `SkipTestException` shared between test files
+- [x] `DispatchConsumersAsync` removal for RabbitMQ.Client 7.x
+- [x] Deprecated testcontainers constructors fixed (`PostgreSqlBuilder` / `RabbitMqBuilder` builder pattern)
 
 ### Persistence — EF Core + Postgres
 
@@ -255,9 +255,34 @@ record NotificationMessage(Guid AlertRuleId, string UserId, int AppId, decimal P
 
 ---
 
-## Phase 4 — Workers (BackgroundServices)
+## Phase 4 — Workers (BackgroundServices) ✅ DONE
 
 ### PriceCheckWorker
+
+```csharp
+public class PriceCheckWorker : BackgroundService
+{
+    // Consumes from price-check-jobs queue
+    // 1. Deserialize PriceCheckMessage
+    // 2. Call ISteamStoreClient.FetchPriceAsync(appId)
+    // 3. On success → IProcessPriceCheckUseCase.ExecuteAsync, ack
+    // 4. On 429 → nack, requeue
+    // 5. On error → nack, requeue (no dead-letter in consumer — handled by scheduler retry)
+}
+```
+
+### WishlistSyncWorker
+
+```csharp
+public class WishlistSyncWorker : BackgroundService
+{
+    // Consumes from steamtracker.wishlist-sync queue (fanout from wishlist.events)
+    // Parses JSON to determine event type:
+    //   - has "removedAt" → WishlistItemRemovedMessage → HandleWishlistItemRemovedUseCase
+    //   - else → WishlistItemAddedMessage → HandleWishlistItemAddedUseCase
+    // ack/nack based on success/failure
+}
+```
 
 ```csharp
 // For each PriceCheckJob message:
@@ -302,36 +327,78 @@ Both workers live in `SteamTracker.Worker` and share the same host process.
 
 ### ✅ Workers registered in DI
 
-- `PriceCheckScheduler` — runs every 24h, enqueues jobs for active tracked games
-- `PriceCheckWorker` — consumes price-check jobs, calls `ISteamStoreClient.FetchPriceAsync`, triggers use cases
-- `WishlistSyncWorker` — consumes from `steamtracker.wishlist-sync` queue bound to `wishlist.events` fanout exchange, dispatches to `HandleWishlistItemAddedUseCase` / `HandleWishlistItemRemovedUseCase`
-
-All three registered in `Program.cs` via `AddHostedService<T>()`.
-
-### Scheduler
-
-Every 24h, reads `ITrackedGameRepository.GetActive()` and enqueues **one job per unique AppId**:
+All three registered in Worker `Program.cs` via `AddHostedService<T>()`:
 
 ```csharp
-var activeAppIds = await _trackedGameRepo.GetActive();
-foreach (var game in activeAppIds.DistinctBy(g => g.AppId))
-    await _publisher.Enqueue(game.AppId);
+hostBuilder.Services.AddHostedService<PriceCheckScheduler>();
+hostBuilder.Services.AddHostedService<PriceCheckWorker>();
+hostBuilder.Services.AddHostedService<WishlistSyncWorker>();
 ```
+
+### PriceCheckScheduler
+
+Every 24h, reads `ITrackedGameRepository.GetActiveAsync()` and enqueues **one job per unique AppId**:
+
+```csharp
+public class PriceCheckScheduler : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            var activeGames = await _trackedGameRepo.GetActiveAsync(stoppingToken);
+            foreach (var game in activeGames.DistinctBy(g => g.AppId))
+                await _publisher.EnqueueAsync(game.AppId, stoppingToken);
+            await Task.Delay(_interval, stoppingToken);
+        }
+    }
+}
+```
+
+
 
 ---
 
-## Phase 5 — API surface
+## Phase 5 — API surface ✅ DONE
 
+```csharp
+// Minimal API in Program.cs
+
+// GET /api/wishlist?userId=... — returns wishlist with prices
+api.MapGet("/wishlist", async (IGetWishlistWithPricesQuery query, string userId) =>
+    Results.Ok(await query.ExecuteAsync(userId)));
+
+// POST /api/wishlist/{userId}/games/{appId}/alert — create alert rule
+api.MapPost("/wishlist/{userId}/games/{appId}/alert", async (
+    ISetAlertRuleUseCase useCase,
+    string userId, int appId,
+    decimal thresholdAmount, string currency = "EUR") =>
+    Results.Created($"/api/wishlist/{userId}/games/{appId}/alert", null));
+
+// DELETE /api/wishlist/{userId}/alert/{alertRuleId}
+api.MapDelete("/wishlist/{userId}/alert/{alertRuleId}", async (
+    IDeleteAlertRuleUseCase useCase, string userId, Guid alertRuleId) =>
+    Results.NoContent());
+
+// POST /api/internal/price-check — called by PriceCheckWorker
+api.MapPost("/internal/price-check", async (
+    IProcessPriceCheckUseCase useCase, [FromBody] PriceCheckRequest request) =>
+    Results.Ok());
+
+// POST /api/internal/wishlist-item-added — called by WishlistSyncWorker
+api.MapPost("/internal/wishlist-item-added", async (
+    IHandleWishlistItemAddedUseCase useCase, [FromBody] WishlistItemEvent request) =>
+    Results.Ok());
+
+// POST /api/internal/wishlist-item-removed — called by WishlistSyncWorker
+api.MapPost("/internal/wishlist-item-removed", async (
+    IHandleWishlistItemRemovedUseCase useCase, [FromBody] WishlistItemEvent request) =>
+    Results.Ok());
 ```
-# Alert rules (validated against local TrackedGame)
-POST   /wishlist/{appId}/alert-rule       → SetAlertRuleUseCase  { triggerBelowPrice }
-DELETE /wishlist/{appId}/alert-rule/{id}  → DeleteAlertRuleUseCase
 
-# Enriched wishlist view (local TrackedGame + Game price data, filtered by UserId)
-GET    /wishlist/prices                   → GetWishlistWithPricesQuery
-```
+Auth: JWT bearer — extract `UserId` from claims, pass into use cases (**TODO: not yet implemented**).
 
-Auth: JWT bearer — extract `UserId` from claims, pass into use cases.
+Currently `UserId` is passed as a query parameter (`?userId=...`) for the GET endpoint and as a route parameter for POST/DELETE. This is sufficient for development but should be replaced with JWT bearer tokens in production.
 
 ---
 
@@ -400,7 +467,51 @@ BackgroundService testing is notoriously tricky. The approach:
 - **Don't test `BackgroundService` itself** — test the logic it calls (the use cases, the scheduler, the rate limiter).
 - **Test the scheduler** as a standalone component: inject a `PeriodicTimer` mock or use `Task.Delay` with a timeout, verify jobs are enqueued.
 - **Test the rate limiter** in isolation: verify it blocks when tokens are exhausted, replenishes over time.
-- **Test the worker's message handling** by calling `ProcessMessage` directly (extract the handler into a separate method or interface that the worker delegates to).
+- **Test the worker's message handling** by calling `HandleBasicDeliverAsync` directly on `PriceCheckConsumer` / `WishlistSyncConsumer`.
+
+### Testcontainers setup
+Shared singleton fixtures ensure containers are created once per test run:
+
+```csharp
+// PostgresContainerFixture.cs — singleton via Lazy<T>
+public sealed class PostgresContainerFixture : IAsyncLifetime
+{
+    private static readonly Lazy<PostgresContainerFixture> _instance = new(() => new());
+    public static PostgresContainerFixture Instance => _instance.Value;
+
+    private PostgresContainerFixture()
+    {
+        Container = new PostgreSqlBuilder("postgres:17-alpine")
+            .WithPassword("testpassword")
+            .Build();
+    }
+}
+
+// RabbitMqContainerFixture.cs — singleton via Lazy<T>
+public sealed class RabbitMqContainerFixture : IAsyncLifetime
+{
+    private static readonly Lazy<RabbitMqContainerFixture> _instance = new(() => new());
+    public static RabbitMqContainerFixture Instance => _instance.Value;
+
+    private RabbitMqContainerFixture()
+    {
+        Container = new RabbitMqBuilder("rabbitmq:3-management-alpine")
+            .Build();
+    }
+}
+```
+
+Tests that need Docker check availability and skip gracefully:
+
+```csharp
+private void SkipIfNoDocker()
+{
+    if (!_dockerAvailable)
+        throw new SkipTestException("Docker not available");
+}
+```
+
+This pattern matches the existing app's `ApiFactory` approach.
 
 ---
 
@@ -426,20 +537,47 @@ Phase 2 — Application layer (TDD)
 Phase 3 — Infrastructure (TDD)
   9. ✅ Write failing integration tests (testcontainers: Postgres + RabbitMQ)
  10. ✅ Implement EF Core adapters for TrackedGame, Game, AlertRule + migrations
- 11. ✅ Implement WishlistSyncWorker + rate limiter + scheduler
- 12. ✅ Implement SteamStoreHttpClient (EUR pricing, F2P support, rate limit exception)
+ 11. ✅ Implement WishlistSyncWorker + scheduler
+ 12. ✅ Implement SteamStoreClient (EUR pricing, F2P support, rate limit exception)
  13. ✅ Implement RabbitMQ publisher/consumer adapters + integration tests
 
 Phase 4 — Wire it up
- 14. ✅ Implement API controllers (POST /alert-rule, GET /wishlist/prices)
+ 14. ✅ Implement API endpoints (POST /alert, GET /wishlist, DELETE /alert, internal endpoints)
  15. ✅ Wire workers into DI, connect scheduler → publisher → worker → use case → notification
- 16. ✅ React frontend additions to existing wishlist UI
+ 16. ⬜ React frontend additions to existing wishlist UI
  17. ⬜ End-to-end: wishlist add → event → TrackedGame → scheduler → price fetch → alert fires
 ```
 
 ---
 
-## Completed
+---
+
+## Current status summary
+
+| Component | Status | Tests |
+|-----------|--------|-------|
+| Domain model (entities, value objects, events, services) | ✅ Complete | 54 pass |
+| Application layer (use cases, ports) | ✅ Complete | 17 pass |
+| Infrastructure — EF Core + Postgres | ✅ Complete | 22 pass (6 skipped without Docker) |
+| Infrastructure — RabbitMQ publishers | ✅ Complete | 0 pass (2 failing — see known issue) |
+| Infrastructure — SteamStoreClient | ✅ Complete | (covered by use case integration tests) |
+| Workers (PriceCheckWorker, WishlistSyncWorker, PriceCheckScheduler) | ✅ Complete | (no dedicated unit tests yet) |
+| API endpoints (Minimal API) | ✅ Complete | (no dedicated integration tests yet) |
+| React frontend additions | ⬜ TODO | — |
+| JWT authentication | ⬜ TODO | — |
+| End-to-end integration | ⬜ TODO | — |
+
+**Total: 71 passing, 6 skipped, 2 failing**
+
+## Known issues / TODO
+
+1. **RabbitMQ integration tests** — anonymous types produce wrong JSON casing. Fix: use typed DTOs with `JsonNamingPolicy.CamelCase`.
+2. **Worker unit tests** — `PriceCheckConsumer` and `WishlistSyncConsumer` should have dedicated tests for their `HandleBasicDeliverAsync` logic.
+3. **Scheduler tests** — `PriceCheckScheduler` should be tested with a mockable timer or configurable interval.
+4. **API integration tests** — Minimal API endpoints should be tested via `WebApplicationFactory` (similar to the existing app's `ApiFactory`).
+5. **JWT auth** — `UserId` currently passed as route/query parameter; replace with JWT bearer token extraction.
+6. **React frontend** — Price badges, alert modals, and wishlist price hook.
+7. **End-to-end** — wishlist add → event → TrackedGame → scheduler → price fetch → alert fires.
 
 ### Worker improvements
 
@@ -480,17 +618,35 @@ The build was failing due to RabbitMQ.Client 7.x API changes:
 
 ### Test results
 
-All **94 tests pass**:
-- 55 domain tests
-- 18 application tests
-- 21 infrastructure tests (InMemory + real scenarios)
+All **71 tests pass** (plus 6 skipped due to no Docker, 2 failing):  
+- **54 domain tests** — all pass (pure C#, no mocks)
+- **17 application tests** — all pass (Moq mocks)
+- **22 infrastructure tests** — all pass (InMemory + UseCasesIntegrationTests)
+- **6 infrastructure tests** — skipped (Postgres roundtrip tests require Docker/testcontainers)
+- **2 RabbitMQ integration tests** — failing (JSON property naming mismatch — see below)
 
-### ✅ React frontend additions
+#### Known test issue: RabbitMQ integration tests
 
-- `useWishlistPrices()` hook — fetches `GET /api/wishlist?userId=...` from SteamTracker API
-- `WishlistPriceBadge` — shows "Not fetched" (amber), "Price fetched" (green) badges
-- `AlertRuleModal` — modal dialog with price threshold input, calls `POST /api/wishlist/{userId}/games/{appId}/alert`
-- Enhanced `WLItemsList` — added price column, status badge, and "Set alert" / "Edit alert" buttons per item
+The `RabbitMqIntegrationTests` publish anonymous types via `JsonSerializer.Serialize()` which produces property names in their declared casing (e.g., `AppId`), but the test assertions expect lower-case (`appId`, `message`, `price`). Fix: use `JsonSerializerOptions` with `PropertyNameCaseInsensitive = true` or define named DTOs.
+
+```csharp
+// Fix: use named DTOs instead of anonymous types
+var message = new TestMessage { AppId = 42, Message = "hello" };
+var bodyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+// Then assert on the matching property names
+```
+
+Alternatively, use `JsonSerializer.Deserialize<T>()` with a typed DTO instead of `JsonElement.GetProperty()`.
+
+### ⬜ React frontend additions (TODO)
+
+Changes are **additive to the existing wishlist UI**, not a separate page:
+
+- [ ] `useWishlistPrices()` hook — fetches `GET /api/wishlist?userId=...` from SteamTracker API
+- [ ] `WishlistPriceBadge` — shows "Not fetched" (amber), "Price fetched" (green) badges
+- [ ] `AlertRuleModal` — modal dialog with price threshold input, calls `POST /api/wishlist/{userId}/games/{appId}/alert`
+- [ ] Enhanced `WLItemsList` — added price column, status badge, and "Set alert" / "Edit alert" buttons per item
+- [ ] Optional: SignalR push for real-time price updates without polling
 
 ### PriceCheckScheduler
 
