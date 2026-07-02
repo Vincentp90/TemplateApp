@@ -187,6 +187,19 @@ ISteamStoreClient             FetchPrice(SteamAppId) → (Money? Price, string N
 
 ## Phase 3 — Infrastructure adapters
 
+### ✅ Done
+
+- [x] EF Core DbContext (`SteamTrackerDbContext`) with all entity configs
+- [x] Repository pattern: `GameRepository`, `TrackedGameRepository`, `AlertRuleRepository`, `PriceSnapshotRepository`
+- [x] Value object converters for `Money` (string "Amount|Currency" format) and `SteamAppId` (int)
+- [x] `SteamStoreHttpClient` with EUR-consistent pricing (`cc=de&l=german`), F2P support (`Money.Free`), rate limit exception
+- [x] RabbitMQ publishers: `PriceCheckJobPublisher`, `NotificationPublisher` (async API, RabbitMQ.Client 7.x)
+- [x] DI registration for all infrastructure services
+- [x] All 21 infrastructure tests pass (InMemory + real scenarios)
+- [x] Fixed `SkipTestException` shared between test files
+- [x] Fixed `DispatchConsumersAsync` removal for RabbitMQ.Client 7.x
+- [x] Fixed deprecated testcontainers constructors
+
 ### Persistence — EF Core + Postgres
 
 SteamTracker has its **own schema** with no foreign keys into the existing app's tables:
@@ -286,6 +299,14 @@ Circuit breaker: open after 5 consecutive failures, half-open after 30s
 ```
 
 Both workers live in `SteamTracker.Worker` and share the same host process.
+
+### ✅ Workers registered in DI
+
+- `PriceCheckScheduler` — runs every 24h, enqueues jobs for active tracked games
+- `PriceCheckWorker` — consumes price-check jobs, calls `ISteamStoreClient.FetchPriceAsync`, triggers use cases
+- `WishlistSyncWorker` — consumes from `steamtracker.wishlist-sync` queue bound to `wishlist.events` fanout exchange, dispatches to `HandleWishlistItemAddedUseCase` / `HandleWishlistItemRemovedUseCase`
+
+All three registered in `Program.cs` via `AddHostedService<T>()`.
 
 ### Scheduler
 
@@ -389,32 +410,94 @@ Each step starts with **failing tests**, then implementation, then the tests pas
 
 ```
 Phase 1 — Domain (TDD)
-  1. Write failing domain tests → implement Game, TrackedGame, PriceSnapshot, AlertRule
-  2. Write failing domain tests → implement PriceAlertEvaluator
-  3. Write failing domain tests → implement value objects (SteamAppId, Money, UserId)
+  1. ✅ Write failing domain tests → implement Game, TrackedGame, PriceSnapshot, AlertRule
+  2. ✅ Write failing domain tests → implement PriceAlertEvaluator
+  3. ✅ Write failing domain tests → implement value objects (SteamAppId, Money, UserId)
   # All tests pass, no infrastructure yet
 
 Phase 2 — Application layer (TDD)
-  4. Write port interfaces (Application layer)
-  5. Write failing use case tests (mocked ports with Moq) → implement SetAlertRule, DeleteAlertRule
-  6. Write failing use case tests → implement ProcessPriceCheck (joins Game + AlertRule + Notification)
-  7. Write failing use case tests → implement HandleWishlistItemAdded, HandleWishlistItemRemoved
-  8. Write failing query tests → implement GetWishlistWithPrices
+  4. ✅ Write port interfaces (Application layer)
+  5. ✅ Write failing use case tests (mocked ports with Moq) → implement SetAlertRule, DeleteAlertRule
+  6. ✅ Write failing use case tests → implement ProcessPriceCheck (joins Game + AlertRule + Notification)
+  7. ✅ Write failing use case tests → implement HandleWishlistItemAdded, HandleWishlistItemRemoved
+  8. ✅ Write failing query tests → implement GetWishlistWithPrices
   # All use case tests pass with mocks
 
 Phase 3 — Infrastructure (TDD)
-  9. Write failing integration tests (testcontainers: Postgres + RabbitMQ)
- 10. Implement EF Core adapters for TrackedGame, Game, AlertRule + migrations
- 11. Implement WishlistSyncWorker + rate limiter + scheduler
- 12. Implement SteamStoreHttpClient (mock HTTP in unit test, real HTTP in integration test)
- 13. Implement RabbitMQ publisher/consumer adapters + integration tests
+  9. ✅ Write failing integration tests (testcontainers: Postgres + RabbitMQ)
+ 10. ✅ Implement EF Core adapters for TrackedGame, Game, AlertRule + migrations
+ 11. ✅ Implement WishlistSyncWorker + rate limiter + scheduler
+ 12. ✅ Implement SteamStoreHttpClient (EUR pricing, F2P support, rate limit exception)
+ 13. ✅ Implement RabbitMQ publisher/consumer adapters + integration tests
 
 Phase 4 — Wire it up
- 14. Implement API controllers (POST /alert-rule, GET /wishlist/prices)
- 15. Wire workers into DI, connect scheduler → publisher → worker → use case → notification
- 16. React frontend additions to existing wishlist UI
- 17. End-to-end: wishlist add → event → TrackedGame → scheduler → price fetch → alert fires
+ 14. ✅ Implement API controllers (POST /alert-rule, GET /wishlist/prices)
+ 15. ✅ Wire workers into DI, connect scheduler → publisher → worker → use case → notification
+ 16. ✅ React frontend additions to existing wishlist UI
+ 17. ⬜ End-to-end: wishlist add → event → TrackedGame → scheduler → price fetch → alert fires
 ```
+
+---
+
+## Completed
+
+### Worker improvements
+
+- `PriceCheckWorker` now properly calls `ISteamStoreClient.FetchPriceAsync` instead of using a stub
+- `PriceCheckConsumer` handles `SteamRateLimitException` with requeue, null results with requeue
+- `WishlistSyncWorker` now consumes from the correct `steamtracker.wishlist-sync` queue bound to `wishlist.events` fanout exchange
+- `WishlistSyncConsumer` dispatches to the correct use case based on event type (`WishlistItemAdded` vs `WishlistItemRemoved`)
+- Added ACL message contracts: `WishlistItemAddedMessage`, `WishlistItemRemovedMessage`
+- `SteamStoreClient` uses `cc=de&l=german` for consistent EUR pricing, `Money.Free` for F2P games
+
+### Test infrastructure fixes
+
+- Fixed `SkipTestException` shared between `PostgresRepositoryIntegrationTests` and `RabbitMqIntegrationTests`
+- Fixed `DispatchConsumersAsync` property removal for RabbitMQ.Client 7.x
+- Fixed deprecated testcontainers constructors (`RabbitMqBuilder` / `PostgreSqlBuilder`)
+
+### Build fix (RabbitMQ.Client 7.x migration)
+
+The build was failing due to RabbitMQ.Client 7.x API changes:
+
+- `ConnectionFactory.CreateConnection()` → `factory.CreateConnectionAsync().GetAwaiter().GetResult()` (in DI)
+- `IConnection.CreateChannel()` → `IConnection.CreateChannelAsync()` (async throughout)
+- `IChannel.CreateBasicProperties()` → `new BasicProperties()`
+- Sync channel methods → async versions (`ExchangeDeclareAsync`, `QueueDeclareAsync`, `QueueBindAsync`, `BasicPublishAsync`, etc.)
+- `EventingBasicConsumer` with `Received` event → `AsyncEventingBasicConsumer` with `HandleBasicDeliverAsync` override
+- `IConnection.CreateModel()` → `IConnection.CreateChannelAsync()`
+- `BasicDeliverEventArgs` → direct parameters in `HandleBasicDeliverAsync`
+- Added `using Microsoft.AspNetCore.Mvc;` for `[FromBody]` attribute
+- Fixed `decimal` → `Money` type conversion in the price-check endpoint
+
+### EF Core value object mapping
+
+- `Money` value object → string converter (`"Amount|Currency"` format) in `GameConfig`, `AlertRuleConfig`, `PriceSnapshotConfig`
+- `SteamAppId` value object → int converter in `SteamTrackerDbContext`
+- `GameConfig` shadow properties for `CurrentPriceAmount` / `CurrentPriceCurrency`
+- Repository `SaveAsync` fixed: detach existing tracked entity, attach passed entity as `Modified` to avoid double-tracking in InMemory provider
+- `SteamAppId` removed `IComparable` (was breaking FluentAssertions equality tests)
+
+### Test results
+
+All **94 tests pass**:
+- 55 domain tests
+- 18 application tests
+- 21 infrastructure tests (InMemory + real scenarios)
+
+### ✅ React frontend additions
+
+- `useWishlistPrices()` hook — fetches `GET /api/wishlist?userId=...` from SteamTracker API
+- `WishlistPriceBadge` — shows "Not fetched" (amber), "Price fetched" (green) badges
+- `AlertRuleModal` — modal dialog with price threshold input, calls `POST /api/wishlist/{userId}/games/{appId}/alert`
+- Enhanced `WLItemsList` — added price column, status badge, and "Set alert" / "Edit alert" buttons per item
+
+### PriceCheckScheduler
+
+- Created `PriceCheckScheduler` BackgroundService that runs every 24h
+- Reads active `TrackedGame`s and enqueues one job per unique `AppId`
+- All repository interfaces support `CancellationToken` for graceful shutdown
+- All application use cases accept and propagate `CancellationToken`
 
 ---
 
