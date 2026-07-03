@@ -2,51 +2,64 @@
 
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { api } from "../api";
-import { useWishlistPrices } from '../hooks/useWishlistPrices';
 import WishlistPriceBadge from './WishlistPriceBadge';
 import AlertRuleModal from './AlertRuleModal';
-import { useAuthStore } from '../AuthState';
 import { useState } from 'react';
 
-type AppListingDetailed = { appId: number; name: string; dateAdded: string };
+export interface MergedWishlistItem {
+  appId: number | null;
+  name: string | null;
+  dateAdded: string | null;
+  price: number | null;
+  priceCurrency: string;
+  lastCheckedAt: string | null;
+  alertRuleId: string | null;
+  alertThreshold: number | null;
+  alertCurrency: string;
+}
 
 export default function WLItemsList() {
-  const { data: wishlistItems = [] } = useSuspenseQuery<AppListingDetailed[]>({
+  const { data: wishlistItems = [] } = useSuspenseQuery<MergedWishlistItem[]>({
     queryKey: ['wishlistOverview'],
     queryFn: async () => {
-      const res = await api.get("/wishlist?fields=name,dateadded");
+      const res = await api.get("/wishlist?fields=appid,name,dateadded,price,pricecurrency,lastcheckedat,alertruleid,alertthreshold,alertcurrency");
       const data = res.data.items;
-      return data.map((item: AppListingDetailed) => ({
+      return data.map((item: MergedWishlistItem) => ({
+        appId: item.appId,
         name: item.name,
         dateAdded: item.dateAdded,
+        price: item.price,
+        priceCurrency: item.priceCurrency ?? 'EUR',
+        lastCheckedAt: item.lastCheckedAt,
+        alertRuleId: item.alertRuleId,
+        alertThreshold: item.alertThreshold,
+        alertCurrency: item.alertCurrency ?? 'EUR',
       }));
     },
   });
 
-  // Get SteamTracker price data from auth store
-  const userId = useAuthStore(state => state.user?.userId ?? '');
-
-  const { data: priceItems = [] } = useWishlistPrices(userId);
-
-  const toLocalTime = (date: string) => new Date(date).toLocaleString(undefined, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  // Merge wishlist items with price data
-  const priceMap = new Map(priceItems.map(p => [p.appId, p]));
+  const toLocalTime = (date: string | null) => {
+    if (!date) return '—';
+    return new Date(date).toLocaleString(undefined, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const [alertModalAppId, setAlertModalAppId] = useState<number | null>(null);
 
   const handleAlertModalClose = () => setAlertModalAppId(null);
+
   const handleAlertSuccess = () => {
     setAlertModalAppId(null);
-    // Invalidate and refetch prices
+    // Invalidate and refetch the merged wishlist
     window.location.reload();
   };
+
+  const hasUserId = true; // Auth is required for this route
 
   return (
     <>
@@ -63,10 +76,10 @@ export default function WLItemsList() {
 
           {/* Rows */}
           {wishlistItems.map((item, i) => {
-            const priceData = priceMap.get(item.appId);
-            const currentPrice = priceData?.currentPrice ?? null;
-            const hasSnapshots = priceData?.hasSnapshots ?? false;
-            const currency = priceData?.currency ?? 'EUR';
+            const currentPrice = item.price ?? null;
+            const currency = item.priceCurrency ?? 'EUR';
+            const hasSnapshots = item.lastCheckedAt != null;
+            const alertRuleId = item.alertRuleId;
 
             return (
               <div
@@ -75,18 +88,18 @@ export default function WLItemsList() {
                   i % 2 === 0 ? "bg-white dark:bg-gray-700" : "bg-gray-50 dark:bg-gray-600"
                 } hover:bg-gray-400 transition-colors duration-200`}
               >
-                <span className="min-w-0 truncate">{item.name}</span>
+                <span className="min-w-0 truncate">{item.name ?? '—'}</span>
                 <span className="text-center tabular-nums">
                   {currentPrice != null ? `${currentPrice.toFixed(2)} ${currency}` : '—'}
                 </span>
                 <div className="flex items-center justify-center gap-2">
                   <WishlistPriceBadge currentPrice={currentPrice} hasSnapshots={hasSnapshots} />
-                  {userId && (
+                  {hasUserId && (
                     <button
-                      onClick={() => setAlertModalAppId(item.appId)}
+                      onClick={() => setAlertModalAppId(item.appId ?? 0)}
                       className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
                     >
-                      {priceData?.alertRuleId ? 'Edit alert' : 'Set alert'}
+                      {alertRuleId ? 'Edit alert' : 'Set alert'}
                     </button>
                   )}
                 </div>
@@ -101,7 +114,6 @@ export default function WLItemsList() {
       {alertModalAppId != null && (
         <AlertRuleModal
           appId={alertModalAppId}
-          userId={userId}
           onClose={handleAlertModalClose}
           onSuccess={handleAlertSuccess}
         />

@@ -3,12 +3,11 @@ import { api } from '../api';
 
 interface AlertRuleModalProps {
   appId: number;
-  userId: string;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function AlertRuleModal({ appId, userId, onClose, onSuccess }: AlertRuleModalProps) {
+export default function AlertRuleModal({ appId, onClose, onSuccess }: AlertRuleModalProps) {
   const [threshold, setThreshold] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,9 +24,7 @@ export default function AlertRuleModal({ appId, userId, onClose, onSuccess }: Al
         return;
       }
 
-      await api.post(`/api/wishlist/${encodeURIComponent(userId)}/games/${appId}/alert`, null, {
-        params: { thresholdAmount: amount, currency: 'EUR' },
-      });
+      await api.post(`/wishlist/${appId}/alert?thresholdAmount=${amount}&currency=EUR`, null);
 
       onSuccess();
       onClose();

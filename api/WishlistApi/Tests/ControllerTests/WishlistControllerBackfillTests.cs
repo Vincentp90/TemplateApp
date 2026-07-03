@@ -1,5 +1,6 @@
 using Application;
 using Application.Commands;
+using Application.Contracts;
 using Application.Events;
 using Domain;
 using Domain.Helpers;
@@ -58,7 +59,11 @@ public class WishlistControllerBackfillTests
         uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
         var service = new WishlistService(repositoryMock.Object, uowMock.Object, eventPublisherMock.Object);
-        var controller = new WishlistController(userContextMock, service);
+        var priceReaderMock = new Mock<ISharedDbPriceReader>();
+        priceReaderMock.Setup(x => x.GetPricesAsync(It.IsAny<IEnumerable<int>>())).ReturnsAsync(new Dictionary<int, GamePrice>());
+        priceReaderMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new Dictionary<int, AlertRuleInfo>());
+        var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
+        var controller = new WishlistController(userContextMock, service, priceReaderMock.Object, alertProxyMock.Object);
         controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
 
         return (repositoryMock, eventPublisherMock, controller, httpContext);

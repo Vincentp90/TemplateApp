@@ -61,7 +61,11 @@ namespace Tests.ControllerTests
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
             var eventPublisherMock = new Mock<IEventPublisher>();
-            var controller = new WishlistController(userContextMock, new WishlistService(repositoryMock.Object, uowMock.Object, eventPublisherMock.Object));
+            var priceReaderMock = new Mock<ISharedDbPriceReader>();
+            priceReaderMock.Setup(x => x.GetPricesAsync(It.IsAny<IEnumerable<int>>())).ReturnsAsync(new Dictionary<int, GamePrice>());
+            priceReaderMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new Dictionary<int, AlertRuleInfo>());
+            var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
+            var controller = new WishlistController(userContextMock, new WishlistService(repositoryMock.Object, uowMock.Object, eventPublisherMock.Object), priceReaderMock.Object, alertProxyMock.Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = httpContext

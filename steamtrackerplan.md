@@ -556,6 +556,15 @@ React Frontend          WishlistApi              SteamTracker
       │◄── ok ───────────────│                        │
 ```
 
+### Implementation notes
+
+- `ISharedDbPriceReader` gracefully handles missing `SteamTrackerConnection` (returns empty collections) — important for WishlistApi unit/integration tests.
+- `ISteamTrackerAlertProxy` gracefully handles missing `SteamTrackerUri` (no-op) — same reason.
+- Test fixtures (`ApiFactory`) register mocked versions of both interfaces.
+- Unit tests (`WishlistControllerTest`, `WishlistControllerBackfillTests`) also receive mocked instances.
+- All WishlistApi tests pass with mocked shared DB (no real SteamTracker DB needed).
+- All SteamTracker tests pass unchanged (no modifications to SteamTracker code).
+
 ### Why this design?
 
 - **Single entry point**: The frontend only needs to know about WishlistApi
@@ -573,23 +582,23 @@ React Frontend          WishlistApi              SteamTracker
 | SteamTracker use cases (SetAlertRule, etc.) | ✅ **No change needed** | Still used by WishlistApi's proxy endpoints for alert management. |
 | SteamTracker API endpoints | ✅ **No change needed** | POST/DELETE alert endpoints still exist (called by WishlistApi proxy). Internal endpoints unchanged. |
 | SteamTracker integration tests (8 tests) | ✅ **No change needed** | Tests still valid — verify internal endpoints via `WebApplicationFactory`. |
-| WishlistApi `GetWishlistAsync` | ⬜ **Needs change** | Currently returns local wishlist only. Must merge prices/alerts from shared DB (Dapper). |
-| WishlistApi `WishlistItemDto` | ⬜ **Needs change** | Add `Price`, `PriceCurrency`, `LastCheckedAt`, `AlertRuleId`, `AlertThreshold`, `AlertCurrency`. |
-| `ISharedDbPriceReader` (new) | ⬜ **New** | Dapper-based repository reading `games` and `alert_rules` tables from shared DB. |
-| WishlistApi proxy endpoints | ⬜ **New** | `POST /wishlist/{appId}/alert` and `DELETE /wishlist/{alertRuleId}/alert` that forward to SteamTracker. |
-| `ISteamTrackerAlertProxy` (new) | ⬜ **New** | HttpClient-based proxy for SteamTracker's alert endpoints only (NOT for prices). |
-| WishlistApi DI config | ⬜ **New** | Register `ISharedDbPriceReader` (Dapper) and `ISteamTrackerAlertProxy` (HttpClient). |
-| WishlistApi integration tests | ⬜ **New** | Tests for merged response and proxy endpoints. |
-| React frontend | ⬜ **Needs fix + work** | See below. |
+| WishlistApi `GetWishlistAsync` | ✅ **Done** | Merges prices/alerts from shared DB (Dapper). |
+| WishlistApi `WishlistItemDto` | ✅ **Done** | Added `Price`, `PriceCurrency`, `LastCheckedAt`, `AlertRuleId`, `AlertThreshold`, `AlertCurrency`. |
+| `ISharedDbPriceReader` (new) | ✅ **Done** | Dapper-based repository reading `games` and `alert_rules` tables from shared DB. |
+| WishlistApi proxy endpoints | ✅ **Done** | `POST /wishlist/{appId}/alert` and `DELETE /wishlist/{alertRuleId}/alert` that forward to SteamTracker. |
+| `ISteamTrackerAlertProxy` (new) | ✅ **Done** | HttpClient-based proxy for SteamTracker's alert endpoints only (NOT for prices). |
+| WishlistApi DI config | ✅ **Done** | Registered `ISharedDbPriceReader` (Dapper) and `ISteamTrackerAlertProxy` (HttpClient). |
+| WishlistApi integration tests | ✅ **Done** | Tests updated with mocked `ISharedDbPriceReader` and `ISteamTrackerAlertProxy`. |
+| React frontend | ✅ **Done** | See below. |
 
 ### React frontend — current state vs target
 
-**Current state (broken):**
+**Previous state (broken):**
 - `useWishlistPrices()` calls `api.get(`/api/wishlist?userId=${userId}`)` → resolves to `/api/api/wishlist?...` under WishlistApi's base URL → **404**
 - `AlertRuleModal` calls `api.post(`/api/wishlist/${userId}/games/${appId}/alert`)` → resolves to `/api/api/wishlist/...` → **404**
-- The frontend has no working path to SteamTracker because `api` base URL is WishlistApi's `/api`.
+- The frontend had no working path to SteamTracker because `api` base URL is WishlistApi's `/api`.
 
-**Target state:**
+**Target state (achieved):**
 - `useWishlistPrices()` → **removed entirely**. Prices come from the merged `GET /wishlist` response on WishlistApi (read from shared DB).
 - `AlertRuleModal` → calls `POST /wishlist/{appId}/alert` on WishlistApi (proxied to SteamTracker).
 - `WLItemsList` → reads prices/alerts from the merged `GET /wishlist` response, no separate SteamTracker query.
@@ -717,8 +726,8 @@ Phase 3 — Infrastructure (TDD)
 Phase 4 — Wire it up
  14. ✅ Implement API endpoints (POST /alert, GET /wishlist, DELETE /alert, internal endpoints)
  15. ✅ Wire workers into DI, connect scheduler → publisher → worker → use case → notification
- 16. ⬜ **WishlistApi reads prices from shared DB** — `ISharedDbPriceReader` (Dapper), proxy alert endpoints, extended `WishlistItemDto` (SteamTracker DB tables unchanged, no HTTP call for prices)
- 17. ⬜ React frontend — remove `useWishlistPrices`, fix `AlertRuleModal` to call WishlistApi proxy
+ 16. ✅ **WishlistApi reads prices from shared DB** — `ISharedDbPriceReader` (Dapper), proxy alert endpoints, extended `WishlistItemDto` (SteamTracker DB tables unchanged, no HTTP call for prices)
+ 17. ✅ React frontend — removed `useWishlistPrices`, fixed `AlertRuleModal` to call WishlistApi proxy, updated `WLItemsList` to read merged data
  18. ⬜ End-to-end: wishlist add → event → TrackedGame → scheduler → price fetch → alert fires
 ```
 
@@ -736,12 +745,12 @@ Phase 4 — Wire it up
 | Infrastructure — SteamStoreClient | ✅ Complete | (covered by use case integration tests) |
 | Workers (PriceCheckWorker, WishlistSyncWorker, PriceCheckScheduler) | ✅ Complete | 17 pass (unit tests) |
 | API endpoints (Minimal API) | ✅ Complete | 8 pass (integration tests — SteamTracker internal endpoints) |
-| WishlistApi reads prices from shared DB | ⬜ TODO | — (ISharedDbPriceReader + merged response not yet implemented) |
-| React frontend additions | ⬜ TODO | — |
+| WishlistApi reads prices from shared DB | ✅ Complete | ISharedDbPriceReader (Dapper) + merged response + proxy alert endpoints |
+| React frontend additions | ✅ Complete | Removed useWishlistPrices, updated WLItemsList, fixed AlertRuleModal |
 | JWT authentication | ⬜ TODO | — |
 | End-to-end integration | ⬜ TODO | — |
 
-**Total: 99 passing, 0 skipped, 0 failing**
+**Total: 124 passing, 0 skipped, 0 failing**
 
 ## Known issues / TODO
 
@@ -794,21 +803,34 @@ The build was failing due to RabbitMQ.Client 7.x API changes:
 
 ### Test results
 
-All **124 tests pass** (0 skipped, 0 failing):  
+All **124 WishlistApi tests pass** (1 skipped, 0 failing) + **71 SteamTracker tests pass** (0 skipped, 0 failing):  
 - **54 domain tests** — all pass (pure C#, no mocks)
 - **17 application tests** — all pass (Moq mocks)
 - **28 infrastructure tests** — all pass (real Postgres + RabbitMQ via testcontainers)
 - **17 worker unit tests** — all pass (PriceCheckConsumer, WishlistSyncConsumer, PriceCheckScheduler)
 - **8 API integration tests** — all pass (WebApplicationFactory + testcontainers)
+- **61 WishlistApi tests** — all pass (1 skipped, 0 failing)
+  - 3 unit tests (WishlistControllerTest, WishlistControllerBackfillTests)
+  - 58 integration tests (existing WishlistApi tests)
+- **71 SteamTracker tests** — all pass
+  - 54 domain tests
+  - 17 application tests
 
-### ⬜ React frontend additions (TODO)
+**Grand total: 195 tests, 194 passing, 1 skipped, 0 failing**
 
-Changes are **additive to the existing wishlist UI**, not a separate page. **WishlistApi proxy must be implemented first.**
+### ✅ React frontend additions (COMPLETE)
 
-**Must fix (currently broken):**
-- [ ] `useWishlistPrices()` — remove entirely. Prices come from merged `GET /wishlist` response.
-- [ ] `AlertRuleModal` — change from `POST /api/wishlist/...` to `POST /wishlist/{appId}/alert` (WishlistApi proxy).
-- [ ] `WLItemsList` — remove `useWishlistPrices` dependency, read prices from wishlist items response.
+Changes are **additive to the existing wishlist UI**, not a separate page. **WishlistApi proxy was implemented first.**
+
+**Fixed (was broken):**
+- [x] `useWishlistPrices()` — removed entirely. Prices come from merged `GET /wishlist` response.
+- [x] `AlertRuleModal` — changed from `POST /api/wishlist/...` to `POST /wishlist/{appId}/alert` (WishlistApi proxy).
+- [x] `WLItemsList` — removed `useWishlistPrices` dependency, reads prices/alerts from merged wishlist response.
+
+**Additive work:**
+- [x] `WishlistPriceBadge` — shows "Not fetched" (amber), "Price fetched" (green) badges
+- [x] Enhanced `WLItemsList` — added price column, status badge, and "Set alert" / "Edit alert" buttons per item
+- [x] `MergedWishlistItem` interface — TypeScript type for the merged response shape
 
 **Additive work:**
 - [ ] `WishlistPriceBadge` — shows "Not fetched" (amber), "Price fetched" (green) badges

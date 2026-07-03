@@ -1,4 +1,5 @@
 using Application;
+using Application.Contracts;
 using Application.Queries;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.AppListings;
@@ -20,6 +21,7 @@ using WishlistApi.Controllers;
 using WishlistApi.Helpers;
 using WishlistApi.HostedServices;
 using Infrastructure.ExternalServices;
+using Infrastructure.SharedDb;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,6 +96,10 @@ builder.Services.AddScoped<IEventPublisher>(sp =>
         sp.GetRequiredService<IRabbitMqConnectionFactory>(),
         "wishlist.events"));
 builder.Services.AddScoped<IAuctionService, AuctionService>();
+
+// Shared DB readers and SteamTracker proxy
+builder.Services.AddScoped<ISharedDbPriceReader, SharedDbPriceReader>();
+builder.Services.AddHttpClient<ISteamTrackerAlertProxy, SteamTrackerAlertProxy>();
 
 
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();

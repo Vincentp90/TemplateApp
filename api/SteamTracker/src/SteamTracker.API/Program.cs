@@ -40,31 +40,34 @@ app.UseExceptionHandler();
 // Minimal API endpoints
 var api = app.MapGroup("/api");
 
-// GET /api/wishlist — returns wishlist with prices
-api.MapGet("/wishlist", async (IGetWishlistWithPricesQuery query, string userId) =>
+// GET /api/wishlist — returns wishlist with prices (internal caller, userId from header)
+api.MapGet("/wishlist", async (IGetWishlistWithPricesQuery query, HttpContext context) =>
 {
+    var userId = context.Request.Headers["X-Internal-UserId"].ToString();
     var results = await query.ExecuteAsync(userId);
     return Results.Ok(results);
 });
 
-// POST /api/wishlist/{userId}/games/{appId}/alert — create alert rule
-api.MapPost("/wishlist/{userId}/games/{appId}/alert", async (
+// POST /api/games/{appId}/alert — create alert rule (internal caller, userId from header)
+api.MapPost("/games/{appId}/alert", async (
     ISetAlertRuleUseCase useCase,
-    string userId,
+    HttpContext context,
     int appId,
-    decimal thresholdAmount,
-    string currency = "EUR") =>
+    [FromQuery] decimal thresholdAmount,
+    [FromQuery] string currency = "EUR") =>
 {
+    var userId = context.Request.Headers["X-Internal-UserId"].ToString();
     await useCase.ExecuteAsync(userId, appId, thresholdAmount, currency);
-    return Results.Created($"/api/wishlist/{userId}/games/{appId}/alert", null);
+    return Results.Created($"/api/games/{appId}/alert", null);
 });
 
-// DELETE /api/wishlist/{userId}/alert/{alertRuleId}
-api.MapDelete("/wishlist/{userId}/alert/{alertRuleId}", async (
+// DELETE /api/alert/{alertRuleId} — delete alert rule (internal caller, userId from header)
+api.MapDelete("/alert/{alertRuleId}", async (
     IDeleteAlertRuleUseCase useCase,
-    string userId,
+    HttpContext context,
     Guid alertRuleId) =>
 {
+    var userId = context.Request.Headers["X-Internal-UserId"].ToString();
     await useCase.ExecuteAsync(userId, alertRuleId);
     return Results.NoContent();
 });
