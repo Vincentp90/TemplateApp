@@ -362,57 +362,238 @@ public class PriceCheckScheduler : BackgroundService
 
 ---
 
-## Phase 5 — API surface ✅ DONE
+## Phase 5 — SteamTracker API endpoints
 
-```csharp
-// Minimal API in Program.cs
+SteamTracker endpoints are **internal-facing only** (called by WishlistApi proxy or workers, never by the frontend).
 
-// GET /api/wishlist?userId=... — returns wishlist with prices
-api.MapGet("/wishlist", async (IGetWishlistWithPricesQuery query, string userId) =>
-    Results.Ok(await query.ExecuteAsync(userId)));
+### Endpoints that still exist
 
-// POST /api/wishlist/{userId}/games/{appId}/alert — create alert rule
-api.MapPost("/wishlist/{userId}/games/{appId}/alert", async (
-    ISetAlertRuleUseCase useCase,
-    string userId, int appId,
-    decimal thresholdAmount, string currency = "EUR") =>
-    Results.Created($"/api/wishlist/{userId}/games/{appId}/alert", null));
+| Endpoint | Used by | Notes |
+|----------|---------|-------|
+| `POST /api/wishlist/{userId}/games/{appId}/alert` | WishlistApi proxy | Alert creation (needs SteamTracker business logic) |
+| `DELETE /api/wishlist/{userId}/alert/{alertRuleId}` | WishlistApi proxy | Alert deletion |
+| `POST /api/internal/price-check` | PriceCheckWorker | Internal |
+| `POST /api/internal/wishlist-item-added` | WishlistSyncWorker | Internal |
+| `POST /api/internal/wishlist-item-removed` | WishlistSyncWorker | Internal |
 
-// DELETE /api/wishlist/{userId}/alert/{alertRuleId}
-api.MapDelete("/wishlist/{userId}/alert/{alertRuleId}", async (
-    IDeleteAlertRuleUseCase useCase, string userId, Guid alertRuleId) =>
-    Results.NoContent());
+### Endpoints removed (no longer needed)
 
-// POST /api/internal/price-check — called by PriceCheckWorker
-api.MapPost("/internal/price-check", async (
-    IProcessPriceCheckUseCase useCase, [FromBody] PriceCheckRequest request) =>
-    Results.Ok());
+- ~~`GET /api/wishlist?userId=...`~~ — WishlistApi reads prices directly from shared DB via Dapper. No HTTP call to SteamTracker.
 
-// POST /api/internal/wishlist-item-added — called by WishlistSyncWorker
-api.MapPost("/internal/wishlist-item-added", async (
-    IHandleWishlistItemAddedUseCase useCase, [FromBody] WishlistItemEvent request) =>
-    Results.Ok());
-
-// POST /api/internal/wishlist-item-removed — called by WishlistSyncWorker
-api.MapPost("/internal/wishlist-item-removed", async (
-    IHandleWishlistItemRemovedUseCase useCase, [FromBody] WishlistItemEvent request) =>
-    Results.Ok());
-```
-
-Auth: JWT bearer — extract `UserId` from claims, pass into use cases (**TODO: not yet implemented**).
-
-Currently `UserId` is passed as a query parameter (`?userId=...`) for the GET endpoint and as a route parameter for POST/DELETE. This is sufficient for development but should be replaced with JWT bearer tokens in production.
+Auth: JWT bearer — extract `UserId` from claims, pass into use cases (**TODO: not yet implemented**). Currently `UserId` is passed as a query parameter (`?userId=...`) — this is fine since these endpoints are internal.
 
 ---
 
-## Phase 6 — React frontend
+## Phase 5b — WishlistApi reads prices from shared DB
 
-Changes are **additive to the existing wishlist UI**, not a separate page:
+The React frontend communicates **only with WishlistApi**. Both services share the same Postgres database.
 
-- Add a price badge to each existing `WishlistItem` card: green (on sale), gray (full price), amber (not yet fetched)
-- Add a "Set alert" button per item → `AlertRuleModal` with price threshold input
-- `useWishlistPrices()` hook — fetches `GET /wishlist/prices`, merges with existing wishlist state
-- Optional: SignalR push for real-time price updates without polling
+### Shared DB tables (PascalCase — no snake_case)
+
+Both services connect to the same Postgres instance. SteamTracker uses PascalCase table names (no EF Core snake_case convention). WishlistApi's own tables use snake_case, but for shared tables it reads via Dapper (raw SQL) to avoid naming conflicts.
+
+| Table | Who writes | Who reads | Columns WishlistApi needs |
+|-------|-----------|-----------|--------------------------|
+| `games` | SteamTracker (via `Game.ApplyPriceUpdate`) | WishlistApi (via Dapper) | AppId, Name, CurrentPriceAmount, CurrentPriceCurrency, LastCheckedAt |
+| `alert_rules` | SteamTracker (via SetAlertRule use case) | WishlistApi (via Dapper) | AlertRuleId, UserId, AppId, TriggerBelowPrice, IsActive |
+| `price_snapshots` | SteamTracker | (not read by WishlistApi) | — |
+
+### Reading prices — Dapper, no HTTP
+
+WishlistApi reads directly from the shared DB. No HTTP call to SteamTracker.
+
+```csharp
+// In WishlistApi — new Dapper-based repository
+public interface ISharedDbPriceReader
+{
+    Task<Dictionary<int, GamePrice>> GetPricesAsync(IEnumerable<int> appIds);
+    Task<Dictionary<string, Dictionary<int, AlertRuleInfo>>> GetAlertRulesAsync(string userId);
+}
+
+public record GamePrice(decimal? Amount, string Currency, DateTimeOffset? LastCheckedAt);
+public record AlertRuleInfo(Guid Id, decimal ThresholdAmount, string Currency);
+
+public class SharedDbPriceReader : ISharedDbPriceReader
+{
+    private readonly IDbConnection _db;
+
+    public SharedDbPriceReader(IConfiguration config)
+    {
+        _db = new NpgsqlConnection(config.GetConnectionString("SharedDbConnection"));
+    }
+
+    public async Task<Dictionary<int, GamePrice>> GetPricesAsync(IEnumerable<int> appIds)
+    {
+        var ids = appIds.ToList();
+        if (!ids.Any()) return new();
+
+        var sql = @"
+            SELECT ""AppId"", ""CurrentPriceAmount"", ""CurrentPriceCurrency"", ""LastCheckedAt""
+            FROM ""Games""
+            WHERE ""AppId"" = ANY(@ids)";
+
+        var rows = await _db.QueryAsync<GamePrice>(sql, new { ids });
+        return rows.ToDictionary(r => r.Amount != null ? r.Amount.Value : 0, r => r);
+    }
+
+    public async Task<Dictionary<string, Dictionary<int, AlertRuleInfo>>> GetAlertRulesAsync(string userId)
+    {
+        var sql = @"
+            SELECT ""AlertRuleId"", ""AppId"", ""TriggerBelowPrice""
+            FROM ""AlertRules""
+            WHERE ""UserId"" = @userId AND ""IsActive"" = true";
+
+        var rows = await _db.QueryAsync<AlertRuleRow>(sql, new { userId });
+        return rows
+            .GroupBy(r => r.UserId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.ToDictionary(r => r.AppId, r => new AlertRuleInfo(r.AlertRuleId, r.ThresholdAmount, r.Currency))
+            );
+    }
+
+    private record AlertRuleRow(Guid AlertRuleId, int AppId, string TriggerBelowPrice, string UserId);
+}
+```
+
+### Enhanced GetWishlistAsync
+
+```csharp
+[HttpGet()]
+public async Task<ActionResult<Wishlist>> GetWishlistAsync([FromQuery] string? fields = null)
+{
+    int internalUserId = await _userContext.GetIdAsync();
+
+    // 1. Get local wishlist items
+    var localItems = await _wishlistService.GetWishlistItemsAsync(internalUserId);
+    var appIds = localItems.Select(x => x.AppId).ToList();
+
+    // 2. Read prices from shared DB
+    var prices = await _priceReader.GetPricesAsync(appIds);
+
+    // 3. Read alert rules from shared DB
+    var userId = internalUserId.ToString();
+    var alertRulesByUser = await _priceReader.GetAlertRulesAsync(userId);
+    var userAlertRules = alertRulesByUser.GetValueOrDefault(userId) ?? new();
+
+    // 4. Merge everything
+    var result = localItems.Select(x => new WishlistItemDto(
+        AppId: Has("appid") ? x.AppId : null,
+        DateAdded: Has("dateadded") ? x.DateAdded : null,
+        Name: Has("name") ? x.AppName : null,
+        Price: prices.TryGetValue(x.AppId, out var price) ? price.Amount : null,
+        PriceCurrency: prices.TryGetValue(x.AppId, out price) ? price.Currency : "EUR",
+        LastCheckedAt: prices.TryGetValue(x.AppId, out price) ? price.LastCheckedAt : null,
+        AlertRuleId: userAlertRules.TryGetValue(x.AppId, out var alert) ? alert.Id : null,
+        AlertThreshold: userAlertRules.TryGetValue(x.AppId, out alert) ? alert.ThresholdAmount : null,
+        AlertCurrency: userAlertRules.TryGetValue(x.AppId, out alert) ? alert.Currency : "EUR"
+    ));
+
+    return Ok(new Wishlist(result));
+}
+```
+
+### Proxy endpoints for alert management
+
+Alert rule creation/deletion need SteamTracker's business logic (e.g., only create alerts for tracked games), so WishlistApi proxies these calls to SteamTracker's API.
+
+```csharp
+// POST /wishlist/{appId}/alert — proxy to SteamTracker
+[HttpPost("{appId}/alert")]
+public async Task<ActionResult> SetAlertAsync(int appId, [FromBody] AlertRuleRequest request)
+{
+    int internalUserId = await _userContext.GetIdAsync();
+    await _steamTrackerAlertProxy.SetAlertRuleAsync(internalUserId.ToString(), appId, request.ThresholdAmount, request.Currency);
+    return Ok();
+}
+
+// DELETE /wishlist/{alertRuleId}/alert — proxy to SteamTracker
+[HttpDelete("{alertRuleId}/alert")]
+public async Task<ActionResult> DeleteAlertAsync(Guid alertRuleId)
+{
+    int internalUserId = await _userContext.GetIdAsync();
+    await _steamTrackerAlertProxy.DeleteAlertRuleAsync(internalUserId.ToString(), alertRuleId);
+    return Ok();
+}
+```
+
+### WishlistItemDto (extended)
+
+```csharp
+public record WishlistItemDto(
+    int? AppId = null,
+    DateTimeOffset? DateAdded = null,
+    string? Name = null,
+    decimal? Price = null,              // from shared DB games table
+    string? PriceCurrency = "EUR",      // from shared DB games table
+    DateTimeOffset? LastCheckedAt = null, // from shared DB games table
+    Guid? AlertRuleId = null,           // from shared DB alert_rules table
+    decimal? AlertThreshold = null,     // from shared DB alert_rules table
+    string? AlertCurrency = "EUR"       // from shared DB alert_rules table
+);
+```
+
+### Frontend
+
+The React frontend only calls WishlistApi:
+- `GET /wishlist` — returns items with prices and alert rules merged in (from shared DB)
+- `POST /wishlist/{appId}/alert` — sets an alert rule (proxied to SteamTracker)
+- `DELETE /wishlist/{alertRuleId}/alert` — deletes an alert rule (proxied to SteamTracker)
+- **Zero direct SteamTracker calls from the frontend.**
+
+### Data flow
+
+```
+React Frontend          WishlistApi              SteamTracker
+      │                       │                        │
+      │── GET /wishlist ───►  │                        │
+      │                       │── Dapper: SELECT ───►  │  (shared DB)
+      │                       │◄── prices + alerts ────│
+      │◄── merged response ──│                        │
+      │                       │                        │
+      │── POST /alert ───►   │── POST /api/alert ────►│
+      │                       │◄── ok ─────────────────│
+      │◄── ok ───────────────│                        │
+```
+
+### Why this design?
+
+- **Single entry point**: The frontend only needs to know about WishlistApi
+- **No HTTP overhead for prices**: WishlistApi reads directly from shared DB (Dapper)
+- **Alert rules through SteamTracker**: Business logic (validation, tracked-game checks) stays in SteamTracker
+- **No CORS issues**: SteamTracker is internal, no browser CORS concerns
+- **Loose coupling**: SteamTracker can evolve independently (different port, different deploy cycle)
+- **Fallback**: If SteamTracker's DB writes are delayed, WishlistApi still returns the wishlist (prices may be stale)
+
+### Architecture change — what's done, what needs to change
+
+| Area | Status | Notes |
+|------|--------|-------|
+| SteamTracker DB tables (`games`, `alert_rules`, etc.) | ✅ **No change needed** | Same tables, same columns. Both services share the same Postgres instance. |
+| SteamTracker use cases (SetAlertRule, etc.) | ✅ **No change needed** | Still used by WishlistApi's proxy endpoints for alert management. |
+| SteamTracker API endpoints | ✅ **No change needed** | POST/DELETE alert endpoints still exist (called by WishlistApi proxy). Internal endpoints unchanged. |
+| SteamTracker integration tests (8 tests) | ✅ **No change needed** | Tests still valid — verify internal endpoints via `WebApplicationFactory`. |
+| WishlistApi `GetWishlistAsync` | ⬜ **Needs change** | Currently returns local wishlist only. Must merge prices/alerts from shared DB (Dapper). |
+| WishlistApi `WishlistItemDto` | ⬜ **Needs change** | Add `Price`, `PriceCurrency`, `LastCheckedAt`, `AlertRuleId`, `AlertThreshold`, `AlertCurrency`. |
+| `ISharedDbPriceReader` (new) | ⬜ **New** | Dapper-based repository reading `games` and `alert_rules` tables from shared DB. |
+| WishlistApi proxy endpoints | ⬜ **New** | `POST /wishlist/{appId}/alert` and `DELETE /wishlist/{alertRuleId}/alert` that forward to SteamTracker. |
+| `ISteamTrackerAlertProxy` (new) | ⬜ **New** | HttpClient-based proxy for SteamTracker's alert endpoints only (NOT for prices). |
+| WishlistApi DI config | ⬜ **New** | Register `ISharedDbPriceReader` (Dapper) and `ISteamTrackerAlertProxy` (HttpClient). |
+| WishlistApi integration tests | ⬜ **New** | Tests for merged response and proxy endpoints. |
+| React frontend | ⬜ **Needs fix + work** | See below. |
+
+### React frontend — current state vs target
+
+**Current state (broken):**
+- `useWishlistPrices()` calls `api.get(`/api/wishlist?userId=${userId}`)` → resolves to `/api/api/wishlist?...` under WishlistApi's base URL → **404**
+- `AlertRuleModal` calls `api.post(`/api/wishlist/${userId}/games/${appId}/alert`)` → resolves to `/api/api/wishlist/...` → **404**
+- The frontend has no working path to SteamTracker because `api` base URL is WishlistApi's `/api`.
+
+**Target state:**
+- `useWishlistPrices()` → **removed entirely**. Prices come from the merged `GET /wishlist` response on WishlistApi (read from shared DB).
+- `AlertRuleModal` → calls `POST /wishlist/{appId}/alert` on WishlistApi (proxied to SteamTracker).
+- `WLItemsList` → reads prices/alerts from the merged `GET /wishlist` response, no separate SteamTracker query.
+- **Zero direct SteamTracker calls from the frontend.**
 
 ---
 
@@ -536,8 +717,9 @@ Phase 3 — Infrastructure (TDD)
 Phase 4 — Wire it up
  14. ✅ Implement API endpoints (POST /alert, GET /wishlist, DELETE /alert, internal endpoints)
  15. ✅ Wire workers into DI, connect scheduler → publisher → worker → use case → notification
- 16. ⬜ React frontend additions to existing wishlist UI
- 17. ⬜ End-to-end: wishlist add → event → TrackedGame → scheduler → price fetch → alert fires
+ 16. ⬜ **WishlistApi reads prices from shared DB** — `ISharedDbPriceReader` (Dapper), proxy alert endpoints, extended `WishlistItemDto` (SteamTracker DB tables unchanged, no HTTP call for prices)
+ 17. ⬜ React frontend — remove `useWishlistPrices`, fix `AlertRuleModal` to call WishlistApi proxy
+ 18. ⬜ End-to-end: wishlist add → event → TrackedGame → scheduler → price fetch → alert fires
 ```
 
 ---
@@ -552,8 +734,9 @@ Phase 4 — Wire it up
 | Application layer (use cases, ports) | ✅ Complete | 17 pass |
 | Infrastructure — EF Core + Postgres + RabbitMQ | ✅ Complete | 28 pass (includes Postgres + RabbitMQ integration) |
 | Infrastructure — SteamStoreClient | ✅ Complete | (covered by use case integration tests) |
-| Workers (PriceCheckWorker, WishlistSyncWorker, PriceCheckScheduler) | ✅ Complete | (no dedicated unit tests yet) |
-| API endpoints (Minimal API) | ✅ Complete | (no dedicated integration tests yet) |
+| Workers (PriceCheckWorker, WishlistSyncWorker, PriceCheckScheduler) | ✅ Complete | 17 pass (unit tests) |
+| API endpoints (Minimal API) | ✅ Complete | 8 pass (integration tests — SteamTracker internal endpoints) |
+| WishlistApi reads prices from shared DB | ⬜ TODO | — (ISharedDbPriceReader + merged response not yet implemented) |
 | React frontend additions | ⬜ TODO | — |
 | JWT authentication | ⬜ TODO | — |
 | End-to-end integration | ⬜ TODO | — |
@@ -564,10 +747,11 @@ Phase 4 — Wire it up
 
 1. **Worker unit tests** — `PriceCheckConsumer` and `WishlistSyncConsumer` should have dedicated tests for their `HandleBasicDeliverAsync` logic.
 2. **Scheduler tests** — `PriceCheckScheduler` should be tested with a mockable timer or configurable interval.
-3. **API integration tests** — Minimal API endpoints should be tested via `WebApplicationFactory` (similar to the existing app's `ApiFactory`).
-4. **JWT auth** — `UserId` currently passed as route/query parameter; replace with JWT bearer token extraction.
-5. **React frontend** — Price badges, alert modals, and wishlist price hook.
-6. **End-to-end** — wishlist add → event → TrackedGame → scheduler → price fetch → alert fires.
+3. **WishlistApi integration tests** — Need WebApplicationFactory tests for `ISharedDbPriceReader` (shared DB Dapper queries) and proxy alert endpoints.
+4. **WishlistApi reads prices from shared DB** — `ISharedDbPriceReader` (Dapper), proxy alert endpoints, extended `WishlistItemDto` with price/alert fields. **This must be done before frontend work.**
+5. **JWT auth** — `UserId` currently passed as route/query parameter; replace with JWT bearer token extraction.
+6. **React frontend** — Fix broken SteamTracker calls (`useWishlistPrices`, `AlertRuleModal`), remove direct SteamTracker queries, wire to WishlistApi proxy endpoints.
+7. **End-to-end** — wishlist add → event → TrackedGame → scheduler → price fetch → alert fires.
 
 ### Worker improvements
 
@@ -610,18 +794,24 @@ The build was failing due to RabbitMQ.Client 7.x API changes:
 
 ### Test results
 
-All **99 tests pass** (0 skipped, 0 failing):  
+All **124 tests pass** (0 skipped, 0 failing):  
 - **54 domain tests** — all pass (pure C#, no mocks)
 - **17 application tests** — all pass (Moq mocks)
 - **28 infrastructure tests** — all pass (real Postgres + RabbitMQ via testcontainers)
+- **17 worker unit tests** — all pass (PriceCheckConsumer, WishlistSyncConsumer, PriceCheckScheduler)
+- **8 API integration tests** — all pass (WebApplicationFactory + testcontainers)
 
 ### ⬜ React frontend additions (TODO)
 
-Changes are **additive to the existing wishlist UI**, not a separate page:
+Changes are **additive to the existing wishlist UI**, not a separate page. **WishlistApi proxy must be implemented first.**
 
-- [ ] `useWishlistPrices()` hook — fetches `GET /api/wishlist?userId=...` from SteamTracker API
+**Must fix (currently broken):**
+- [ ] `useWishlistPrices()` — remove entirely. Prices come from merged `GET /wishlist` response.
+- [ ] `AlertRuleModal` — change from `POST /api/wishlist/...` to `POST /wishlist/{appId}/alert` (WishlistApi proxy).
+- [ ] `WLItemsList` — remove `useWishlistPrices` dependency, read prices from wishlist items response.
+
+**Additive work:**
 - [ ] `WishlistPriceBadge` — shows "Not fetched" (amber), "Price fetched" (green) badges
-- [ ] `AlertRuleModal` — modal dialog with price threshold input, calls `POST /api/wishlist/{userId}/games/{appId}/alert`
 - [ ] Enhanced `WLItemsList` — added price column, status badge, and "Set alert" / "Edit alert" buttons per item
 - [ ] Optional: SignalR push for real-time price updates without polling
 
