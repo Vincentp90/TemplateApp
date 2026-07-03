@@ -13,6 +13,7 @@ export const Route = createFileRoute('/app')({
       if(authStore.isAuthenticated()) return;
       const res = await api.get("/auth/me");
       authStore.setUser({
+        userId: res.data.userId,
         username: res.data.username,
         role: res.data.role,
       });

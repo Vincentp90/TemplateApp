@@ -200,15 +200,17 @@ public class WishlistSyncConsumer : AsyncEventingBasicConsumer
             // WishlistItemRemoved has: userId, appId, removedAt
             var hasRemovedAt = doc.RootElement.TryGetProperty("removedAt", out _);
 
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
             if (hasRemovedAt)
             {
-                var evt = JsonSerializer.Deserialize<WishlistItemRemovedMessage>(json);
+                var evt = JsonSerializer.Deserialize<WishlistItemRemovedMessage>(json, options);
                 if (evt is not null)
                     await _removedUseCase.ExecuteAsync(evt.UserId, evt.AppId, cancellationToken);
             }
             else
             {
-                var evt = JsonSerializer.Deserialize<WishlistItemAddedMessage>(json);
+                var evt = JsonSerializer.Deserialize<WishlistItemAddedMessage>(json, options);
                 if (evt is not null)
                     await _addedUseCase.ExecuteAsync(evt.UserId, evt.AppId, evt.AddedAt, cancellationToken);
             }

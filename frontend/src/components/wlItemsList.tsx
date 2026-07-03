@@ -5,6 +5,7 @@ import { api } from "../api";
 import { useWishlistPrices } from '../hooks/useWishlistPrices';
 import WishlistPriceBadge from './WishlistPriceBadge';
 import AlertRuleModal from './AlertRuleModal';
+import { useAuthStore } from '../AuthState';
 import { useState } from 'react';
 
 type AppListingDetailed = { appId: number; name: string; dateAdded: string };
@@ -22,14 +23,8 @@ export default function WLItemsList() {
     },
   });
 
-  // Get SteamTracker price data (userId from auth state — default to empty for now)
-  const [userId] = useState(() => {
-    try {
-      return localStorage.getItem('userId') || '';
-    } catch {
-      return '';
-    }
-  });
+  // Get SteamTracker price data from auth store
+  const userId = useAuthStore(state => state.user?.userId ?? '');
 
   const { data: priceItems = [] } = useWishlistPrices(userId);
 

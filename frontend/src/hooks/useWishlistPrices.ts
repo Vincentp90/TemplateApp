@@ -18,5 +18,6 @@ export function useWishlistPrices(userId: string) {
       const res = await api.get(`/api/wishlist?userId=${encodeURIComponent(userId)}`);
       return res.data;
     },
+    enabled: !!userId,
   });
 }

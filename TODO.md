@@ -1,8 +1,12 @@
+Agent: ignore this
+
 Microservices/message queue exercise:
 https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
 Next prompt:
-Complete steamtrackerplan.md. You were struggling with running tests with testcontainers, this should now work. You can use api/WishlistApi/Tests/IntegrationTests/ApiUnauthorizedTests.cs as an example of a working testcontainer test. Let me know if it's not working.
+Alter the steamtrackerplan.md plan: the steamtracker should not have the GET /wishlist/prices endpoint, instead WishlistApi GetWishlistAsync action should also include the price in Application.Contracts.Wishlist. I don't want communication between react frontend and SteamTracker service. Is this change compatible with the existing alert-rule? 
+
+
 
 Things I'm going to try/add/learn more about later :
 - Try to vibecode angular frontend

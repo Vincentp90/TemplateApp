@@ -21,6 +21,10 @@ builder.Services.AddScoped<IHandleWishlistItemAddedUseCase, HandleWishlistItemAd
 builder.Services.AddScoped<IHandleWishlistItemRemovedUseCase, HandleWishlistItemRemovedUseCase>();
 builder.Services.AddSingleton<PriceAlertEvaluator>();
 
+// Global exception handler
+builder.Services.AddExceptionHandler<SteamTracker.API.ExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
 
 // Ensure DB is up-to-date (migration applied at startup — use Migrate in prod)
@@ -29,6 +33,9 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<SteamTrackerDbContext>();
     await dbContext.Database.MigrateAsync();
 }
+
+// Global exception handler
+app.UseExceptionHandler();
 
 // Minimal API endpoints
 var api = app.MapGroup("/api");
