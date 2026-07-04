@@ -7,7 +7,11 @@
     <Project Path="src/SteamTracker.Worker/SteamTracker.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/SteamTracker.API.Tests/SteamTracker.API.Tests.csproj" />
     <Project Path="tests/SteamTracker.Application.Tests/SteamTracker.Application.Tests.csproj" />
     <Project Path="tests/SteamTracker.Domain.Tests/SteamTracker.Domain.Tests.csproj" />
+    <Project Path="tests/SteamTracker.Infrastructure.Tests/SteamTracker.Infrastructure.Tests.csproj" />
+    <Project Path="tests/SteamTracker.Integration.Tests/SteamTracker.Integration.Tests.csproj" />
+    <Project Path="tests/SteamTracker.Worker.Tests/SteamTracker.Worker.Tests.csproj" />
   </Folder>
 </Solution>

@@ -3,9 +3,11 @@ Agent: ignore this
 Microservices/message queue exercise:
 https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
-Next prompt:
-Alter the steamtrackerplan.md plan: the steamtracker should not have the GET /wishlist/prices endpoint, instead WishlistApi GetWishlistAsync action should also include the price in Application.Contracts.Wishlist. I don't want communication between react frontend and SteamTracker service. Is this change compatible with the existing alert-rule? 
-
+Next prompt:            
+ 3. Worker unit tests (SteamTracker side)                                                                                                                                                                                                                                                       
+ - PriceCheckConsumer and WishlistSyncConsumer should have dedicated tests for their HandleBasicDeliverAsync logic                                                                                                                                                                              
+ - PriceCheckScheduler should be tested with a mockable timer or configurable interval     
+- Nightly job to prune stale games rows  
 
 
 Things I'm going to try/add/learn more about later :
