@@ -747,7 +747,6 @@ Phase 4 — Wire it up
 | API endpoints (Minimal API) | ✅ Complete | 8 pass (integration tests — SteamTracker internal endpoints) |
 | WishlistApi reads prices from shared DB | ✅ Complete | ISharedDbPriceReader (Dapper) + merged response + proxy alert endpoints |
 | React frontend additions | ✅ Complete | Removed useWishlistPrices, updated WLItemsList, fixed AlertRuleModal |
-| JWT authentication | ⬜ TODO | — |
 | End-to-end integration | ⬜ TODO | — |
 
 **Total: 124 passing, 0 skipped, 0 failing**

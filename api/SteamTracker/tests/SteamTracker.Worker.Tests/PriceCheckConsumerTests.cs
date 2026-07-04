@@ -225,4 +225,165 @@ public class PriceCheckConsumerTests
             x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: true, It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task HandleBasicDeliverAsync_EmptyBody_LogsErrorAndNacksWithRequeue()
+    {
+        // Arrange
+        const ulong deliveryTag = 6;
+        var body = Array.Empty<byte>();
+
+        // Act
+        await _consumer.HandleBasicDeliverAsync(
+            consumerTag: "tag",
+            deliveryTag: deliveryTag,
+            redelivered: false,
+            exchange: "",
+            routingKey: "",
+            properties: new BasicProperties(),
+            body: body,
+            CancellationToken.None);
+
+        // Assert — empty body throws JsonException → nack with requeue
+        _useCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<int>(), It.IsAny<Money>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _channelMock.Verify(
+            x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: true, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleBasicDeliverAsync_RedeliveredMessage_ProcessedNormally()
+    {
+        // Arrange
+        const int appId = 33333;
+        const ulong deliveryTag = 7;
+        var price = new Money(4.99m, "EUR");
+        var gameName = "Cheap Game";
+        var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+
+        _steamClientMock
+            .Setup(x => x.FetchPriceAsync(appId))
+            .ReturnsAsync((price, gameName));
+
+        // Act — redelivered = true should still be processed
+        await _consumer.HandleBasicDeliverAsync(
+            consumerTag: "tag",
+            deliveryTag: deliveryTag,
+            redelivered: true,
+            exchange: "",
+            routingKey: "",
+            properties: new BasicProperties(),
+            body: body,
+            CancellationToken.None);
+
+        // Assert — redelivered messages are still processed and acked
+        _useCaseMock.Verify(
+            x => x.ExecuteAsync(appId, price, gameName, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _channelMock.Verify(
+            x => x.BasicAckAsync(deliveryTag, multiple: false, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleBasicDeliverAsync_SteamClientThrows_LogsErrorAndNacksWithRequeue()
+    {
+        // Arrange
+        const int appId = 77777;
+        const ulong deliveryTag = 8;
+        var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+
+        _steamClientMock
+            .Setup(x => x.FetchPriceAsync(appId))
+            .ThrowsAsync(new TimeoutException("Steam API timeout"));
+
+        // Act
+        await _consumer.HandleBasicDeliverAsync(
+            consumerTag: "tag",
+            deliveryTag: deliveryTag,
+            redelivered: false,
+            exchange: "",
+            routingKey: "",
+            properties: new BasicProperties(),
+            body: body,
+            CancellationToken.None);
+
+        // Assert — TimeoutException is caught by generic handler → nack with requeue
+        _useCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<int>(), It.IsAny<Money>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _channelMock.Verify(
+            x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: true, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleBasicDeliverAsync_UseCaseThrows_LogsErrorAndNacksWithRequeue()
+    {
+        // Arrange
+        const int appId = 88888;
+        const ulong deliveryTag = 9;
+        var price = new Money(2.99m, "EUR");
+        var gameName = "Game";
+        var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+
+        _steamClientMock
+            .Setup(x => x.FetchPriceAsync(appId))
+            .ReturnsAsync((price, gameName));
+        _useCaseMock
+            .Setup(x => x.ExecuteAsync(appId, price, gameName, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Use case failed"));
+
+        // Act
+        await _consumer.HandleBasicDeliverAsync(
+            consumerTag: "tag",
+            deliveryTag: deliveryTag,
+            redelivered: false,
+            exchange: "",
+            routingKey: "",
+            properties: new BasicProperties(),
+            body: body,
+            CancellationToken.None);
+
+        // Assert — use case exception → nack with requeue
+        _channelMock.Verify(
+            x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: true, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleBasicDeliverAsync_AppIdZero_ProcessedNormally()
+    {
+        // Arrange — AppId 0 is valid (deserialization succeeds, Steam client handles it)
+        const int appId = 0;
+        const ulong deliveryTag = 10;
+        var price = new Money(0m, "EUR");
+        var gameName = "Free Game";
+        var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+
+        _steamClientMock
+            .Setup(x => x.FetchPriceAsync(appId))
+            .ReturnsAsync((price, gameName));
+
+        // Act
+        await _consumer.HandleBasicDeliverAsync(
+            consumerTag: "tag",
+            deliveryTag: deliveryTag,
+            redelivered: false,
+            exchange: "",
+            routingKey: "",
+            properties: new BasicProperties(),
+            body: body,
+            CancellationToken.None);
+
+        // Assert — zero AppId is processed like any other
+        _useCaseMock.Verify(
+            x => x.ExecuteAsync(appId, price, gameName, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _channelMock.Verify(
+            x => x.BasicAckAsync(deliveryTag, multiple: false, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 }
