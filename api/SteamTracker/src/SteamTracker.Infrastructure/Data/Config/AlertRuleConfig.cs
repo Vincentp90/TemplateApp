@@ -12,7 +12,13 @@ public class AlertRuleConfig : IEntityTypeConfiguration<AlertRule>
         builder.HasKey(ar => ar.AlertRuleId);
 
         builder.Property(ar => ar.UserId).HasMaxLength(128).IsRequired();
-        
+
+        // Convert SteamAppId value object to/from int
+        builder.Property(ar => ar.AppId)
+            .HasConversion(
+                v => v.Value,
+                v => new SteamAppId(v));
+
         // Convert Money value object to/from "Amount|Currency" string
         builder.Property(ar => ar.TriggerBelowPrice)
             .HasConversion(

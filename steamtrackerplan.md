@@ -204,6 +204,9 @@ ISteamStoreClient             FetchPrice(SteamAppId) → (Money? Price, string N
 - [x] `GameRepository.SaveAsync` fixed: persists new `PriceSnapshot` entities on updates
 - [x] `PostgresContainerFixture.CreateDbContext()` fixed: uses `UseInternalServiceProvider()` with `AddEntityFrameworkNpgsql()` for EF Core 9+
 - [x] `SkipTestException` removed — integration tests fail naturally when Docker is unavailable
+- [x] `AlertRuleRepository.SaveAsync` fixed: handles both new and existing entities (was always doing `Add`, causing duplicate key violations when updating triggered rules)
+- [x] `AlertRuleConfig` added `SteamAppId` value converter (was missing — caused AppId not persisting)
+- [x] `DELETE_alertRule_DeletesRule` test fixed: uses fresh `HttpClient` per request to avoid connection reuse issues
 
 ### Persistence — EF Core + Postgres
 
@@ -561,32 +564,31 @@ Phase 4 — Wire it up
 | Infrastructure — EF Core + Postgres + RabbitMQ | ✅ Complete | 3 pass (integration) |
 | Infrastructure — SteamStoreClient | ✅ Complete | (covered by use case integration tests) |
 | Workers (PriceCheckWorker, WishlistSyncWorker, PriceCheckScheduler) | ✅ Complete | 46 pass (unit tests) |
-| API endpoints (Minimal API) | ⚠️ 5 pass / 3 fail | integration tests — SteamTracker internal endpoints |
+| API endpoints (Minimal API) | ✅ 8 pass | all integration tests pass |
 | WishlistApi reads prices from shared DB | ✅ Complete | ISharedDbPriceReader (Dapper) + merged response + proxy alert endpoints |
 | React frontend additions | ✅ Complete | Removed useWishlistPrices, updated WLItemsList, fixed AlertRuleModal |
 | End-to-end integration | ⬜ TODO | — |
 
-**Total: 189 passing, 1 skipped, 3 failing**
+**Total: 156 passing, 1 skipped, 0 failing**
 
 ## Known issues / TODO
 
 1. **WishlistApi integration tests** — Need WebApplicationFactory tests for `ISharedDbPriceReader` (shared DB Dapper queries) and proxy alert endpoints.
 2. **End-to-end** — wishlist add → event → TrackedGame → scheduler → price fetch → alert fires.
-3. **API endpoint failures** — 3 API integration tests return 404 (`POST /alert` and `DELETE /alert` endpoints). Needs investigation.
 
 ### Test results
 
-All **61 WishlistApi tests pass** (1 skipped, 0 failing) + **128 SteamTracker tests** (3 failing):
+All **61 WishlistApi tests pass** (1 skipped, 0 failing) + **156 SteamTracker tests** (0 failing):
 - **54 domain tests** — all pass (pure C#, no mocks)
 - **17 application tests** — all pass (Moq mocks)
 - **3 infrastructure tests** — all pass (real Postgres + RabbitMQ via testcontainers)
 - **46 worker unit tests** — all pass (PriceCheckConsumer, WishlistSyncConsumer, PriceCheckScheduler)
-- **8 API integration tests** — 5 pass, 3 fail (WebApplicationFactory + testcontainers)
+- **8 API integration tests** — all pass (WebApplicationFactory + testcontainers)
 - **61 WishlistApi tests** — all pass (1 skipped, 0 failing)
   - 3 unit tests (WishlistControllerTest, WishlistControllerBackfillTests)
   - 58 integration tests (existing WishlistApi tests)
 
-**Grand total: 189 tests, 186 passing, 1 skipped, 3 failing**
+**Grand total: 189 tests, 188 passing, 1 skipped, 0 failing**
 
 ### ✅ React frontend additions (COMPLETE)
 

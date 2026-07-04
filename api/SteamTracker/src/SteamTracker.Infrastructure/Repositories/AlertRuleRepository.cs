@@ -50,7 +50,6 @@ public class AlertRuleRepository : IAlertRuleRepository
             _context.Entry(existing).State = EntityState.Detached;
             _context.Entry(alertRule).State = EntityState.Modified;
         }
-
         await _context.SaveChangesAsync(cancellationToken);
     }
 

@@ -30,9 +30,6 @@ public class TestApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // Start RabbitMQ container eagerly — IConnection is resolved during request compilation
-        _rabbitMq.StartAsync().GetAwaiter().GetResult();
-
         builder.ConfigureServices(services =>
         {
             // Remove hosted services (workers) — we test their logic directly
@@ -51,7 +48,7 @@ public class TestApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.AddDbContext<SteamTrackerDbContext>(options =>
                 options.UseNpgsql(_db.GetConnectionString()));
 
-            // Replace RabbitMQ with in-memory publisher
+            // Replace RabbitMQ connection
             services.AddSingleton<IConnection>(_ =>
             {
                 var factory = new ConnectionFactory
@@ -61,8 +58,6 @@ public class TestApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
                 return factory.CreateConnectionAsync().GetAwaiter().GetResult();
             });
         });
-
-
     }
 
     private HttpClient? _client;
@@ -71,7 +66,6 @@ public class TestApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _db.StartAsync();
-        // Start RabbitMQ eagerly — IConnection is resolved during request compilation
         await _rabbitMq.StartAsync();
     }
     async Task IAsyncLifetime.DisposeAsync()
