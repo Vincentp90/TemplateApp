@@ -1,6 +1,5 @@
 using FluentAssertions;
 using SteamTracker.Domain.Entities;
-using SteamTracker.Domain.Events;
 using SteamTracker.Domain.ValueObjects;
 
 namespace SteamTracker.Domain.Tests;
@@ -19,29 +18,12 @@ public class TrackedGameTests
     }
 
     [Fact]
-    public void StartTracking_does_not_raise_events()
-    {
-        var game = TrackedGame.StartTracking(new SteamAppId(42), DateTimeOffset.UtcNow);
-        game.DomainEvents.Should().BeEmpty();
-    }
-
-    [Fact]
     public void StopTracking_deactivates_game()
     {
         var game = TrackedGame.StartTracking(new SteamAppId(42), DateTimeOffset.UtcNow);
         game.StopTracking();
 
         game.IsActive.Should().BeFalse();
-    }
-
-    [Fact]
-    public void StopTracking_raises_TrackingStoppedEvent()
-    {
-        var game = TrackedGame.StartTracking(new SteamAppId(42), DateTimeOffset.UtcNow);
-        game.StopTracking();
-
-        game.DomainEvents.Should().ContainSingle()
-            .Which.Should().BeOfType<TrackingStoppedEvent>();
     }
 
     [Fact]
@@ -52,6 +34,5 @@ public class TrackedGameTests
         game.StopTracking(); // second call
 
         game.IsActive.Should().BeFalse();
-        game.DomainEvents.Should().ContainSingle(); // only one event
     }
 }

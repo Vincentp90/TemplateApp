@@ -1,4 +1,3 @@
-using SteamTracker.Domain.Events;
 using SteamTracker.Domain.ValueObjects;
 
 namespace SteamTracker.Domain.Entities;
@@ -15,9 +14,6 @@ public class Game
 
     public List<PriceSnapshot> PriceSnapshots { get; private set; } = new();
 
-    private readonly List<object> _domainEvents = new();
-    public IReadOnlyList<object> DomainEvents => _domainEvents.AsReadOnly();
-
     private Game() { } // EF Core constructor
 
     public Game(SteamAppId appId)
@@ -33,6 +29,5 @@ public class Game
         LastCheckedAt = at;
 
         PriceSnapshots.Add(new PriceSnapshot(AppId.Value, newPrice, at));
-        _domainEvents.Add(new PriceUpdatedEvent(AppId, oldPrice, newPrice, at));
     }
 }

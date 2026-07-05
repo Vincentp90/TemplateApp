@@ -103,22 +103,4 @@ public class MessageContractTests
         // Assert
         hasRemovedAt.Should().BeTrue();
     }
-
-    [Fact]
-    public void WishlistItemEvent_SerializesAndDeserializesCorrectly()
-    {
-        // Arrange — legacy event type
-        var addedAt = new DateTimeOffset(2025, 6, 15, 10, 30, 0, TimeSpan.Zero);
-        var original = new WishlistItemEvent("user-1", 42, addedAt);
-        var json = JsonSerializer.Serialize(original);
-
-        // Act
-        var deserialized = JsonSerializer.Deserialize<WishlistItemEvent>(json);
-
-        // Assert
-        deserialized.Should().NotBeNull();
-        deserialized!.UserId.Should().Be("user-1");
-        deserialized.AppId.Should().Be(42);
-        deserialized.AddedAt.Should().Be(addedAt);
-    }
 }

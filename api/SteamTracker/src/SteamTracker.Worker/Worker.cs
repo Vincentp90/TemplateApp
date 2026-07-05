@@ -110,23 +110,10 @@ public class PriceCheckConsumer : AsyncEventingBasicConsumer
         }
         catch (Exception ex)
         {
-            var requeue = IsTransientException(ex);
+            var requeue = WorkerHelpers.IsTransient(ex);
             _logger.LogError(ex, "Error processing price check for delivery {DeliveryTag} (requeue: {Requeue})", deliveryTag, requeue);
             await _channel.BasicNackAsync(deliveryTag, multiple: false, requeue: requeue, cancellationToken);
         }
-    }
-
-    /// <summary>
-    /// Classifies an exception as transient (retryable) or programming error (dead-letter).
-    /// </summary>
-    private static bool IsTransientException(Exception ex)
-    {
-        return ex is
-            TimeoutException or
-            OperationCanceledException or
-            HttpRequestException or
-            SteamRateLimitException or
-            IOException;
     }
 }
 
@@ -233,16 +220,19 @@ public class WishlistSyncConsumer : AsyncEventingBasicConsumer
         }
         catch (Exception ex)
         {
-            var requeue = IsTransientException(ex);
+            var requeue = WorkerHelpers.IsTransient(ex);
             _logger.LogError(ex, "Error processing wishlist sync message (requeue: {Requeue})", requeue);
             await _channel.BasicNackAsync(deliveryTag, multiple: false, requeue: requeue, cancellationToken);
         }
     }
+}
 
+internal static class WorkerHelpers
+{
     /// <summary>
     /// Classifies an exception as transient (retryable) or programming error (dead-letter).
     /// </summary>
-    private static bool IsTransientException(Exception ex)
+    public static bool IsTransient(Exception ex)
     {
         return ex is
             TimeoutException or
@@ -260,5 +250,4 @@ public record PriceCheckMessage(int AppId, DateTimeOffset EnqueuedAt);
 public record WishlistItemAddedMessage(string UserId, int AppId, DateTimeOffset AddedAt);
 public record WishlistItemRemovedMessage(string UserId, int AppId, DateTimeOffset RemovedAt);
 
-// Legacy — kept for backward compatibility with internal API endpoints
-public record WishlistItemEvent(string UserId, int AppId, DateTimeOffset AddedAt);
+

@@ -1,4 +1,3 @@
-using SteamTracker.Domain.Events;
 using SteamTracker.Domain.ValueObjects;
 
 namespace SteamTracker.Domain.Entities;
@@ -13,9 +12,6 @@ public class TrackedGame
     public SteamAppId AppId { get; private set; }
     public bool IsActive { get; private set; }
     public DateTimeOffset TrackedSince { get; private set; }
-
-    private readonly List<object> _domainEvents = new();
-    public IReadOnlyList<object> DomainEvents => _domainEvents.AsReadOnly();
 
     private TrackedGame() { } // EF Core constructor
 
@@ -34,6 +30,5 @@ public class TrackedGame
         if (!IsActive) return;
 
         IsActive = false;
-        _domainEvents.Add(new TrackingStoppedEvent(AppId));
     }
 }
