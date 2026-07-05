@@ -11,14 +11,14 @@ namespace SteamTracker.Application.UseCases;
 public class HandleWishlistItemAddedUseCase : IHandleWishlistItemAddedUseCase
 {
     private readonly ITrackedGameRepository _trackedGameRepo;
-    private readonly IPriceCheckJobPublisher _publisher;
+    private readonly IPriceCheckJobPublisher _priceCheckJobpublisher;
 
     public HandleWishlistItemAddedUseCase(
         ITrackedGameRepository trackedGameRepo,
         IPriceCheckJobPublisher publisher)
     {
         _trackedGameRepo = trackedGameRepo;
-        _publisher = publisher;
+        _priceCheckJobpublisher = publisher;
     }
 
     public async Task ExecuteAsync(string userId, int appId, DateTimeOffset addedAt, CancellationToken cancellationToken = default)
@@ -30,6 +30,6 @@ public class HandleWishlistItemAddedUseCase : IHandleWishlistItemAddedUseCase
         var trackedGame = TrackedGame.StartTracking(appId, addedAt);
         await _trackedGameRepo.SaveAsync(trackedGame, cancellationToken);
 
-        await _publisher.EnqueueAsync(appId, cancellationToken);
+        await _priceCheckJobpublisher.EnqueueAsync(appId, cancellationToken);
     }
 }

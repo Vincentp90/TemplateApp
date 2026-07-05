@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using System.Threading.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using SteamTracker.Application.Ports;
 using SteamTracker.Domain.ValueObjects;
@@ -9,22 +10,19 @@ namespace SteamTracker.Infrastructure.External;
 public class SteamStoreClient : ISteamStoreClient
 {
     private readonly HttpClient _httpClient;
-    private readonly string _apiKey;
-    private readonly string _baseUri;
+    private readonly TokenBucketRateLimiter _rateLimiter;
 
-    public SteamStoreClient(HttpClient httpClient, IConfiguration configuration)
+    public SteamStoreClient(HttpClient httpClient, IConfiguration configuration, TokenBucketRateLimiter rateLimiter)
     {
         _httpClient = httpClient;
-        _apiKey = configuration["Steam:ApiKey"] ?? string.Empty;
-        _baseUri = configuration["Steam:BaseUri"] ?? "https://store.steampowered.com";
+        _rateLimiter = rateLimiter;
     }
 
     public async Task<(Money Price, string Name)?> FetchPriceAsync(int appId)
     {
-        // Use Steam API /api/featured-categories/v2 or price API
-        // For simplicity, we'll use the store page and parse, or the API
-        var uri = $"https://store.steampowered.com/api/appdetails?appids={appId}&cc=de&l=german";
+        using var lease = await _rateLimiter.AcquireAsync();
 
+        var uri = $"https://store.steampowered.com/api/appdetails?appids={appId}&filters=price_overview&cc=de&l=german";
         var response = await _httpClient.GetAsync(uri);
 
         if (response.StatusCode == HttpStatusCode.TooManyRequests)
@@ -43,11 +41,9 @@ public class SteamStoreClient : ISteamStoreClient
         var data = appElement.GetProperty("data");
         var name = data.GetProperty("name").GetString() ?? string.Empty;
 
-        // Check if the game has a free package
         if (data.TryGetProperty("is_free", out var isFreeProp) && isFreeProp.GetBoolean())
             return (Money.Free, name);
 
-        // Get price summary
         if (data.TryGetProperty("price_overview", out var priceOverview))
         {
             var amount = priceOverview.GetProperty("final").GetInt32() / 100m;

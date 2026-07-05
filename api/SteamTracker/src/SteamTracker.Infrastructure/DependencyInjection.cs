@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +29,15 @@ public static class DependencyInjection
         services.AddScoped<IAlertRuleRepository, AlertRuleRepository>();
 
         // External clients
+        services.AddSingleton<TokenBucketRateLimiter>(_ => new TokenBucketRateLimiter(
+            new TokenBucketRateLimiterOptions
+            {   // API supposedly has 200 req/5 min limit
+                QueueLimit = 1,
+                TokenLimit = 50,
+                TokensPerPeriod = 1,
+                ReplenishmentPeriod = TimeSpan.FromSeconds(3),// 100 req/5 min
+                AutoReplenishment = true
+            }));
         services.AddHttpClient<ISteamStoreClient, SteamStoreClient>();
 
         // RabbitMQ connection
