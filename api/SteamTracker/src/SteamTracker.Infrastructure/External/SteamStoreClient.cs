@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using SteamTracker.Application.Ports;
 using SteamTracker.Domain.ValueObjects;
 
@@ -11,11 +12,17 @@ public class SteamStoreClient : ISteamStoreClient
 {
     private readonly HttpClient _httpClient;
     private readonly TokenBucketRateLimiter _rateLimiter;
+    private readonly ILogger<SteamStoreClient>? _logger;
 
-    public SteamStoreClient(HttpClient httpClient, IConfiguration configuration, TokenBucketRateLimiter rateLimiter)
+    public SteamStoreClient(
+        HttpClient httpClient,
+        IConfiguration configuration,
+        TokenBucketRateLimiter rateLimiter,
+        ILogger<SteamStoreClient>? logger = null)
     {
         _httpClient = httpClient;
         _rateLimiter = rateLimiter;
+        _logger = logger;
     }
 
     public async Task<(Money Price, string Name)?> FetchPriceAsync(int appId)
@@ -29,7 +36,10 @@ public class SteamStoreClient : ISteamStoreClient
             throw new SteamRateLimitException("Rate limited by Steam API.");
 
         if (!response.IsSuccessStatusCode)
+        {
+            _logger?.LogDebug("Non-success response {StatusCode} for appId={AppId}", response.StatusCode, appId);
             return null;
+        }
 
         var json = await response.Content.ReadAsStringAsync();
         var doc = JsonDocument.Parse(json);
@@ -48,6 +58,7 @@ public class SteamStoreClient : ISteamStoreClient
         {
             var amount = priceOverview.GetProperty("final").GetInt32() / 100m;
             var currency = priceOverview.GetProperty("currency").GetString() ?? "EUR";
+            _logger?.LogDebug("Game {Name} (appId={AppId}) price: {Amount} {Currency}", name, appId, amount, currency);
             return (new Money(amount, currency), name);
         }
 
