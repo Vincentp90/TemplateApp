@@ -25,6 +25,9 @@ public class SharedDbPriceReader : ISharedDbPriceReader
         if (string.IsNullOrEmpty(_connectionString))
             return new Dictionary<int, GamePrice>();
 
+        if (appIds == null)
+            return new Dictionary<int, GamePrice>();
+
         var ids = appIds.ToList();
         if (!ids.Any())
             return new Dictionary<int, GamePrice>();
@@ -40,7 +43,7 @@ public class SharedDbPriceReader : ISharedDbPriceReader
 
         return rows
             .Where(r => r.AppId > 0)
-            .ToDictionary(r => r.AppId, r => new GamePrice(r.CurrentPriceAmount, r.CurrentPriceCurrency ?? "EUR", r.LastCheckedAt));
+            .ToDictionary(r => r.AppId, r => new GamePrice(r.CurrentPriceAmount, r.CurrentPriceCurrency, r.LastCheckedAt));
     }
 
     public async Task<Dictionary<int, AlertRuleInfo>> GetAlertRulesAsync(string userId)
@@ -50,8 +53,9 @@ public class SharedDbPriceReader : ISharedDbPriceReader
 
         using var connection = new NpgsqlConnection(_connectionString);
 
+        // TriggerBelowPrice is stored as "Amount|Currency" (combined column per AlertRuleConfig)
         const string sql = @"
-            SELECT ""AlertRuleId"", ""AppId"", ""TriggerBelowPrice"", ""Currency""
+            SELECT ""AlertRuleId"", ""AppId"", ""TriggerBelowPrice""
             FROM ""AlertRules""
             WHERE ""UserId"" = @UserId AND ""IsActive"" = true";
 
@@ -59,11 +63,29 @@ public class SharedDbPriceReader : ISharedDbPriceReader
 
         return rows
             .Where(r => r.AppId > 0)
+            .Select(ParseAlertRule)
+            .Where(r => r.HasValue)
             .ToDictionary(
-                r => r.AppId,
-                r => new AlertRuleInfo(r.AlertRuleId, r.TriggerBelowPrice, r.Currency));
+                r => r!.Value.AppId,
+                r => r!.Value.Info);
     }
 
-    private record GamePriceRow(int AppId, decimal? CurrentPriceAmount, string? CurrentPriceCurrency, DateTimeOffset? LastCheckedAt);
-    private record AlertRuleRow(Guid AlertRuleId, int AppId, decimal TriggerBelowPrice, string Currency);
+    private static (decimal Amount, string Currency) ParseMoneyString(string value)
+    {
+        var parts = value.Split('|');
+        return parts.Length == 2
+            ? (decimal.Parse(parts[0]), parts[1])
+            : (0, string.Empty);
+    }
+
+    private static (int AppId, AlertRuleInfo Info)? ParseAlertRule(AlertRuleRow row)
+    {
+        if (row.AppId <= 0) return null;
+        var money = ParseMoneyString(row.TriggerBelowPrice);
+        if (money.Amount <= 0) return null;
+        return (row.AppId, new AlertRuleInfo(row.AlertRuleId, money.Amount, money.Currency));
+    }
+
+    private record GamePriceRow(int AppId, decimal? CurrentPriceAmount, string? CurrentPriceCurrency, DateTime? LastCheckedAt);
+    private record AlertRuleRow(Guid AlertRuleId, int AppId, string TriggerBelowPrice);
 }

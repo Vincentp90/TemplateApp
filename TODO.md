@@ -3,8 +3,12 @@ Agent: ignore this
 Microservices/message queue exercise:
 https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
-Next prompt:                                                                                  
-- steamtrackerplan.md end-to-end test
+Next prompt:  
+- Make sure .UseSnakeCaseNamingConvention() is used in SteamTracker db
+- Finish end-to-end tests
+
+Polishing:
+- SharedDbPriceReader: too much defensive programming. Just crash when connection string is empty.
 
 
 Things I'm going to try/add/learn more about later :

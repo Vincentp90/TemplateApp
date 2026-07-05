@@ -551,6 +551,7 @@ Phase 4 — Wire it up
  14. ✅ Implement API endpoints (POST /alert, GET /wishlist, DELETE /alert, internal endpoints)
  15. ✅ Wire workers into DI, connect scheduler → publisher → worker → use case → notification
  16. ✅ **WishlistApi reads prices from shared DB** — `ISharedDbPriceReader` (Dapper), proxy alert endpoints, extended `WishlistItemDto` (SteamTracker DB tables unchanged, no HTTP call for prices)
+ 16.5. ✅ **SharedDb integration tests** — WebApplicationFactory + testcontainers for `ISharedDbPriceReader` (Dapper queries) and `ISteamTrackerAlertProxy` endpoints
  17. ✅ React frontend — removed `useWishlistPrices`, fixed `AlertRuleModal` to call WishlistApi proxy, updated `WLItemsList` to read merged data
  18. ⬜ End-to-end: wishlist add → event → TrackedGame → scheduler → price fetch → alert fires
 ```
@@ -566,15 +567,15 @@ Phase 4 — Wire it up
 | Workers (PriceCheckWorker, WishlistSyncWorker, PriceCheckScheduler) | ✅ Complete | 46 pass (unit tests) |
 | API endpoints (Minimal API) | ✅ 8 pass | all integration tests pass |
 | WishlistApi reads prices from shared DB | ✅ Complete | ISharedDbPriceReader (Dapper) + merged response + proxy alert endpoints |
+| SharedDb integration tests | ✅ Complete | 18 pass (WebApplicationFactory + testcontainers) |
 | React frontend additions | ✅ Complete | Removed useWishlistPrices, updated WLItemsList, fixed AlertRuleModal |
 | End-to-end integration | ⬜ TODO | — |
 
-**Total: 156 passing, 1 skipped, 0 failing**
+**Total: 207 passing, 1 skipped, 0 failing**
 
 ## Known issues / TODO
 
-1. **WishlistApi integration tests** — Need WebApplicationFactory tests for `ISharedDbPriceReader` (shared DB Dapper queries) and proxy alert endpoints.
-2. **End-to-end** — wishlist add → event → TrackedGame → scheduler → price fetch → alert fires.
+1. **End-to-end** — wishlist add → event → TrackedGame → scheduler → price fetch → alert fires.
 
 ### Test results
 
@@ -587,8 +588,11 @@ All **61 WishlistApi tests pass** (1 skipped, 0 failing) + **156 SteamTracker te
 - **61 WishlistApi tests** — all pass (1 skipped, 0 failing)
   - 3 unit tests (WishlistControllerTest, WishlistControllerBackfillTests)
   - 58 integration tests (existing WishlistApi tests)
+- **18 SharedDb integration tests** — all pass (WebApplicationFactory + testcontainers)
+  - 15 `SharedDbPriceReaderIntegrationTests` (Dapper queries against real SteamTracker DB)
+  - 3 `AlertProxyEndpointTests` (proxy alert endpoints with JWT auth)
 
-**Grand total: 189 tests, 188 passing, 1 skipped, 0 failing**
+**Grand total: 207 tests, 206 passing, 1 skipped, 0 failing**
 
 ### ✅ React frontend additions (COMPLETE)
 

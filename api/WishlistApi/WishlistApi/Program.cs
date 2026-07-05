@@ -13,6 +13,7 @@ using Domain.Helpers;
 using Domain.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System;
@@ -142,6 +143,11 @@ using (var scope = app.Services.CreateScope())
     try
     {
         db.Database.Migrate();
+    }
+    catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P07")
+    {
+        // Tables already exist from a previous migration — ignore
+        Console.WriteLine($"Migration skipped (tables already exist): {ex.Message}");
     }
     catch (Exception ex)
     {
