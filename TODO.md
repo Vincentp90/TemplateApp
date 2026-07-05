@@ -5,9 +5,7 @@ https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
 
 Polishing:
-- SteamTrackerDbContextModelSnapshot -> What is the point of all the  HasColumnName here?
-- update nuget packages to latest
-- check all defensive programming if really necessary
+- check all defensive programming in SteamTracker, check if really necessary. It's better to use strict types to avoid defensive checks, what can be improved? Also, in truly exceptional situations, i want exceptions to be thrown up.
 
 
 Things I'm going to try/add/learn more about later :
