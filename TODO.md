@@ -5,7 +5,7 @@ https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
 
 Polishing:
-- check all defensive programming in SteamTracker, check if really necessary. It's better to use strict types to avoid defensive checks, what can be improved? Also, in truly exceptional situations, i want exceptions to be thrown up.
+- do api/SteamTracker/CHECKLIST.md
 
 
 Things I'm going to try/add/learn more about later :
