@@ -40,15 +40,14 @@ public class AlertRuleRepository : IAlertRuleRepository
 
     public async Task SaveAsync(AlertRule alertRule, CancellationToken cancellationToken = default)
     {
-        var existing = await _context.AlertRules.FindAsync(new object[] { alertRule.AlertRuleId }, cancellationToken);
+        var existing = await _context.AlertRules.FirstOrDefaultAsync(ar => ar.AlertRuleId == alertRule.AlertRuleId, cancellationToken);
         if (existing is null)
         {
             _context.AlertRules.Add(alertRule);
         }
         else
         {
-            _context.Entry(existing).State = EntityState.Detached;
-            _context.Entry(alertRule).State = EntityState.Modified;
+            _context.Entry(existing).CurrentValues.SetValues(alertRule);
         }
         await _context.SaveChangesAsync(cancellationToken);
     }

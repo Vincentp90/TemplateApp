@@ -32,15 +32,15 @@ public class TrackedGameRepository : ITrackedGameRepository
 
     public async Task SaveAsync(TrackedGame trackedGame, CancellationToken cancellationToken = default)
     {
-        var existing = await _context.TrackedGames.FindAsync(new object[] { trackedGame.AppId }, cancellationToken);
+        var existing = await _context.TrackedGames.FirstOrDefaultAsync(tg => tg.AppId == trackedGame.AppId, cancellationToken);
+
         if (existing is null)
         {
             _context.TrackedGames.Add(trackedGame);
         }
         else
         {
-            _context.Entry(existing).State = EntityState.Detached;
-            _context.Entry(trackedGame).State = EntityState.Modified;
+            _context.Entry(existing).CurrentValues.SetValues(trackedGame);
         }
 
         await _context.SaveChangesAsync(cancellationToken);

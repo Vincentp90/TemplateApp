@@ -25,16 +25,14 @@ public class GameRepository : IGameRepository
 
     public async Task SaveAsync(Game game, CancellationToken cancellationToken = default)
     {
-        var existing = await _context.Games.FindAsync(new object[] { game.AppId }, cancellationToken);
+        var existing = await _context.Games.FirstOrDefaultAsync(g => g.AppId == game.AppId, cancellationToken);
         if (existing is null)
         {
             _context.Games.Add(game);
         }
         else
         {
-            // Detach the tracked copy and attach the passed entity as modified
-            _context.Entry(existing).State = EntityState.Detached;
-            _context.Entry(game).State = EntityState.Modified;
+            _context.Entry(existing).CurrentValues.SetValues(game);
 
             // Persist only PriceSnapshots that don't already exist in the DB
             foreach (var snapshot in game.PriceSnapshots)

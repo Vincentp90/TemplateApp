@@ -6,7 +6,7 @@ SteamTracker
 
 Polishing:
 - Read through code
-
+- lower steam api call max rate
 
 Things I'm going to try/add/learn more about later :
 - Switch to usecases instead of services in application layer
