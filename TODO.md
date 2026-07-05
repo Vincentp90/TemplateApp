@@ -12,6 +12,7 @@ Polishing:
 
 
 Things I'm going to try/add/learn more about later :
+- Switch to usecases instead of services in application layer
 - Try to vibecode angular frontend
 - Auction: add end date to entity, remove static mutable Domain.Auction.Duration
 - Auction OCC: remove client side part since we also have the admin form which is more suitable for RowVersion round-trip, auction use case fits better with only server side OCC

@@ -12,4 +12,6 @@ Current year: 2026
 
 ### Project Overviews
 - **Frontend (React/TypeScript)**: [frontend/OVERVIEW.md](frontend/OVERVIEW.md)
-- **Backend (.NET 10 API)**: [api/WishlistApi/OVERVIEW.md](api/WishlistApi/OVERVIEW.md)
+- **Backend (.NET 10 APIs)**: [api/OVERVIEW.md](api/OVERVIEW.md)
+  - **WishlistApi**: [api/WishlistApi/OVERVIEW.md](api/WishlistApi/OVERVIEW.md)
+  - **SteamTracker**: [api/SteamTracker/OVERVIEW.md](api/SteamTracker/OVERVIEW.md)
