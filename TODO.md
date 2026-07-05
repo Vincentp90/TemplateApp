@@ -3,12 +3,11 @@ Agent: ignore this
 Microservices/message queue exercise:
 https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
-Next prompt:  
-- Continue steamtrackerplan.md, is it done or are there still things needed to finish end-to-end?
 
 Polishing:
-- SharedDbPriceReader: too much defensive programming. Just crash when connection string is empty. Any other places where this is checked?
 - SteamTrackerDbContextModelSnapshot -> What is the point of all the  HasColumnName here?
+- update nuget packages to latest
+- check all defensive programming if really necessary
 
 
 Things I'm going to try/add/learn more about later :

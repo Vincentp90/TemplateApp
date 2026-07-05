@@ -13,18 +13,15 @@ namespace Infrastructure.SharedDb;
 /// </summary>
 public class SharedDbPriceReader : ISharedDbPriceReader
 {
-    private readonly string? _connectionString;
+    private readonly string _connectionString;
 
     public SharedDbPriceReader(IConfiguration configuration)
     {
-        _connectionString = configuration.GetConnectionString("SteamTrackerConnection");
+        _connectionString = configuration.GetConnectionString("SteamTrackerConnection")!;
     }
 
     public async Task<Dictionary<int, GamePrice>> GetPricesAsync(IEnumerable<int> appIds)
     {
-        if (string.IsNullOrEmpty(_connectionString))
-            return new Dictionary<int, GamePrice>();
-
         if (appIds == null)
             return new Dictionary<int, GamePrice>();
 
@@ -48,9 +45,6 @@ public class SharedDbPriceReader : ISharedDbPriceReader
 
     public async Task<Dictionary<int, AlertRuleInfo>> GetAlertRulesAsync(string userId)
     {
-        if (string.IsNullOrEmpty(_connectionString))
-            return new Dictionary<int, AlertRuleInfo>();
-
         using var connection = new NpgsqlConnection(_connectionString);
 
         // TriggerBelowPrice is stored as "Amount|Currency" (combined column per AlertRuleConfig)
