@@ -20,7 +20,7 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException("Connection string 'SteamTracker' not configured.");
 
         services.AddDbContext<SteamTrackerDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention());
 
         // Repositories
         services.AddScoped<ITrackedGameRepository, TrackedGameRepository>();

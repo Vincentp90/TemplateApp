@@ -4,11 +4,11 @@ Microservices/message queue exercise:
 https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
 Next prompt:  
-- Make sure .UseSnakeCaseNamingConvention() is used in SteamTracker db
-- Finish end-to-end tests
+- Continue steamtrackerplan.md, is it done or are there still things needed to finish end-to-end?
 
 Polishing:
-- SharedDbPriceReader: too much defensive programming. Just crash when connection string is empty.
+- SharedDbPriceReader: too much defensive programming. Just crash when connection string is empty. Any other places where this is checked?
+- SteamTrackerDbContextModelSnapshot -> What is the point of all the  HasColumnName here?
 
 
 Things I'm going to try/add/learn more about later :

@@ -46,7 +46,7 @@ public class TestApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
                 services.Remove(dbDescriptor);
 
             services.AddDbContext<SteamTrackerDbContext>(options =>
-                options.UseNpgsql(_db.GetConnectionString()));
+                options.UseNpgsql(_db.GetConnectionString()).UseSnakeCaseNamingConvention());
 
             // Replace RabbitMQ connection
             services.AddSingleton<IConnection>(_ =>

@@ -15,11 +15,11 @@ public class GameConfig : IEntityTypeConfiguration<Game>
         
         // Store CurrentPrice as separate columns with shadow properties
         builder.Property<decimal?>("CurrentPriceAmount")
-            .HasColumnName("CurrentPriceAmount")
+            .HasColumnName("current_price_amount")
             .HasPrecision(10, 2)
             .IsRequired(false);
         builder.Property<string>("CurrentPriceCurrency")
-            .HasColumnName("CurrentPriceCurrency")
+            .HasColumnName("current_price_currency")
             .HasMaxLength(3)
             .IsRequired(false);
 

@@ -12,7 +12,7 @@ using SteamTracker.Infrastructure.Data;
 namespace SteamTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(SteamTrackerDbContext))]
-    [Migration("20260702142018_InitialCreate")]
+    [Migration("20260705080135_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace SteamTracker.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.17")
+                .HasAnnotation("ProductVersion", "10.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -29,106 +29,131 @@ namespace SteamTracker.Infrastructure.Migrations
                 {
                     b.Property<Guid>("AlertRuleId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("alert_rule_id");
 
                     b.Property<int>("AppId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("app_id");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<DateTimeOffset?>("LastTriggeredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_triggered_at");
 
                     b.Property<string>("TriggerBelowPrice")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("trigger_below_price");
 
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("user_id");
 
-                    b.HasKey("AlertRuleId");
+                    b.HasKey("AlertRuleId")
+                        .HasName("pk_alert_rules");
 
-                    b.HasIndex("UserId", "AppId");
+                    b.HasIndex("UserId", "AppId")
+                        .HasDatabaseName("ix_alert_rules_user_id_app_id");
 
-                    b.ToTable("AlertRules");
+                    b.ToTable("alert_rules", (string)null);
                 });
 
             modelBuilder.Entity("SteamTracker.Domain.Entities.Game", b =>
                 {
                     b.Property<int>("AppId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("app_id");
 
                     b.Property<string>("CurrentPrice")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("current_price");
 
                     b.Property<decimal?>("CurrentPriceAmount")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)")
-                        .HasColumnName("CurrentPriceAmount");
+                        .HasColumnName("current_price_amount");
 
                     b.Property<string>("CurrentPriceCurrency")
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)")
-                        .HasColumnName("CurrentPriceCurrency");
+                        .HasColumnName("current_price_currency");
 
                     b.Property<DateTimeOffset?>("LastCheckedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_checked_at");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("name");
 
-                    b.HasKey("AppId");
+                    b.HasKey("AppId")
+                        .HasName("pk_games");
 
-                    b.ToTable("Games");
+                    b.ToTable("games", (string)null);
                 });
 
             modelBuilder.Entity("SteamTracker.Domain.Entities.PriceSnapshot", b =>
                 {
                     b.Property<Guid>("SnapshotId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("snapshot_id");
 
                     b.Property<DateTimeOffset>("CapturedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("captured_at");
 
                     b.Property<int>("DiscountPercent")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("discount_percent");
 
                     b.Property<int>("GameId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("game_id");
 
                     b.Property<string>("Price")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("price");
 
-                    b.HasKey("SnapshotId");
+                    b.HasKey("SnapshotId")
+                        .HasName("pk_price_snapshots");
 
-                    b.HasIndex("GameId", "CapturedAt");
+                    b.HasIndex("GameId", "CapturedAt")
+                        .HasDatabaseName("ix_price_snapshots_game_id_captured_at");
 
-                    b.ToTable("PriceSnapshots");
+                    b.ToTable("price_snapshots", (string)null);
                 });
 
             modelBuilder.Entity("SteamTracker.Domain.Entities.TrackedGame", b =>
                 {
                     b.Property<int>("AppId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("app_id");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<DateTimeOffset>("TrackedSince")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("tracked_since");
 
-                    b.HasKey("AppId");
+                    b.HasKey("AppId")
+                        .HasName("pk_tracked_games");
 
-                    b.HasIndex("AppId");
+                    b.HasIndex("AppId")
+                        .HasDatabaseName("ix_tracked_games_app_id");
 
-                    b.ToTable("TrackedGames");
+                    b.ToTable("tracked_games", (string)null);
                 });
 
             modelBuilder.Entity("SteamTracker.Domain.Entities.PriceSnapshot", b =>
@@ -137,7 +162,8 @@ namespace SteamTracker.Infrastructure.Migrations
                         .WithMany("PriceSnapshots")
                         .HasForeignKey("GameId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_price_snapshots_games_game_id");
                 });
 
             modelBuilder.Entity("SteamTracker.Domain.Entities.Game", b =>

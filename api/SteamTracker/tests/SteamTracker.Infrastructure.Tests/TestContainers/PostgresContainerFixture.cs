@@ -42,6 +42,7 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
 
         var options = new DbContextOptionsBuilder<SteamTrackerDbContext>()
             .UseNpgsql(ConnectionString, o => o.EnableRetryOnFailure())
+            .UseSnakeCaseNamingConvention()
             .UseInternalServiceProvider(provider)
             .Options;
 
