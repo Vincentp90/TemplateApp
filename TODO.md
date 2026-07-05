@@ -5,7 +5,7 @@ https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
 
 Polishing:
-- do api/SteamTracker/CHECKLIST.md
+- Read through code
 
 
 Things I'm going to try/add/learn more about later :

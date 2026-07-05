@@ -131,7 +131,7 @@ public class PriceCheckConsumerTests
     }
 
     [Fact]
-    public async Task HandleBasicDeliverAsync_GenericException_NacksAndRequeues()
+    public async Task HandleBasicDeliverAsync_TransientException_NacksAndRequeues()
     {
         // Arrange
         const int appId = 11111;
@@ -141,7 +141,7 @@ public class PriceCheckConsumerTests
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
-            .ThrowsAsync(new InvalidOperationException("Steam API timeout"));
+            .ThrowsAsync(new TimeoutException("Steam API timeout"));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -158,6 +158,68 @@ public class PriceCheckConsumerTests
         _useCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<int>(), It.IsAny<Money>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _channelMock.Verify(
             x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: true, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleBasicDeliverAsync_HttpRequestException_NacksAndRequeues()
+    {
+        // Arrange
+        const int appId = 22222;
+        const ulong deliveryTag = 4;
+        var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+
+        _steamClientMock
+            .Setup(x => x.FetchPriceAsync(appId))
+            .ThrowsAsync(new HttpRequestException("Network error"));
+
+        // Act
+        await _consumer.HandleBasicDeliverAsync(
+            consumerTag: "tag",
+            deliveryTag: deliveryTag,
+            redelivered: false,
+            exchange: "",
+            routingKey: "",
+            properties: new BasicProperties(),
+            body: body,
+            CancellationToken.None);
+
+        // Assert — HttpRequestException is transient → requeue
+        _useCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<int>(), It.IsAny<Money>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _channelMock.Verify(
+            x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: true, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleBasicDeliverAsync_ProgrammingError_NacksWithoutRequeue()
+    {
+        // Arrange
+        const int appId = 11111;
+        const ulong deliveryTag = 4;
+        var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+
+        _steamClientMock
+            .Setup(x => x.FetchPriceAsync(appId))
+            .ThrowsAsync(new InvalidOperationException("Programming error"));
+
+        // Act
+        await _consumer.HandleBasicDeliverAsync(
+            consumerTag: "tag",
+            deliveryTag: deliveryTag,
+            redelivered: false,
+            exchange: "",
+            routingKey: "",
+            properties: new BasicProperties(),
+            body: body,
+            CancellationToken.None);
+
+        // Assert — programming error → dead-letter (requeue: false)
+        _useCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<int>(), It.IsAny<Money>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _channelMock.Verify(
+            x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: false, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -202,7 +264,7 @@ public class PriceCheckConsumerTests
     }
 
     [Fact]
-    public async Task HandleBasicDeliverAsync_InvalidJson_LogsErrorAndNacks()
+    public async Task HandleBasicDeliverAsync_InvalidJson_LogsErrorAndDeadLetters()
     {
         // Arrange
         const ulong deliveryTag = 5;
@@ -219,15 +281,15 @@ public class PriceCheckConsumerTests
             body: body,
             CancellationToken.None);
 
-        // Assert — deserialize throws JsonException → caught by generic handler → nack with requeue
+        // Assert — JsonException is a programming error → dead-letter (requeue: false)
         _useCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<int>(), It.IsAny<Money>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _channelMock.Verify(
-            x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: true, It.IsAny<CancellationToken>()),
+            x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: false, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Fact]
-    public async Task HandleBasicDeliverAsync_EmptyBody_LogsErrorAndNacksWithRequeue()
+    public async Task HandleBasicDeliverAsync_EmptyBody_LogsErrorAndDeadLetters()
     {
         // Arrange
         const ulong deliveryTag = 6;
@@ -244,10 +306,10 @@ public class PriceCheckConsumerTests
             body: body,
             CancellationToken.None);
 
-        // Assert — empty body throws JsonException → nack with requeue
+        // Assert — empty body throws JsonException → dead-letter (requeue: false)
         _useCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<int>(), It.IsAny<Money>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _channelMock.Verify(
-            x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: true, It.IsAny<CancellationToken>()),
+            x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: false, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -318,7 +380,7 @@ public class PriceCheckConsumerTests
     }
 
     [Fact]
-    public async Task HandleBasicDeliverAsync_UseCaseThrows_LogsErrorAndNacksWithRequeue()
+    public async Task HandleBasicDeliverAsync_UseCaseThrows_LogsErrorAndDeadLetters()
     {
         // Arrange
         const int appId = 88888;
@@ -346,9 +408,9 @@ public class PriceCheckConsumerTests
             body: body,
             CancellationToken.None);
 
-        // Assert — use case exception → nack with requeue
+        // Assert — programming error → dead-letter (requeue: false)
         _channelMock.Verify(
-            x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: true, It.IsAny<CancellationToken>()),
+            x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: false, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

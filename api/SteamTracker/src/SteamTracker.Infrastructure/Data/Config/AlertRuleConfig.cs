@@ -22,7 +22,7 @@ public class AlertRuleConfig : IEntityTypeConfiguration<AlertRule>
         // Convert Money value object to/from "Amount|Currency" string
         builder.Property(ar => ar.TriggerBelowPrice)
             .HasConversion(
-                v => $"{v.Amount}|{v.Currency}",
+                v => $"{v.Amount}|{v.Currency.Value}",
                 v => ParseMoney(v));
 
         builder.Property(ar => ar.LastTriggeredAt).IsRequired(false);

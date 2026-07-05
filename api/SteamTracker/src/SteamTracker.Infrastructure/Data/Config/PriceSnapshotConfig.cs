@@ -16,7 +16,7 @@ public class PriceSnapshotConfig : IEntityTypeConfiguration<PriceSnapshot>
         // Convert Money value object to/from "Amount|Currency" string
         builder.Property(ps => ps.Price)
             .HasConversion(
-                v => $"{v.Amount}|{v.Currency}",
+                v => $"{v.Amount}|{v.Currency.Value}",
                 v => ParseMoney(v));
     }
 

@@ -135,8 +135,8 @@ public class WishlistApiIntegrationTests : IClassFixture<TestApiFactory>
         // Act — app 99999 is not tracked
         var response = await Client.PostAsync("/api/games/99999/alert?thresholdAmount=10.0", null);
 
-        // Assert — InvalidOperationException → 500
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        // Assert — TrackingNotFoundException → 404
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]

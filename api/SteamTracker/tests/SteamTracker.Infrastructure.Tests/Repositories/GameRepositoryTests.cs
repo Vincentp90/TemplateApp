@@ -102,6 +102,6 @@ public class GameRepositoryTests : IDisposable
         // Assert
         result!.PriceSnapshots.Should().ContainSingle();
         result.PriceSnapshots[0].Price.Amount.Should().Be(9.99m);
-        result.PriceSnapshots[0].Price.Currency.Should().Be("EUR");
+        result.PriceSnapshots[0].Price.Currency.Value.Should().Be("EUR");
     }
 }

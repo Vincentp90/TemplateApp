@@ -1,5 +1,6 @@
 using SteamTracker.Application.Ports;
 using SteamTracker.Domain.Entities;
+using SteamTracker.Domain.Exceptions;
 using SteamTracker.Domain.ValueObjects;
 
 namespace SteamTracker.Application.UseCases;
@@ -25,7 +26,7 @@ public class SetAlertRuleUseCase : ISetAlertRuleUseCase
     {
         var trackedGame = await _trackedGameRepo.GetAsync(appId, cancellationToken);
         if (trackedGame is null || !trackedGame.IsActive)
-            throw new InvalidOperationException($"No active tracking for AppId {appId}.");
+            throw new TrackingNotFoundException($"No active tracking for AppId {appId}.");
 
         var rule = new AlertRule(
             Guid.NewGuid(),

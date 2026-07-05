@@ -26,7 +26,7 @@ public class GameConfig : IEntityTypeConfiguration<Game>
         // Convert Money value object to/from "Amount|Currency" string
         builder.Property<Money?>("CurrentPrice")
             .HasConversion(
-                v => v == null ? null : $"{v.Value.Amount}|{v.Value.Currency}",
+                v => v == null ? null : $"{v.Value.Amount}|{v.Value.Currency.Value}",
                 v => v == null ? null : ParseMoney(v!));
 
         builder.HasMany(g => g.PriceSnapshots)

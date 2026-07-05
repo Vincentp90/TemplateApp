@@ -15,6 +15,7 @@ public class ProcessPriceCheckUseCaseTests
     {
         var gameRepo = new Mock<IGameRepository>();
         var alertRuleRepo = new Mock<IAlertRuleRepository>();
+        alertRuleRepo.Setup(r => r.GetActiveRulesForAsync(It.IsAny<SteamAppId>())).ReturnsAsync(Array.Empty<AlertRule>());
         var notificationPublisher = new Mock<INotificationPublisher>();
         var evaluator = new PriceAlertEvaluator();
 
@@ -95,6 +96,7 @@ public class ProcessPriceCheckUseCaseTests
         gameRepo.Setup(r => r.GetAsync(It.IsAny<SteamAppId>())).ReturnsAsync((Game?)null);
 
         var alertRuleRepo = new Mock<IAlertRuleRepository>();
+        alertRuleRepo.Setup(r => r.GetActiveRulesForAsync(It.IsAny<SteamAppId>())).ReturnsAsync(Array.Empty<AlertRule>());
         var notificationPublisher = new Mock<INotificationPublisher>();
         var evaluator = new PriceAlertEvaluator();
 

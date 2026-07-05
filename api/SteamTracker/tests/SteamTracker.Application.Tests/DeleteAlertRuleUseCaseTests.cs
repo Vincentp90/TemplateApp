@@ -3,6 +3,7 @@ using Moq;
 using SteamTracker.Application.Ports;
 using SteamTracker.Application.UseCases;
 using SteamTracker.Domain.Entities;
+using SteamTracker.Domain.Exceptions;
 using SteamTracker.Domain.ValueObjects;
 
 namespace SteamTracker.Application.Tests;
@@ -19,7 +20,7 @@ public class DeleteAlertRuleUseCaseTests
 
         var act = async () => await useCase.ExecuteAsync("user-1", Guid.NewGuid());
 
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        await act.Should().ThrowAsync<AlertRuleNotFoundException>();
     }
 
     [Fact]
@@ -34,7 +35,7 @@ public class DeleteAlertRuleUseCaseTests
 
         var act = async () => await useCase.ExecuteAsync("user-1", rule.AlertRuleId);
 
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        await act.Should().ThrowAsync<AlertRuleNotFoundException>();
     }
 
     [Fact]

@@ -5,17 +5,25 @@ namespace SteamTracker.Domain.ValueObjects;
 /// </summary>
 public readonly struct Money : IEquatable<Money>
 {
-    public static Money Free { get; } = new(0m, "EUR") { IsFree = true };
+    public static Money Free { get; } = new(0m, new CurrencyCode("EUR")) { IsFree = true };
 
     public decimal Amount { get; }
-    public string Currency { get; }
+    public CurrencyCode Currency { get; }
     public bool IsFree { get; init; }
 
-    public Money(decimal amount, string currency = "EUR")
+    public Money(decimal amount, CurrencyCode currency)
     {
+        if (amount < 0m)
+            throw new ArgumentException("Money amount cannot be negative.", nameof(amount));
         Amount = amount;
-        Currency = currency ?? throw new ArgumentNullException(nameof(currency));
+        Currency = currency;
     }
+
+    /// <summary>
+    /// Convenience constructor with default EUR — delegates currency validation to <see cref="CurrencyCode"/>.
+    /// </summary>
+    public Money(decimal amount, string currency = "EUR")
+        : this(amount, new CurrencyCode(currency)) { }
 
     public bool Equals(Money other)
     {

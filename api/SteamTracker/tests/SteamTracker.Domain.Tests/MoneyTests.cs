@@ -10,7 +10,7 @@ public class MoneyTests
     {
         var free = Money.Free;
         free.Amount.Should().Be(0m);
-        free.Currency.Should().Be("EUR");
+        free.Currency.Value.Should().Be("EUR");
     }
 
     [Fact]
@@ -24,14 +24,14 @@ public class MoneyTests
     {
         var money = new Money(19.99m, "USD");
         money.Amount.Should().Be(19.99m);
-        money.Currency.Should().Be("USD");
+        money.Currency.Value.Should().Be("USD");
     }
 
     [Fact]
     public void Default_currency_is_eur()
     {
         var money = new Money(9.99m);
-        money.Currency.Should().Be("EUR");
+        money.Currency.Value.Should().Be("EUR");
     }
 
     [Fact]
@@ -81,6 +81,20 @@ public class MoneyTests
     public void Greater_than_says_paid_is_greater_than_free()
     {
         (new Money(1m) > Money.Free).Should().BeTrue();
+    }
+
+    [Fact]
+    public void Constructor_rejects_negative_amount()
+    {
+        var act = () => new Money(-1m, "EUR");
+        act.Should().Throw<ArgumentException>().WithMessage("Money amount cannot be negative.*");
+    }
+
+    [Fact]
+    public void Constructor_accepts_zero_amount()
+    {
+        var money = new Money(0m, "EUR");
+        money.Amount.Should().Be(0m);
     }
 
     [Fact]

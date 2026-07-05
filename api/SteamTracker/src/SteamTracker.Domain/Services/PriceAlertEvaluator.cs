@@ -10,7 +10,7 @@ public class PriceAlertEvaluator
 {
     public IEnumerable<AlertRule> Evaluate(Game game, IEnumerable<AlertRule> rules)
     {
-        if (game.CurrentPrice is null || rules is null)
+        if (game.CurrentPrice is null)
             return [];
 
         var price = game.CurrentPrice.Value;

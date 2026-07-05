@@ -201,7 +201,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         savedGame.Should().NotBeNull();
         savedGame!.CurrentPrice.Should().NotBeNull();
         savedGame.CurrentPrice!.Value.Amount.Should().Be(19.99m);
-        savedGame.CurrentPrice!.Value.Currency.Should().Be("EUR");
+        savedGame.CurrentPrice!.Value.Currency.Value.Should().Be("EUR");
         savedGame.Name.Should().Be("Test Game E2E");
         savedGame.LastCheckedAt.Should().NotBeNull();
 

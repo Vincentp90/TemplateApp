@@ -47,7 +47,7 @@ public class PostgresRepositoryIntegrationTests : IAsyncLifetime
         fetched.Name.Should().Be("Cyberpunk 2077");
         fetched.CurrentPrice.Should().NotBeNull();
         fetched.CurrentPrice!.Value.Amount.Should().Be(29.99m);
-        fetched.CurrentPrice.Value.Currency.Should().Be("USD");
+        fetched.CurrentPrice.Value.Currency.Value.Should().Be("USD");
         fetched.PriceSnapshots.Should().ContainSingle();
         fetched.PriceSnapshots[0].Price.Amount.Should().Be(29.99m);
     }
@@ -96,7 +96,7 @@ public class PostgresRepositoryIntegrationTests : IAsyncLifetime
         fetched.Should().NotBeNull();
         fetched!.UserId.Should().Be("user-1");
         fetched.TriggerBelowPrice.Amount.Should().Be(15m);
-        fetched.TriggerBelowPrice.Currency.Should().Be("EUR");
+        fetched.TriggerBelowPrice.Currency.Value.Should().Be("EUR");
         fetched.IsActive.Should().BeTrue();
 
         // Deactivate and verify

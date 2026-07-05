@@ -3,6 +3,7 @@ using Moq;
 using SteamTracker.Application.Ports;
 using SteamTracker.Application.UseCases;
 using SteamTracker.Domain.Entities;
+using SteamTracker.Domain.Exceptions;
 using SteamTracker.Domain.ValueObjects;
 
 namespace SteamTracker.Application.Tests;
@@ -21,7 +22,7 @@ public class SetAlertRuleUseCaseTests
 
         var act = async () => await useCase.ExecuteAsync("user-1", 42, 10m);
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
+        await act.Should().ThrowAsync<TrackingNotFoundException>()
             .WithMessage("No active tracking for AppId 42.");
     }
 
@@ -40,7 +41,7 @@ public class SetAlertRuleUseCaseTests
 
         var act = async () => await useCase.ExecuteAsync("user-1", 42, 10m);
 
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        await act.Should().ThrowAsync<TrackingNotFoundException>();
     }
 
     [Fact]

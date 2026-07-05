@@ -110,9 +110,23 @@ public class PriceCheckConsumer : AsyncEventingBasicConsumer
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing price check for delivery {DeliveryTag}", deliveryTag);
-            await _channel.BasicNackAsync(deliveryTag, multiple: false, requeue: true, cancellationToken);
+            var requeue = IsTransientException(ex);
+            _logger.LogError(ex, "Error processing price check for delivery {DeliveryTag} (requeue: {Requeue})", deliveryTag, requeue);
+            await _channel.BasicNackAsync(deliveryTag, multiple: false, requeue: requeue, cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// Classifies an exception as transient (retryable) or programming error (dead-letter).
+    /// </summary>
+    private static bool IsTransientException(Exception ex)
+    {
+        return ex is
+            TimeoutException or
+            OperationCanceledException or
+            HttpRequestException or
+            SteamRateLimitException or
+            IOException;
     }
 }
 
@@ -219,9 +233,23 @@ public class WishlistSyncConsumer : AsyncEventingBasicConsumer
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing wishlist sync message");
-            await _channel.BasicNackAsync(deliveryTag, multiple: false, requeue: true, cancellationToken);
+            var requeue = IsTransientException(ex);
+            _logger.LogError(ex, "Error processing wishlist sync message (requeue: {Requeue})", requeue);
+            await _channel.BasicNackAsync(deliveryTag, multiple: false, requeue: requeue, cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// Classifies an exception as transient (retryable) or programming error (dead-letter).
+    /// </summary>
+    private static bool IsTransientException(Exception ex)
+    {
+        return ex is
+            TimeoutException or
+            OperationCanceledException or
+            HttpRequestException or
+            SteamRateLimitException or
+            IOException;
     }
 }
 

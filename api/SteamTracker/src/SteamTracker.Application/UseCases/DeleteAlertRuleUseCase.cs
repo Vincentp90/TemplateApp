@@ -1,4 +1,5 @@
 using SteamTracker.Application.Ports;
+using SteamTracker.Domain.Exceptions;
 
 namespace SteamTracker.Application.UseCases;
 
@@ -18,7 +19,7 @@ public class DeleteAlertRuleUseCase : IDeleteAlertRuleUseCase
     {
         var rule = await _alertRuleRepo.GetAsync(alertRuleId, cancellationToken);
         if (rule is null || rule.UserId != userId)
-            throw new InvalidOperationException($"Alert rule {alertRuleId} not found for user {userId}.");
+            throw new AlertRuleNotFoundException($"Alert rule {alertRuleId} not found for user {userId}.");
 
         await _alertRuleRepo.DeleteAsync(rule, cancellationToken);
     }

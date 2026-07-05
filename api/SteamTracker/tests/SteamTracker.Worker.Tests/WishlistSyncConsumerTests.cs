@@ -164,9 +164,9 @@ public class WishlistSyncConsumerTests
     }
 
     [Fact]
-    public async Task HandleBasicDeliverAsync_MalformedJson_StillAcks()
+    public async Task HandleBasicDeliverAsync_MalformedJson_DeadLetters()
     {
-        // Arrange — invalid JSON triggers exception → nack with requeue
+        // Arrange — invalid JSON triggers exception → dead-letter
         var body = Encoding.UTF8.GetBytes("{ invalid json");
 
         // Act
@@ -180,9 +180,9 @@ public class WishlistSyncConsumerTests
             body: body,
             CancellationToken.None);
 
-        // Assert — JsonDocument.Parse throws → caught → nack with requeue
+        // Assert — JsonDocument.Parse throws → caught → dead-letter (requeue: false)
         _channelMock.Verify(
-            x => x.BasicNackAsync(6, multiple: false, requeue: true, It.IsAny<CancellationToken>()),
+            x => x.BasicNackAsync(6, multiple: false, requeue: false, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -214,7 +214,7 @@ public class WishlistSyncConsumerTests
     }
 
     [Fact]
-    public async Task HandleBasicDeliverAsync_AddUseCaseThrows_NacksAndRequeues()
+    public async Task HandleBasicDeliverAsync_AddUseCaseThrows_DeadLetters()
     {
         // Arrange
         var addedAt = new DateTimeOffset(2025, 6, 15, 10, 30, 0, TimeSpan.Zero);
@@ -236,14 +236,14 @@ public class WishlistSyncConsumerTests
             body: body,
             CancellationToken.None);
 
-        // Assert — exception during use case → nack with requeue
+        // Assert — programming error → dead-letter (requeue: false)
         _channelMock.Verify(
-            x => x.BasicNackAsync(8, multiple: false, requeue: true, It.IsAny<CancellationToken>()),
+            x => x.BasicNackAsync(8, multiple: false, requeue: false, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Fact]
-    public async Task HandleBasicDeliverAsync_RemoveUseCaseThrows_NacksAndRequeues()
+    public async Task HandleBasicDeliverAsync_RemoveUseCaseThrows_DeadLetters()
     {
         // Arrange
         var removedAt = new DateTimeOffset(2025, 7, 1, 12, 0, 0, TimeSpan.Zero);
@@ -265,9 +265,9 @@ public class WishlistSyncConsumerTests
             body: body,
             CancellationToken.None);
 
-        // Assert — exception during remove use case → nack with requeue
+        // Assert — programming error → dead-letter (requeue: false)
         _channelMock.Verify(
-            x => x.BasicNackAsync(9, multiple: false, requeue: true, It.IsAny<CancellationToken>()),
+            x => x.BasicNackAsync(9, multiple: false, requeue: false, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
