@@ -93,8 +93,8 @@ public sealed class SharedDbFixture : IAsyncLifetime
     }
 
     /// <summary>
-    /// Seeds SteamTracker's PascalCase tables with test data using raw SQL.
-    /// Tables: tracked_games, games, alert_rules
+    /// Seeds SteamTracker's snake_case tables with test data using raw SQL.
+    /// Tables: tracked_games, games, alert_rules (matching EF Core snake_case naming convention).
     /// </summary>
     public async Task SeedSteamTrackerAsync(string connectionString)
     {
@@ -105,54 +105,54 @@ public sealed class SharedDbFixture : IAsyncLifetime
         await connection.OpenAsync();
 
         const string sql = @"
-            -- Create TrackedGames table (PascalCase to match EF Core)
-            CREATE TABLE IF NOT EXISTS ""TrackedGames"" (
-                ""AppId"" INT PRIMARY KEY,
-                ""IsActive"" BOOLEAN NOT NULL,
-                ""TrackedSince"" TIMESTAMPTZ NOT NULL
+            -- Create tracked_games table (snake_case to match EF Core naming convention)
+            CREATE TABLE IF NOT EXISTS ""tracked_games"" (
+                ""app_id"" INT PRIMARY KEY,
+                ""is_active"" BOOLEAN NOT NULL,
+                ""tracked_since"" TIMESTAMPTZ NOT NULL
             );
 
-            -- Create Games table (PascalCase to match EF Core)
-            CREATE TABLE IF NOT EXISTS ""Games"" (
-                ""AppId"" INT PRIMARY KEY,
-                ""Name"" VARCHAR(256) NOT NULL,
-                ""CurrentPriceAmount"" DECIMAL(10,2),
-                ""CurrentPriceCurrency"" VARCHAR(3),
-                ""LastCheckedAt"" TIMESTAMPTZ
+            -- Create games table (snake_case to match EF Core naming convention)
+            CREATE TABLE IF NOT EXISTS ""games"" (
+                ""app_id"" INT PRIMARY KEY,
+                ""name"" VARCHAR(256) NOT NULL,
+                ""current_price_amount"" DECIMAL(10,2),
+                ""current_price_currency"" VARCHAR(3),
+                ""last_checked_at"" TIMESTAMPTZ
             );
 
-            -- Create AlertRules table (PascalCase to match EF Core)
-            CREATE TABLE IF NOT EXISTS ""AlertRules"" (
-                ""AlertRuleId"" UUID PRIMARY KEY,
-                ""UserId"" VARCHAR(128) NOT NULL,
-                ""AppId"" INT NOT NULL,
-                ""TriggerBelowPrice"" VARCHAR(20) NOT NULL,
-                ""IsActive"" BOOLEAN NOT NULL DEFAULT true,
-                ""LastTriggeredAt"" TIMESTAMPTZ
+            -- Create alert_rules table (snake_case to match EF Core naming convention)
+            CREATE TABLE IF NOT EXISTS ""alert_rules"" (
+                ""alert_rule_id"" UUID PRIMARY KEY,
+                ""user_id"" VARCHAR(128) NOT NULL,
+                ""app_id"" INT NOT NULL,
+                ""trigger_below_price"" VARCHAR(20) NOT NULL,
+                ""is_active"" BOOLEAN NOT NULL DEFAULT true,
+                ""last_triggered_at"" TIMESTAMPTZ
             );
 
             -- Insert test tracked games
-            INSERT INTO ""TrackedGames"" (""AppId"", ""IsActive"", ""TrackedSince"") VALUES
+            INSERT INTO ""tracked_games"" (""app_id"", ""is_active"", ""tracked_since"") VALUES
                 (42, true, '2025-01-01T00:00:00Z'),
                 (100, true, '2025-01-02T00:00:00Z'),
                 (200, true, '2025-01-03T00:00:00Z'),
                 (300, false, '2025-01-04T00:00:00Z')
-            ON CONFLICT (""AppId"") DO NOTHING;
+            ON CONFLICT (""app_id"") DO NOTHING;
 
             -- Insert test games with prices
-            INSERT INTO ""Games"" (""AppId"", ""Name"", ""CurrentPriceAmount"", ""CurrentPriceCurrency"", ""LastCheckedAt"") VALUES
+            INSERT INTO ""games"" (""app_id"", ""name"", ""current_price_amount"", ""current_price_currency"", ""last_checked_at"") VALUES
                 (42, 'Test Game Alpha', 19.99, 'EUR', '2025-07-01T12:00:00Z'),
                 (100, 'Test Game Beta', 29.99, 'EUR', '2025-07-01T12:00:00Z'),
                 (200, 'Free To Play Game', NULL, NULL, NULL)
-            ON CONFLICT (""AppId"") DO NOTHING;
+            ON CONFLICT (""app_id"") DO NOTHING;
 
             -- Insert test alert rules
-            INSERT INTO ""AlertRules"" (""AlertRuleId"", ""UserId"", ""AppId"", ""TriggerBelowPrice"", ""IsActive"", ""LastTriggeredAt"") VALUES
+            INSERT INTO ""alert_rules"" (""alert_rule_id"", ""user_id"", ""app_id"", ""trigger_below_price"", ""is_active"", ""last_triggered_at"") VALUES
                 ('a0000000-0000-0000-0000-000000000001'::uuid, 'user-1', 42, '15.00|EUR', true, NULL),
                 ('a0000000-0000-0000-0000-000000000002'::uuid, 'user-1', 100, '25.00|EUR', true, NULL),
                 ('a0000000-0000-0000-0000-000000000003'::uuid, 'user-1', 200, '5.00|EUR', false, NULL),
                 ('a0000000-0000-0000-0000-000000000004'::uuid, 'user-2', 42, '10.00|EUR', true, '2025-06-01T10:00:00Z')
-            ON CONFLICT (""AlertRuleId"") DO NOTHING;
+            ON CONFLICT (""alert_rule_id"") DO NOTHING;
         ";
 
         using var command = new Npgsql.NpgsqlCommand(sql, connection);

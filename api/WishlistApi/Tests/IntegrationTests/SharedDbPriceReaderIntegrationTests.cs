@@ -7,7 +7,7 @@ namespace Tests.IntegrationTests;
 
 /// <summary>
 /// Integration tests for SharedDbPriceReader using a real Postgres container
-/// with SteamTracker's PascalCase tables.
+/// with SteamTracker's snake_case tables (matching EF Core naming convention).
 /// </summary>
 public class SharedDbPriceReaderIntegrationTests : IAsyncLifetime
 {

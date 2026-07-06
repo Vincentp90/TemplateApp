@@ -13,6 +13,7 @@ services:
       - 5432:5432
     environment:
       POSTGRES_PASSWORD: example
+      POSTGRES_DB: steamtracker
     volumes:
       - db_data:/var/lib/postgresql
 
@@ -51,6 +52,21 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Devcontainer
       - ASPNETCORE_URLS=http://+:5186
+
+  steamtracker-worker:
+    build: 
+      context: ./api/SteamTracker/src
+      dockerfile: Dockerfile.dev
+    depends_on:
+      - db
+      - rabbitmq
+    volumes: 
+      - .:/workspace
+    working_dir: /workspace/api/SteamTracker/src/SteamTracker.Worker
+    command: dotnet run --no-launch-profile -- --Logging:LogLevel:Default=Warning
+    environment:
+      - ConnectionStrings__SteamTracker=Host=db;Database=steamtracker;Username=postgres;Password=example
+      - RabbitMQ__HostName=rabbitmq
 
 volumes:
   db_data:

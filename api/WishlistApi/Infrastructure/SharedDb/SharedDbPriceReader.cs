@@ -9,7 +9,7 @@ namespace Infrastructure.SharedDb;
 /// <summary>
 /// Dapper-based reader for SteamTracker's database.
 /// Reads prices from the games table and alert rules from the alert_rules table.
-/// Uses PascalCase column names to match SteamTracker's EF Core conventions.
+/// Uses snake_case column names with PascalCase aliases for Dapper materialization.
 /// </summary>
 public class SharedDbPriceReader : ISharedDbPriceReader
 {
@@ -29,39 +29,55 @@ public class SharedDbPriceReader : ISharedDbPriceReader
         if (!ids.Any())
             return new Dictionary<int, GamePrice>();
 
-        using var connection = new NpgsqlConnection(_connectionString);
+        try
+        {
+            using var connection = new NpgsqlConnection(_connectionString);
 
-        const string sql = @"
-            SELECT ""AppId"", ""CurrentPriceAmount"", ""CurrentPriceCurrency"", ""LastCheckedAt""
-            FROM ""Games""
-            WHERE ""AppId"" = ANY(@Ids)";
+            const string sql = @"
+                SELECT ""app_id"" AS ""AppId"", ""current_price_amount"" AS ""CurrentPriceAmount"", ""current_price_currency"" AS ""CurrentPriceCurrency"", ""last_checked_at"" AS ""LastCheckedAt""
+                FROM ""games""
+                WHERE ""app_id"" = ANY(@Ids)";
 
-        var rows = await connection.QueryAsync<GamePriceRow>(sql, new { Ids = ids });
+            var rows = await connection.QueryAsync<GamePriceRow>(sql, new { Ids = ids });
 
-        return rows
-            .Where(r => r.AppId > 0)
-            .ToDictionary(r => r.AppId, r => new GamePrice(r.CurrentPriceAmount, r.CurrentPriceCurrency, r.LastCheckedAt));
+            return rows
+                .Where(r => r.AppId > 0)
+                .ToDictionary(r => r.AppId, r => new GamePrice(r.CurrentPriceAmount, r.CurrentPriceCurrency, r.LastCheckedAt));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SharedDbPriceReader] Failed to read prices from SteamTracker DB: {ex.Message}");
+            return new Dictionary<int, GamePrice>();
+        }
     }
 
     public async Task<Dictionary<int, AlertRuleInfo>> GetAlertRulesAsync(string userId)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
+        try
+        {
+            using var connection = new NpgsqlConnection(_connectionString);
 
-        // TriggerBelowPrice is stored as "Amount|Currency" (combined column per AlertRuleConfig)
-        const string sql = @"
-            SELECT ""AlertRuleId"", ""AppId"", ""TriggerBelowPrice""
-            FROM ""AlertRules""
-            WHERE ""UserId"" = @UserId AND ""IsActive"" = true";
+            // TriggerBelowPrice is stored as "Amount|Currency" (combined column per AlertRuleConfig)
+            const string sql = @"
+                SELECT ""alert_rule_id"" AS ""AlertRuleId"", ""app_id"" AS ""AppId"", ""trigger_below_price"" AS ""TriggerBelowPrice""
+                FROM ""alert_rules""
+                WHERE ""user_id"" = @UserId AND ""is_active"" = true";
 
-        var rows = await connection.QueryAsync<AlertRuleRow>(sql, new { UserId = userId });
+            var rows = await connection.QueryAsync<AlertRuleRow>(sql, new { UserId = userId });
 
-        return rows
-            .Where(r => r.AppId > 0)
-            .Select(ParseAlertRule)
-            .Where(r => r.HasValue)
-            .ToDictionary(
-                r => r!.Value.AppId,
-                r => r!.Value.Info);
+            return rows
+                .Where(r => r.AppId > 0)
+                .Select(ParseAlertRule)
+                .Where(r => r.HasValue)
+                .ToDictionary(
+                    r => r!.Value.AppId,
+                    r => r!.Value.Info);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SharedDbPriceReader] Failed to read alert rules from SteamTracker DB: {ex.Message}");
+            return new Dictionary<int, AlertRuleInfo>();
+        }
     }
 
     private static (decimal Amount, string Currency) ParseMoneyString(string value)
