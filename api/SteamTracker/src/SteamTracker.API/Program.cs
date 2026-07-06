@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using SteamTracker.Application.Ports;
 using SteamTracker.Application.UseCases;
 using SteamTracker.Domain.Services;
-using SteamTracker.Domain.ValueObjects;
 using SteamTracker.Infrastructure;
 using SteamTracker.Infrastructure.Data;
 
@@ -17,7 +16,6 @@ builder.Services.AddScoped<ISetAlertRuleUseCase, SetAlertRuleUseCase>();
 builder.Services.AddScoped<IDeleteAlertRuleUseCase, DeleteAlertRuleUseCase>();
 
 builder.Services.AddScoped<IProcessPriceCheckUseCase, ProcessPriceCheckUseCase>();
-builder.Services.AddScoped<IHandleWishlistItemAddedUseCase, HandleWishlistItemAddedUseCase>();
 builder.Services.AddScoped<IHandleWishlistItemRemovedUseCase, HandleWishlistItemRemovedUseCase>();
 builder.Services.AddSingleton<PriceAlertEvaluator>();
 
@@ -64,24 +62,6 @@ api.MapDelete("/alert/{alertRuleId}", async (
     return Results.NoContent();
 });
 
-// POST /api/internal/price-check — called by PriceCheckWorker
-api.MapPost("/internal/price-check", async (
-    IProcessPriceCheckUseCase useCase,
-    [FromBody] PriceCheckRequest request) =>
-{
-    await useCase.ExecuteAsync(request.AppId, new Money(request.Price, "EUR"), request.Name);
-    return Results.Ok();
-});
-
-// POST /api/internal/wishlist-item-added — called by WishlistSyncWorker
-api.MapPost("/internal/wishlist-item-added", async (
-    IHandleWishlistItemAddedUseCase useCase,
-    [FromBody] WishlistItemEvent request) =>
-{
-    await useCase.ExecuteAsync(request.UserId, request.AppId, request.AddedAt);
-    return Results.Ok();
-});
-
 // POST /api/internal/wishlist-item-removed — called by WishlistSyncWorker
 api.MapPost("/internal/wishlist-item-removed", async (
     IHandleWishlistItemRemovedUseCase useCase,
@@ -94,5 +74,4 @@ api.MapPost("/internal/wishlist-item-removed", async (
 app.Run();
 
 // Request DTOs
-public record PriceCheckRequest(int AppId, decimal Price, string Name);
 public record WishlistItemEvent(string UserId, int AppId, DateTimeOffset AddedAt);

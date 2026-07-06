@@ -135,56 +135,6 @@ public class WishlistApiIntegrationTests : IClassFixture<TestApiFactory>
 
 
     [Fact]
-    public async Task POST_internal_priceCheck_ProcessesPrice()
-    {
-        // Arrange — ensure tracked game exists
-        await WithDbContextAsync(async db =>
-        {
-            var games = await db.TrackedGames.ToListAsync();
-            if (!games.Any(tg => tg.AppId.Value == 777))
-            {
-                var game = TrackedGame.StartTracking(new SteamAppId(777), DateTimeOffset.UtcNow);
-                await db.TrackedGames.AddAsync(game);
-                await db.SaveChangesAsync();
-            }
-        });
-
-        // Act
-        var payload = new { appId = 777, price = 5.50m, name = "Cheap Game" };
-        var response = await Client.PostAsJsonAsync("/api/internal/price-check", payload);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        // Verify price was saved
-        await WithDbContextAsync(async db =>
-        {
-            var savedGame = (await db.Games.ToListAsync()).FirstOrDefault(g => g.AppId.Value == 777);
-            savedGame.Should().NotBeNull();
-            savedGame!.CurrentPrice!.Value.Amount.Should().Be(5.50m);
-        });
-    }
-
-    [Fact]
-    public async Task POST_internal_wishlistAdded_CreatesTrackedGame()
-    {
-        // Act
-        var payload = new { userId = "new-user", appId = 888, addedAt = DateTimeOffset.UtcNow };
-        var response = await Client.PostAsJsonAsync("/api/internal/wishlist-item-added", payload);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        // Verify tracked game was created
-        await WithDbContextAsync(async db =>
-        {
-            var tracked = (await db.TrackedGames.ToListAsync()).FirstOrDefault(tg => tg.AppId.Value == 888);
-            tracked.Should().NotBeNull();
-            tracked!.IsActive.Should().BeTrue();
-        });
-    }
-
-    [Fact]
     public async Task POST_internal_wishlistRemoved_DeactivatesTrackedGame()
     {
         // Arrange
