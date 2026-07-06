@@ -6,7 +6,6 @@ SteamTracker
 
 Final steps:
 - Read through tests
-- What happens if a game is removed from all wishlists? is pricesnapshot ever cleaned up?
 - Test without steamtracker
 - add steamtracker to dockercompose
 - final test

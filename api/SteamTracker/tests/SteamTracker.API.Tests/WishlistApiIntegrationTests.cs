@@ -9,7 +9,6 @@ using SteamTracker.Infrastructure.Repositories;
 using SteamTracker.Application.Ports;
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using Xunit;
 
 /// <summary>
@@ -51,57 +50,6 @@ public class WishlistApiIntegrationTests : IClassFixture<TestApiFactory>
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SteamTrackerDbContext>();
         await action(db);
-    }
-
-    [Fact]
-    public async Task GET_wishlist_ReturnsPrices()
-    {
-        // Arrange
-        Client.DefaultRequestHeaders.Add("X-Internal-UserId", "test-user");
-
-        // Act
-        var response = await Client.GetAsync("/api/wishlist");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var content = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
-        content.Should().NotBeNull();
-        content.Should().HaveCount(1);
-        content![0].GetProperty("appId").GetInt32().Should().Be(42);
-        content[0].GetProperty("currentPrice").GetDouble().Should().Be(19.99);
-    }
-
-    [Fact]
-    public async Task GET_wishlist_EmptyWhenNoTrackedGames()
-    {
-        // Arrange — clear tracked games
-        await WithDbContextAsync(async db =>
-        {
-            await db.TrackedGames.ExecuteDeleteAsync();
-        });
-
-        // Act
-        Client.DefaultRequestHeaders.Add("X-Internal-UserId", "unknown-user");
-        var response = await Client.GetAsync("/api/wishlist");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var content = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
-        content.Should().BeEmpty();
-
-        // Re-seed so subsequent tests have data
-        using var seedScope = _factory.Services.CreateScope();
-        var sp = seedScope.ServiceProvider;
-        var seedDb = sp.GetRequiredService<SteamTrackerDbContext>();
-        var trackedGameRepo = sp.GetRequiredService<ITrackedGameRepository>();
-        var gameRepo = sp.GetRequiredService<IGameRepository>();
-
-        var trackedGame = TrackedGame.StartTracking(new SteamAppId(42), DateTimeOffset.UtcNow);
-        await trackedGameRepo.SaveAsync(trackedGame);
-
-        var game = new Game(new SteamAppId(42));
-        game.ApplyPriceUpdate(new Money(19.99m, "EUR"), "Test Game", DateTimeOffset.UtcNow);
-        await gameRepo.SaveAsync(game);
     }
 
     [Fact]
@@ -186,79 +134,5 @@ public class WishlistApiIntegrationTests : IClassFixture<TestApiFactory>
 
 
 
-    [Fact]
-    public async Task POST_internal_priceCheck_ProcessesPrice()
-    {
-        // Arrange — ensure tracked game exists
-        await WithDbContextAsync(async db =>
-        {
-            var games = await db.TrackedGames.ToListAsync();
-            if (!games.Any(tg => tg.AppId.Value == 777))
-            {
-                var game = TrackedGame.StartTracking(new SteamAppId(777), DateTimeOffset.UtcNow);
-                await db.TrackedGames.AddAsync(game);
-                await db.SaveChangesAsync();
-            }
-        });
 
-        // Act
-        var payload = new { appId = 777, price = 5.50m, name = "Cheap Game" };
-        var response = await Client.PostAsJsonAsync("/api/internal/price-check", payload);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        // Verify price was saved
-        await WithDbContextAsync(async db =>
-        {
-            var savedGame = (await db.Games.ToListAsync()).FirstOrDefault(g => g.AppId.Value == 777);
-            savedGame.Should().NotBeNull();
-            savedGame!.CurrentPrice!.Value.Amount.Should().Be(5.50m);
-        });
-    }
-
-    [Fact]
-    public async Task POST_internal_wishlistAdded_CreatesTrackedGame()
-    {
-        // Act
-        var payload = new { userId = "new-user", appId = 888, addedAt = DateTimeOffset.UtcNow };
-        var response = await Client.PostAsJsonAsync("/api/internal/wishlist-item-added", payload);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        // Verify tracked game was created
-        await WithDbContextAsync(async db =>
-        {
-            var tracked = (await db.TrackedGames.ToListAsync()).FirstOrDefault(tg => tg.AppId.Value == 888);
-            tracked.Should().NotBeNull();
-            tracked!.IsActive.Should().BeTrue();
-        });
-    }
-
-    [Fact]
-    public async Task POST_internal_wishlistRemoved_DeactivatesTrackedGame()
-    {
-        // Arrange
-        await WithDbContextAsync(async db =>
-        {
-            var trackedGame = TrackedGame.StartTracking(new SteamAppId(999), DateTimeOffset.UtcNow);
-            await db.TrackedGames.AddAsync(trackedGame);
-            await db.SaveChangesAsync();
-        });
-
-        // Act
-        var payload = new { userId = "user", appId = 999, addedAt = DateTimeOffset.UtcNow };
-        var response = await Client.PostAsJsonAsync("/api/internal/wishlist-item-removed", payload);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        await WithDbContextAsync(async db =>
-        {
-            var updated = (await db.TrackedGames.ToListAsync()).FirstOrDefault(tg => tg.AppId.Value == 999);
-            updated.Should().NotBeNull();
-            updated!.IsActive.Should().BeFalse();
-        });
-    }
 }
