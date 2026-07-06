@@ -15,7 +15,13 @@ hostBuilder.Services.AddInfrastructure(hostBuilder.Configuration);
 hostBuilder.Services.AddScoped<ISetAlertRuleUseCase, SetAlertRuleUseCase>();
 hostBuilder.Services.AddScoped<IDeleteAlertRuleUseCase, DeleteAlertRuleUseCase>();
 hostBuilder.Services.AddScoped<IGetWishlistWithPricesQuery, GetWishlistWithPricesQuery>();
-hostBuilder.Services.AddScoped<IProcessPriceCheckUseCase, ProcessPriceCheckUseCase>();
+hostBuilder.Services.AddScoped<IProcessPriceCheckUseCase>(sp =>
+    new ProcessPriceCheckUseCase(
+        sp.GetRequiredService<IGameRepository>(),
+        sp.GetRequiredService<IAlertRuleRepository>(),
+        sp.GetRequiredService<INotificationPublisher>(),
+        sp.GetRequiredService<PriceAlertEvaluator>(),
+        hostBuilder.Configuration));
 hostBuilder.Services.AddScoped<IHandleWishlistItemAddedUseCase, HandleWishlistItemAddedUseCase>();
 hostBuilder.Services.AddScoped<IHandleWishlistItemRemovedUseCase, HandleWishlistItemRemovedUseCase>();
 hostBuilder.Services.AddSingleton<PriceAlertEvaluator>();

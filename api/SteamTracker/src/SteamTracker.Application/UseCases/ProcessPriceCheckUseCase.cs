@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using SteamTracker.Application.Ports;
 using SteamTracker.Domain.Entities;
 using SteamTracker.Domain.Services;
@@ -15,23 +16,33 @@ public class ProcessPriceCheckUseCase : IProcessPriceCheckUseCase
     private readonly IAlertRuleRepository _alertRuleRepo;
     private readonly INotificationPublisher _notificationPublisher;
     private readonly PriceAlertEvaluator _evaluator;
+    private readonly bool _alertsEnabled;
 
     public ProcessPriceCheckUseCase(
         IGameRepository gameRepo,
         IAlertRuleRepository alertRuleRepo,
         INotificationPublisher notificationPublisher)
-        : this(gameRepo, alertRuleRepo, notificationPublisher, new PriceAlertEvaluator()) { }
+        : this(gameRepo, alertRuleRepo, notificationPublisher, new PriceAlertEvaluator(), null) { }
 
     public ProcessPriceCheckUseCase(
         IGameRepository gameRepo,
         IAlertRuleRepository alertRuleRepo,
         INotificationPublisher notificationPublisher,
         PriceAlertEvaluator evaluator)
+        : this(gameRepo, alertRuleRepo, notificationPublisher, evaluator, null) { }
+
+    public ProcessPriceCheckUseCase(
+        IGameRepository gameRepo,
+        IAlertRuleRepository alertRuleRepo,
+        INotificationPublisher notificationPublisher,
+        PriceAlertEvaluator evaluator,
+        IConfiguration? configuration)
     {
         _gameRepo = gameRepo;
         _alertRuleRepo = alertRuleRepo;
         _notificationPublisher = notificationPublisher;
         _evaluator = evaluator;
+        _alertsEnabled = configuration?["RabbitMQ:AlertsEnabled"] != "false";
     }
 
     public async Task ExecuteAsync(int appId, Money price, string name, CancellationToken cancellationToken = default)
@@ -40,6 +51,9 @@ public class ProcessPriceCheckUseCase : IProcessPriceCheckUseCase
 
         game.ApplyPriceUpdate(price, name, DateTimeOffset.UtcNow);
         await _gameRepo.SaveAsync(game, cancellationToken);
+
+        if (!_alertsEnabled)
+            return;
 
         var rules = await _alertRuleRepo.GetActiveRulesForAsync(game.AppId, cancellationToken);
         var triggered = _evaluator.Evaluate(game, rules);

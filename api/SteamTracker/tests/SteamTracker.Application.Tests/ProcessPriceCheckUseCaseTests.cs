@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using FluentAssertions;
 using Moq;
 using SteamTracker.Application.Ports;
@@ -18,12 +19,15 @@ public class ProcessPriceCheckUseCaseTests
         alertRuleRepo.Setup(r => r.GetActiveRulesForAsync(It.IsAny<SteamAppId>())).ReturnsAsync(Array.Empty<AlertRule>());
         var notificationPublisher = new Mock<INotificationPublisher>();
         var evaluator = new PriceAlertEvaluator();
+        var config = new Mock<IConfiguration>();
+        config.Setup(c => c["RabbitMQ:AlertsEnabled"]).Returns("true");
 
         var useCase = new ProcessPriceCheckUseCase(
             gameRepo.Object,
             alertRuleRepo.Object,
             notificationPublisher.Object,
-            evaluator);
+            evaluator,
+            config.Object);
 
         await useCase.ExecuteAsync(42, new Money(9.99m), "Test Game");
 
@@ -46,12 +50,15 @@ public class ProcessPriceCheckUseCaseTests
 
         var notificationPublisher = new Mock<INotificationPublisher>();
         var evaluator = new PriceAlertEvaluator();
+        var config = new Mock<IConfiguration>();
+        config.Setup(c => c["RabbitMQ:AlertsEnabled"]).Returns("true");
 
         var useCase = new ProcessPriceCheckUseCase(
             gameRepo.Object,
             alertRuleRepo.Object,
             notificationPublisher.Object,
-            evaluator);
+            evaluator,
+            config.Object);
 
         // Price is below threshold, so alert should trigger
         await useCase.ExecuteAsync(42, new Money(5m), "Test Game");
@@ -74,12 +81,15 @@ public class ProcessPriceCheckUseCaseTests
 
         var notificationPublisher = new Mock<INotificationPublisher>();
         var evaluator = new PriceAlertEvaluator();
+        var config = new Mock<IConfiguration>();
+        config.Setup(c => c["RabbitMQ:AlertsEnabled"]).Returns("true");
 
         var useCase = new ProcessPriceCheckUseCase(
             gameRepo.Object,
             alertRuleRepo.Object,
             notificationPublisher.Object,
-            evaluator);
+            evaluator,
+            config.Object);
 
         // Price is above threshold, no alert
         await useCase.ExecuteAsync(42, new Money(10m), "Test Game");
@@ -87,6 +97,77 @@ public class ProcessPriceCheckUseCaseTests
         notificationPublisher.Verify(
             n => n.PublishAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<decimal>(), It.IsAny<string>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_alertsDisabled_skipsRuleEvaluationAndPublishing()
+    {
+        var game = new Game(new SteamAppId(42));
+        var gameRepo = new Mock<IGameRepository>();
+        gameRepo.Setup(r => r.GetAsync(It.IsAny<SteamAppId>())).ReturnsAsync(game);
+
+        var rule = new AlertRule(Guid.NewGuid(), "user-1", new SteamAppId(42), new Money(10m));
+        var alertRuleRepo = new Mock<IAlertRuleRepository>();
+        alertRuleRepo.Setup(r => r.GetActiveRulesForAsync(It.IsAny<SteamAppId>())).ReturnsAsync(new[] { rule });
+
+        var notificationPublisher = new Mock<INotificationPublisher>();
+        var evaluator = new PriceAlertEvaluator();
+
+        var config = new Mock<IConfiguration>();
+        config.Setup(c => c["RabbitMQ:AlertsEnabled"]).Returns("false");
+
+        var useCase = new ProcessPriceCheckUseCase(
+            gameRepo.Object,
+            alertRuleRepo.Object,
+            notificationPublisher.Object,
+            evaluator,
+            config.Object);
+
+        // Price is below threshold, but alerts are disabled
+        await useCase.ExecuteAsync(42, new Money(5m), "Test Game");
+
+        // Alert rules should NOT be queried (implies evaluator also not called)
+        alertRuleRepo.Verify(r => r.GetActiveRulesForAsync(It.IsAny<SteamAppId>()), Times.Never);
+        // Publisher should NOT be called
+        notificationPublisher.Verify(
+            n => n.PublishAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<decimal>(), It.IsAny<string>()),
+            Times.Never);
+        // Price save should still happen
+        gameRepo.Verify(r => r.SaveAsync(It.IsAny<Game>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_alertsEnabledByDefault_skipsNothing()
+    {
+        var game = new Game(new SteamAppId(42));
+        var gameRepo = new Mock<IGameRepository>();
+        gameRepo.Setup(r => r.GetAsync(It.IsAny<SteamAppId>())).ReturnsAsync(game);
+
+        var rule = new AlertRule(Guid.NewGuid(), "user-1", new SteamAppId(42), new Money(10m));
+        var alertRuleRepo = new Mock<IAlertRuleRepository>();
+        alertRuleRepo.Setup(r => r.GetActiveRulesForAsync(It.IsAny<SteamAppId>())).ReturnsAsync(new[] { rule });
+
+        var notificationPublisher = new Mock<INotificationPublisher>();
+        var evaluator = new PriceAlertEvaluator();
+
+        var config = new Mock<IConfiguration>();
+        config.Setup(c => c["RabbitMQ:AlertsEnabled"]).Returns("true");
+
+        var useCase = new ProcessPriceCheckUseCase(
+            gameRepo.Object,
+            alertRuleRepo.Object,
+            notificationPublisher.Object,
+            evaluator,
+            config.Object);
+
+        // Price is below threshold
+        await useCase.ExecuteAsync(42, new Money(5m), "Test Game");
+
+        // Alert rules should be queried and publisher called
+        alertRuleRepo.Verify(r => r.GetActiveRulesForAsync(It.IsAny<SteamAppId>()), Times.Once);
+        notificationPublisher.Verify(
+            n => n.PublishAsync(rule.AlertRuleId, "user-1", 42, 5m, "EUR"),
+            Times.Once);
     }
 
     [Fact]
@@ -99,12 +180,15 @@ public class ProcessPriceCheckUseCaseTests
         alertRuleRepo.Setup(r => r.GetActiveRulesForAsync(It.IsAny<SteamAppId>())).ReturnsAsync(Array.Empty<AlertRule>());
         var notificationPublisher = new Mock<INotificationPublisher>();
         var evaluator = new PriceAlertEvaluator();
+        var config = new Mock<IConfiguration>();
+        config.Setup(c => c["RabbitMQ:AlertsEnabled"]).Returns("true");
 
         var useCase = new ProcessPriceCheckUseCase(
             gameRepo.Object,
             alertRuleRepo.Object,
             notificationPublisher.Object,
-            evaluator);
+            evaluator,
+            config.Object);
 
         await useCase.ExecuteAsync(42, new Money(9.99m), "New Game");
 

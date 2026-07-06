@@ -27,7 +27,7 @@ public class AlertRule
 
     public bool ShouldTrigger(Money currentPrice)
     {
-        if (currentPrice.IsFree) return false;
+        if (currentPrice.IsFree) return false;//TODO if game is usually not free but now it's temporarily free then we still don't send alert
         return currentPrice <= TriggerBelowPrice;
     }
 

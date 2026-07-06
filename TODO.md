@@ -4,10 +4,12 @@ Microservices/message queue exercise:
 https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
 
-Polishing:
-- verbose logging in FetchPriceAsync
-- Read through code
-- lower steam api call max rate
+Final steps:
+- Read through tests
+- What happens if a game is removed from all wishlists? is pricesnapshot ever cleaned up?
+- Test without steamtracker
+- add steamtracker to dockercompose
+- final test
 
 Things I'm going to try/add/learn more about later :
 - Switch to usecases instead of services in application layer
