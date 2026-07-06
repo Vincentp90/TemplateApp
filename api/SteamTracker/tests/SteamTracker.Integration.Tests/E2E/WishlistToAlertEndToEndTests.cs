@@ -103,7 +103,6 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         // Use cases
         services.AddScoped<ISetAlertRuleUseCase, SetAlertRuleUseCase>();
         services.AddScoped<IDeleteAlertRuleUseCase, DeleteAlertRuleUseCase>();
-        services.AddScoped<IGetWishlistWithPricesQuery, GetWishlistWithPricesQuery>();
         services.AddScoped<IProcessPriceCheckUseCase, ProcessPriceCheckUseCase>();
         services.AddScoped<IHandleWishlistItemAddedUseCase, HandleWishlistItemAddedUseCase>();
         services.AddScoped<IHandleWishlistItemRemovedUseCase, HandleWishlistItemRemovedUseCase>();

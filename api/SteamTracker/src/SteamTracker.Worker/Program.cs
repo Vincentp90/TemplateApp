@@ -14,7 +14,6 @@ hostBuilder.Services.AddInfrastructure(hostBuilder.Configuration);
 // Application — use cases
 hostBuilder.Services.AddScoped<ISetAlertRuleUseCase, SetAlertRuleUseCase>();
 hostBuilder.Services.AddScoped<IDeleteAlertRuleUseCase, DeleteAlertRuleUseCase>();
-hostBuilder.Services.AddScoped<IGetWishlistWithPricesQuery, GetWishlistWithPricesQuery>();
 hostBuilder.Services.AddScoped<IProcessPriceCheckUseCase>(sp =>
     new ProcessPriceCheckUseCase(
         sp.GetRequiredService<IGameRepository>(),

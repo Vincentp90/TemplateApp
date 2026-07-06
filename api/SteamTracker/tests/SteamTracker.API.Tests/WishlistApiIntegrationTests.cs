@@ -9,7 +9,6 @@ using SteamTracker.Infrastructure.Repositories;
 using SteamTracker.Application.Ports;
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using Xunit;
 
 /// <summary>
@@ -51,57 +50,6 @@ public class WishlistApiIntegrationTests : IClassFixture<TestApiFactory>
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SteamTrackerDbContext>();
         await action(db);
-    }
-
-    [Fact]
-    public async Task GET_wishlist_ReturnsPrices()
-    {
-        // Arrange
-        Client.DefaultRequestHeaders.Add("X-Internal-UserId", "test-user");
-
-        // Act
-        var response = await Client.GetAsync("/api/wishlist");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var content = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
-        content.Should().NotBeNull();
-        content.Should().HaveCount(1);
-        content![0].GetProperty("appId").GetInt32().Should().Be(42);
-        content[0].GetProperty("currentPrice").GetDouble().Should().Be(19.99);
-    }
-
-    [Fact]
-    public async Task GET_wishlist_EmptyWhenNoTrackedGames()
-    {
-        // Arrange — clear tracked games
-        await WithDbContextAsync(async db =>
-        {
-            await db.TrackedGames.ExecuteDeleteAsync();
-        });
-
-        // Act
-        Client.DefaultRequestHeaders.Add("X-Internal-UserId", "unknown-user");
-        var response = await Client.GetAsync("/api/wishlist");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var content = await response.Content.ReadFromJsonAsync<List<JsonElement>>();
-        content.Should().BeEmpty();
-
-        // Re-seed so subsequent tests have data
-        using var seedScope = _factory.Services.CreateScope();
-        var sp = seedScope.ServiceProvider;
-        var seedDb = sp.GetRequiredService<SteamTrackerDbContext>();
-        var trackedGameRepo = sp.GetRequiredService<ITrackedGameRepository>();
-        var gameRepo = sp.GetRequiredService<IGameRepository>();
-
-        var trackedGame = TrackedGame.StartTracking(new SteamAppId(42), DateTimeOffset.UtcNow);
-        await trackedGameRepo.SaveAsync(trackedGame);
-
-        var game = new Game(new SteamAppId(42));
-        game.ApplyPriceUpdate(new Money(19.99m, "EUR"), "Test Game", DateTimeOffset.UtcNow);
-        await gameRepo.SaveAsync(game);
     }
 
     [Fact]

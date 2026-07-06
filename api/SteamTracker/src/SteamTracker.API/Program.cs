@@ -15,7 +15,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 // Application — use cases
 builder.Services.AddScoped<ISetAlertRuleUseCase, SetAlertRuleUseCase>();
 builder.Services.AddScoped<IDeleteAlertRuleUseCase, DeleteAlertRuleUseCase>();
-builder.Services.AddScoped<IGetWishlistWithPricesQuery, GetWishlistWithPricesQuery>();
+
 builder.Services.AddScoped<IProcessPriceCheckUseCase, ProcessPriceCheckUseCase>();
 builder.Services.AddScoped<IHandleWishlistItemAddedUseCase, HandleWishlistItemAddedUseCase>();
 builder.Services.AddScoped<IHandleWishlistItemRemovedUseCase, HandleWishlistItemRemovedUseCase>();
@@ -39,14 +39,6 @@ app.UseExceptionHandler();
 
 // Minimal API endpoints
 var api = app.MapGroup("/api");
-
-// GET /api/wishlist — returns wishlist with prices (internal caller, userId from header)
-api.MapGet("/wishlist", async (IGetWishlistWithPricesQuery query, HttpContext context) =>
-{
-    var userId = context.Request.Headers["X-Internal-UserId"].ToString();
-    var results = await query.ExecuteAsync(userId);
-    return Results.Ok(results);
-});
 
 // POST /api/games/{appId}/alert — create alert rule (internal caller, userId from header)
 api.MapPost("/games/{appId}/alert", async (
