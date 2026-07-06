@@ -134,29 +134,5 @@ public class WishlistApiIntegrationTests : IClassFixture<TestApiFactory>
 
 
 
-    [Fact]
-    public async Task POST_internal_wishlistRemoved_DeactivatesTrackedGame()
-    {
-        // Arrange
-        await WithDbContextAsync(async db =>
-        {
-            var trackedGame = TrackedGame.StartTracking(new SteamAppId(999), DateTimeOffset.UtcNow);
-            await db.TrackedGames.AddAsync(trackedGame);
-            await db.SaveChangesAsync();
-        });
 
-        // Act
-        var payload = new { userId = "user", appId = 999, addedAt = DateTimeOffset.UtcNow };
-        var response = await Client.PostAsJsonAsync("/api/internal/wishlist-item-removed", payload);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        await WithDbContextAsync(async db =>
-        {
-            var updated = (await db.TrackedGames.ToListAsync()).FirstOrDefault(tg => tg.AppId.Value == 999);
-            updated.Should().NotBeNull();
-            updated!.IsActive.Should().BeFalse();
-        });
-    }
 }

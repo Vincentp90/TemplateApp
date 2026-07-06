@@ -5,8 +5,6 @@ https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
 
 Final steps:
-- Search through the frontend and backend APIs for all calls to POST /api/internal/wishlist-item-added in SteamTracker.API 
-    - Remove the endpoint and underlying code if it has no other references 
 - Read through tests
 - Test without steamtracker
 - add steamtracker to dockercompose

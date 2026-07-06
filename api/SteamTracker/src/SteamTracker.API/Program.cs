@@ -16,7 +16,6 @@ builder.Services.AddScoped<ISetAlertRuleUseCase, SetAlertRuleUseCase>();
 builder.Services.AddScoped<IDeleteAlertRuleUseCase, DeleteAlertRuleUseCase>();
 
 builder.Services.AddScoped<IProcessPriceCheckUseCase, ProcessPriceCheckUseCase>();
-builder.Services.AddScoped<IHandleWishlistItemRemovedUseCase, HandleWishlistItemRemovedUseCase>();
 builder.Services.AddSingleton<PriceAlertEvaluator>();
 
 // Global exception handler
@@ -62,16 +61,6 @@ api.MapDelete("/alert/{alertRuleId}", async (
     return Results.NoContent();
 });
 
-// POST /api/internal/wishlist-item-removed — called by WishlistSyncWorker
-api.MapPost("/internal/wishlist-item-removed", async (
-    IHandleWishlistItemRemovedUseCase useCase,
-    [FromBody] WishlistItemEvent request) =>
-{
-    await useCase.ExecuteAsync(request.UserId, request.AppId);
-    return Results.Ok();
-});
-
 app.Run();
 
-// Request DTOs
-public record WishlistItemEvent(string UserId, int AppId, DateTimeOffset AddedAt);
+
