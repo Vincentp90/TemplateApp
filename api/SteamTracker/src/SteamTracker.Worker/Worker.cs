@@ -97,15 +97,18 @@ public class PriceCheckConsumer : AsyncEventingBasicConsumer
             // Fetch price from Steam
             var result = await _steamClient.FetchPriceAsync(request.AppId);
 
-            if (result is null)
+            var name = string.Empty;
+            if (result is not null)
             {
-                _logger.LogWarning("Steam returned no price data for AppId {AppId}, requeuing", request.AppId);
-                await _channel.BasicNackAsync(deliveryTag, multiple: false, requeue: true, cancellationToken);
-                return;
+                var (price, gameName) = result.Value;
+                name = gameName;
+                await _useCase.ExecuteAsync(request.AppId, price, name, cancellationToken);
+            }
+            else
+            {
+                _logger.LogWarning("Steam returned no price data for AppId {AppId} — still acking to avoid infinite retries", request.AppId);
             }
 
-            var (price, name) = result.Value;
-            await _useCase.ExecuteAsync(request.AppId, price, name, cancellationToken);
             await _channel.BasicAckAsync(deliveryTag, multiple: false, cancellationToken);
         }
         catch (SteamRateLimitException ex)

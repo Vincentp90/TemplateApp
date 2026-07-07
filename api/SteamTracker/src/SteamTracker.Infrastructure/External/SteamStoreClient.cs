@@ -49,15 +49,29 @@ public class SteamStoreClient : ISteamStoreClient
             return null;
 
         var data = appElement.GetProperty("data");
-        var name = data.GetProperty("name").GetString() ?? string.Empty;
+        if (data.ValueKind != JsonValueKind.Object)
+            return null;
+
+        var name = string.Empty;
+        if (data.TryGetProperty("name", out var nameProp) && nameProp.ValueKind == JsonValueKind.String)
+            name = nameProp.GetString() ?? string.Empty;
 
         if (data.TryGetProperty("is_free", out var isFreeProp) && isFreeProp.GetBoolean())
             return (Money.Free, name);
 
         if (data.TryGetProperty("price_overview", out var priceOverview))
         {
-            var amount = priceOverview.GetProperty("final").GetInt32() / 100m;
-            var currency = priceOverview.GetProperty("currency").GetString() ?? "EUR";
+            if (priceOverview.ValueKind != JsonValueKind.Object)
+                return null;
+
+            if (!priceOverview.TryGetProperty("final", out var finalProp) || finalProp.ValueKind != JsonValueKind.Number)
+                return null;
+
+            if (!priceOverview.TryGetProperty("currency", out var currencyProp) || currencyProp.ValueKind != JsonValueKind.String)
+                return null;
+
+            var amount = finalProp.GetInt32() / 100m;
+            var currency = currencyProp.GetString() ?? "EUR";
             _logger?.LogDebug("Game {Name} (appId={AppId}) price: {Amount} {Currency}", name, appId, amount, currency);
             return (new Money(amount, currency), name);
         }

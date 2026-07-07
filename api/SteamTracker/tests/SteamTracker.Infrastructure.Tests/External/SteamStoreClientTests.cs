@@ -128,6 +128,53 @@ public class SteamStoreClientTests
     }
 
     [Fact]
+    public async Task FetchPriceAsync_PartialDataWithoutName_ReturnsPrice()
+    {
+        // Arrange — Steam's filters=price_overview strips name/is_free from data.
+        // This is exactly what the real Steam API returns for apps like Half-Life 2.
+        var json = """
+        {
+            "220": {
+                "success": true,
+                "data": {
+                    "price_overview": {
+                        "final": 195,
+                        "currency": "EUR"
+                    }
+                }
+            }
+        }
+        """;
+        var handler = new FakeHttpMessageHandler();
+        handler.SetResponse(json);
+
+        var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
+
+        var config = new Dictionary<string, string?> { ["Steam:ApiKey"] = "test-key" };
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(config!)
+            .Build();
+
+        var rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
+        {
+            QueueLimit = 1,
+            TokenLimit = 100,
+            TokensPerPeriod = 100,
+            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
+            AutoReplenishment = true
+        });
+        var client = new SteamStoreClient(httpClient, configuration, rateLimiter);
+
+        // Act
+        var result = await client.FetchPriceAsync(220);
+
+        // Assert — should still extract price even when name/is_free are missing
+        result.Should().NotBeNull();
+        result!.Value.Price.Amount.Should().Be(1.95m);
+        result.Value.Price.Currency.Value.Should().Be("EUR");
+    }
+
+    [Fact]
     public async Task FetchPriceAsync_FreeGame_ReturnsFreeMoney()
     {
         // Arrange

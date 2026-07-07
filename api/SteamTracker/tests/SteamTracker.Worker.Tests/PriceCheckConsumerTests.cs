@@ -69,9 +69,9 @@ public class PriceCheckConsumerTests
     }
 
     [Fact]
-    public async Task HandleBasicDeliverAsync_NullSteamResult_NacksAndRequeues()
+    public async Task HandleBasicDeliverAsync_NullSteamResult_AcksWithoutProcessing()
     {
-        // Arrange
+        // Arrange — Steam returned no price data (region-locked, delisted, etc.)
         const int appId = 99999;
         const ulong deliveryTag = 2;
         var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
@@ -92,11 +92,14 @@ public class PriceCheckConsumerTests
             body: body,
             CancellationToken.None);
 
-        // Assert
+        // Assert — ack the message to avoid infinite retries; use case not called
         _useCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<int>(), It.IsAny<Money>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _channelMock.Verify(
-            x => x.BasicNackAsync(deliveryTag, multiple: false, requeue: true, It.IsAny<CancellationToken>()),
+            x => x.BasicAckAsync(deliveryTag, multiple: false, It.IsAny<CancellationToken>()),
             Times.Once);
+        _channelMock.Verify(
+            x => x.BasicNackAsync(It.IsAny<ulong>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
