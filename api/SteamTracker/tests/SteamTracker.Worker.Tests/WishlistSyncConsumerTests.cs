@@ -18,6 +18,13 @@ public class WishlistSyncConsumerTests
     private readonly Mock<ILogger> _loggerMock;
     private readonly WishlistSyncConsumer _consumer;
 
+    // Serializer options matching RabbitMqEventPublisher (snake_case)
+    private static readonly JsonSerializerOptions SnakeCaseOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        WriteIndented = false
+    };
+
     public WishlistSyncConsumerTests()
     {
         _addedUseCaseMock = new Mock<IHandleWishlistItemAddedUseCase>();
@@ -37,7 +44,7 @@ public class WishlistSyncConsumerTests
         // Arrange
         var addedAt = new DateTimeOffset(2025, 6, 15, 10, 30, 0, TimeSpan.Zero);
         var msg = new { userId = "user-1", appId = 42, addedAt = addedAt };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -66,7 +73,7 @@ public class WishlistSyncConsumerTests
         // Arrange
         var removedAt = new DateTimeOffset(2025, 7, 1, 12, 0, 0, TimeSpan.Zero);
         var msg = new { userId = "user-2", appId = 99, removedAt = removedAt };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -95,7 +102,7 @@ public class WishlistSyncConsumerTests
         // Arrange
         var removedAt = new DateTimeOffset(2025, 7, 1, 12, 0, 0, TimeSpan.Zero);
         var msg = new { userId = "user-removed", appId = 555, removedAt = removedAt };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -120,7 +127,7 @@ public class WishlistSyncConsumerTests
         // Arrange
         var addedAt = new DateTimeOffset(2025, 6, 15, 10, 30, 0, TimeSpan.Zero);
         var msg = new { userId = "abc-def", appId = 777, addedAt = addedAt };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -145,7 +152,7 @@ public class WishlistSyncConsumerTests
         // Arrange — message with addedAt but no removedAt → "added"
         var addedAt = DateTimeOffset.UtcNow;
         var msg = new { userId = "user", appId = 1, addedAt = addedAt };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -191,7 +198,7 @@ public class WishlistSyncConsumerTests
     {
         // Arrange — missing addedAt field → deserializes with default DateTimeOffset.MinValue → use case called, still acks
         var msg = new { userId = "user-1", appId = 42 };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -219,7 +226,7 @@ public class WishlistSyncConsumerTests
         // Arrange
         var addedAt = new DateTimeOffset(2025, 6, 15, 10, 30, 0, TimeSpan.Zero);
         var msg = new { userId = "user-throw", appId = 123, addedAt = addedAt };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
 
         _addedUseCaseMock
             .Setup(x => x.ExecuteAsync("user-throw", 123, addedAt, It.IsAny<CancellationToken>()))
@@ -248,7 +255,7 @@ public class WishlistSyncConsumerTests
         // Arrange
         var removedAt = new DateTimeOffset(2025, 7, 1, 12, 0, 0, TimeSpan.Zero);
         var msg = new { userId = "user-throw-remove", appId = 456, removedAt = removedAt };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
 
         _removedUseCaseMock
             .Setup(x => x.ExecuteAsync("user-throw-remove", 456, It.IsAny<CancellationToken>()))
@@ -277,7 +284,7 @@ public class WishlistSyncConsumerTests
         // Arrange — message has only removedAt, no addedAt → should be detected as remove
         var removedAt = new DateTimeOffset(2025, 8, 1, 0, 0, 0, TimeSpan.Zero);
         var msg = new { userId = "only-removed", appId = 999, removedAt = removedAt };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -304,7 +311,7 @@ public class WishlistSyncConsumerTests
         var removedAt = new DateTimeOffset(2025, 9, 1, 12, 0, 0, TimeSpan.Zero);
         var addedAt = new DateTimeOffset(2025, 6, 1, 10, 0, 0, TimeSpan.Zero);
         var msg = new { userId = "both-fields", appId = 777, addedAt = addedAt, removedAt = removedAt };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -330,7 +337,7 @@ public class WishlistSyncConsumerTests
         // Arrange — null userId still deserializes and calls use case
         var addedAt = new DateTimeOffset(2025, 6, 15, 10, 30, 0, TimeSpan.Zero);
         var msg = new { userId = (string?)null, appId = 42, addedAt = addedAt };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -358,7 +365,7 @@ public class WishlistSyncConsumerTests
         // Arrange — negative AppId still deserializes and calls use case
         var addedAt = new DateTimeOffset(2025, 6, 15, 10, 30, 0, TimeSpan.Zero);
         var msg = new { userId = "user", appId = -1, addedAt = addedAt };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -386,7 +393,7 @@ public class WishlistSyncConsumerTests
         // Arrange — extra fields in JSON should not cause issues
         var addedAt = new DateTimeOffset(2025, 6, 15, 10, 30, 0, TimeSpan.Zero);
         var msg = new { userId = "user", appId = 42, addedAt = addedAt, extraField = "ignored", anotherExtra = 123 };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(

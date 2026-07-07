@@ -24,7 +24,9 @@ public class PriceCheckJobPublisher : IPriceCheckJobPublisher
         await channel.QueueDeclareAsync(queue: "pricecheck.jobs", durable: true, exclusive: false, autoDelete: false, arguments: null, cancellationToken: cancellationToken);
         await channel.QueueBindAsync(queue: "pricecheck.jobs", exchange: _exchangeName, routingKey: "pricecheck", arguments: null, cancellationToken: cancellationToken);
 
-        var body = JsonSerializer.Serialize(new { AppId = appId, EnqueuedAt = DateTimeOffset.UtcNow });
+        var body = JsonSerializer.Serialize(
+            new { AppId = appId, EnqueuedAt = DateTimeOffset.UtcNow },
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
         var bodyBytes = Encoding.UTF8.GetBytes(body);
 
         await channel.BasicPublishAsync(

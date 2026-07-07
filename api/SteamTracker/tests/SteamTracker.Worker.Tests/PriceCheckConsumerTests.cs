@@ -42,7 +42,7 @@ public class PriceCheckConsumerTests
         var price = new Money(19.99m, "EUR");
         var gameName = "Test Game";
         var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
@@ -75,7 +75,7 @@ public class PriceCheckConsumerTests
         const int appId = 99999;
         const ulong deliveryTag = 2;
         var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
@@ -106,7 +106,7 @@ public class PriceCheckConsumerTests
         const int appId = 54321;
         const ulong deliveryTag = 3;
         var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
@@ -137,7 +137,7 @@ public class PriceCheckConsumerTests
         const int appId = 11111;
         const ulong deliveryTag = 4;
         var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
@@ -168,7 +168,7 @@ public class PriceCheckConsumerTests
         const int appId = 22222;
         const ulong deliveryTag = 4;
         var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
@@ -199,7 +199,7 @@ public class PriceCheckConsumerTests
         const int appId = 11111;
         const ulong deliveryTag = 4;
         var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
@@ -241,8 +241,8 @@ public class PriceCheckConsumerTests
 
         var msg1 = new PriceCheckMessage(appId1, DateTimeOffset.UtcNow);
         var msg2 = new PriceCheckMessage(appId2, DateTimeOffset.UtcNow);
-        var body1 = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg1));
-        var body2 = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg2));
+        var body1 = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg1, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
+        var body2 = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg2, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -322,7 +322,7 @@ public class PriceCheckConsumerTests
         var price = new Money(4.99m, "EUR");
         var gameName = "Cheap Game";
         var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
@@ -355,7 +355,7 @@ public class PriceCheckConsumerTests
         const int appId = 77777;
         const ulong deliveryTag = 8;
         var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
@@ -388,7 +388,7 @@ public class PriceCheckConsumerTests
         var price = new Money(2.99m, "EUR");
         var gameName = "Game";
         var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
@@ -423,7 +423,7 @@ public class PriceCheckConsumerTests
         var price = new Money(0m, "EUR");
         var gameName = "Free Game";
         var message = new PriceCheckMessage(appId, DateTimeOffset.UtcNow);
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))

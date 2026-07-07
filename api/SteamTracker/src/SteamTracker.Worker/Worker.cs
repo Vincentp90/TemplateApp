@@ -80,7 +80,12 @@ public class PriceCheckConsumer : AsyncEventingBasicConsumer
         try
         {
             var json = Encoding.UTF8.GetString(body.ToArray());
-            var request = JsonSerializer.Deserialize<PriceCheckMessage>(json);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+            };
+            var request = JsonSerializer.Deserialize<PriceCheckMessage>(json, options);
 
             if (request is null)
             {
@@ -196,12 +201,16 @@ public class WishlistSyncConsumer : AsyncEventingBasicConsumer
             var json = Encoding.UTF8.GetString(body.ToArray());
             var doc = JsonDocument.Parse(json);
 
-            // Determine event type by checking for the "removedAt" field
-            // WishlistItemAdded has: userId, appId, addedAt
-            // WishlistItemRemoved has: userId, appId, removedAt
-            var hasRemovedAt = doc.RootElement.TryGetProperty("removedAt", out _);
+            // Determine event type by checking for the "removed_at" field
+            // WishlistItemAdded has: user_id, app_id, added_at
+            // WishlistItemRemoved has: user_id, app_id, removed_at
+            var hasRemovedAt = doc.RootElement.TryGetProperty("removed_at", out _);
 
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+            };
 
             if (hasRemovedAt)
             {

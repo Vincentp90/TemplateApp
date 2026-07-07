@@ -147,7 +147,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
 
         // 2. Publish WishlistItemAdded event to RabbitMQ
         var addedMessage = new { userId, appId, addedAt = addedAt.ToString("o") };
-        var addedBody = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(addedMessage, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+        var addedBody = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(addedMessage, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
         await _publishChannel!.BasicPublishAsync(
             exchange: "wishlist.events",
             routingKey: "",
@@ -165,7 +165,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         Assert.NotNull(addedMsg);
 
         var addedJson = Encoding.UTF8.GetString(addedMsg!.Body.ToArray());
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
         var addedEvt = JsonSerializer.Deserialize<WishlistItemAddedMessage>(addedJson, options);
         Assert.NotNull(addedEvt);
 
@@ -177,7 +177,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         Assert.NotNull(priceMsg);
 
         var priceJson = Encoding.UTF8.GetString(priceMsg!.Body.ToArray());
-        var priceOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var priceOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
         var priceRequest = JsonSerializer.Deserialize<PriceCheckMessage>(priceJson, priceOptions);
         Assert.NotNull(priceRequest);
 
@@ -243,7 +243,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
 
         // Publish WishlistItemAdded event
         var addedMessage = new { userId, appId, addedAt = addedAt.ToString("o") };
-        var addedBody = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(addedMessage, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+        var addedBody = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(addedMessage, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
         await _publishChannel!.BasicPublishAsync(
             exchange: "wishlist.events",
             routingKey: "",
@@ -261,7 +261,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         Assert.NotNull(addedMsg);
 
         var addedJson = Encoding.UTF8.GetString(addedMsg!.Body.ToArray());
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
         var addedEvt = JsonSerializer.Deserialize<WishlistItemAddedMessage>(addedJson, options);
         Assert.NotNull(addedEvt);
 
@@ -273,7 +273,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         Assert.NotNull(priceMsg);
 
         var priceJson = Encoding.UTF8.GetString(priceMsg!.Body.ToArray());
-        var priceOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var priceOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
         var priceRequest = JsonSerializer.Deserialize<PriceCheckMessage>(priceJson, priceOptions);
         Assert.NotNull(priceRequest);
 
@@ -318,7 +318,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
 
         // Publish WishlistItemRemoved event
         var removedMessage = new { userId, appId, removedAt = DateTimeOffset.UtcNow.ToString("o") };
-        var removedBody = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(removedMessage, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+        var removedBody = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(removedMessage, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
         await _publishChannel!.BasicPublishAsync(
             exchange: "wishlist.events",
             routingKey: "",
@@ -336,7 +336,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         Assert.NotNull(removedMsg);
 
         var removedJson = Encoding.UTF8.GetString(removedMsg!.Body.ToArray());
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
         var removedEvt = JsonSerializer.Deserialize<WishlistItemRemovedMessage>(removedJson, options);
         Assert.NotNull(removedEvt);
 
@@ -396,7 +396,7 @@ public class TestPriceCheckJobPublisher : IPriceCheckJobPublisher
     public async Task EnqueueAsync(int appId, CancellationToken cancellationToken = default)
     {
         var message = new { appId, enqueuedAt = DateTimeOffset.UtcNow.ToString("o") };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
         await _channel.BasicPublishAsync(
             exchange: "steamtracker.direct",
             routingKey: "price-check",

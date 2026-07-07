@@ -12,7 +12,10 @@ namespace SteamTracker.Infrastructure.Tests.Messaging;
 /// </summary>
 public class RabbitMqIntegrationTests : IAsyncLifetime
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+    };
 
     private IChannel? _channel;
     private ConnectionFactory? _factory;
@@ -64,7 +67,7 @@ public class RabbitMqIntegrationTests : IAsyncLifetime
         result.Should().NotBeNull();
         var json = Encoding.UTF8.GetString(result!.Body.ToArray());
         var parsed = JsonSerializer.Deserialize<JsonElement>(json);
-        parsed.GetProperty("appId").GetInt32().Should().Be(42);
+        parsed.GetProperty("app_id").GetInt32().Should().Be(42);
         parsed.GetProperty("message").GetString().Should().Be("hello");
     }
 

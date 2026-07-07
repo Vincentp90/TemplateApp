@@ -22,15 +22,17 @@ public class NotificationPublisher : INotificationPublisher
         await using var channel = await _connection.CreateChannelAsync(null, cancellationToken);
         await channel.ExchangeDeclareAsync(exchange: _exchangeName, type: ExchangeType.Topic, durable: true, cancellationToken: cancellationToken);
 
-        var body = JsonSerializer.Serialize(new
-        {
-            AlertRuleId = alertRuleId,
-            UserId = userId,
-            AppId = appId,
-            Price = price,
-            Currency = currency,
-            TriggeredAt = DateTimeOffset.UtcNow
-        });
+        var body = JsonSerializer.Serialize(
+            new
+            {
+                AlertRuleId = alertRuleId,
+                UserId = userId,
+                AppId = appId,
+                Price = price,
+                Currency = currency,
+                TriggeredAt = DateTimeOffset.UtcNow
+            },
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
         var properties = new BasicProperties
         {
