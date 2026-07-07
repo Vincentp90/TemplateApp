@@ -34,7 +34,7 @@ public class SharedDbPriceReader : ISharedDbPriceReader
             using var connection = new NpgsqlConnection(_connectionString);
 
             const string sql = @"
-                SELECT ""app_id"" AS ""AppId"", ""current_price_amount"" AS ""CurrentPriceAmount"", ""current_price_currency"" AS ""CurrentPriceCurrency"", ""last_checked_at"" AS ""LastCheckedAt""
+                SELECT ""app_id"" AS ""AppId"", ""current_price"" AS ""CurrentPrice"", ""last_checked_at"" AS ""LastCheckedAt""
                 FROM ""games""
                 WHERE ""app_id"" = ANY(@Ids)";
 
@@ -42,7 +42,8 @@ public class SharedDbPriceReader : ISharedDbPriceReader
 
             return rows
                 .Where(r => r.AppId > 0)
-                .ToDictionary(r => r.AppId, r => new GamePrice(r.CurrentPriceAmount, r.CurrentPriceCurrency, r.LastCheckedAt));
+                .Select(ParseGamePrice)
+                .ToDictionary(r => r.AppId, r => r.Price);
         }
         catch (Exception ex)
         {
@@ -88,6 +89,24 @@ public class SharedDbPriceReader : ISharedDbPriceReader
             : (0, string.Empty);
     }
 
+    private static (int AppId, GamePrice Price) ParseGamePrice(GamePriceRow row)
+    {
+        decimal? amount = null;
+        string? currency = null;
+
+        if (!string.IsNullOrWhiteSpace(row.CurrentPrice))
+        {
+            var money = ParseMoneyString(row.CurrentPrice);
+            if (money.Amount > 0)
+            {
+                amount = money.Amount;
+                currency = money.Currency!;
+            }
+        }
+
+        return (row.AppId, new GamePrice(amount, currency, ToDateTimeOffset(row.LastCheckedAt)));
+    }
+
     private static (int AppId, AlertRuleInfo Info)? ParseAlertRule(AlertRuleRow row)
     {
         if (row.AppId <= 0) return null;
@@ -96,6 +115,12 @@ public class SharedDbPriceReader : ISharedDbPriceReader
         return (row.AppId, new AlertRuleInfo(row.AlertRuleId, money.Amount, money.Currency));
     }
 
-    private record GamePriceRow(int AppId, decimal? CurrentPriceAmount, string? CurrentPriceCurrency, DateTime? LastCheckedAt);
+    private record GamePriceRow(int AppId, string? CurrentPrice, DateTime? LastCheckedAt);
+
+    private static DateTimeOffset? ToDateTimeOffset(DateTime? dt)
+    {
+        if (!dt.HasValue) return null;
+        return new DateTimeOffset(dt.Value.ToUniversalTime(), TimeSpan.Zero);
+    }
     private record AlertRuleRow(Guid AlertRuleId, int AppId, string TriggerBelowPrice);
 }

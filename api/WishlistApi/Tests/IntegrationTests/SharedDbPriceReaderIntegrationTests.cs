@@ -1,6 +1,8 @@
 using Application.Contracts;
+using Dapper;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using Tests.IntegrationTests;
 
 namespace Tests.IntegrationTests;
@@ -38,6 +40,38 @@ public class SharedDbPriceReaderIntegrationTests : IAsyncLifetime
         prices.Should().HaveCount(2);
         prices[42].Should().Be(new GamePrice(19.99m, "EUR", new DateTimeOffset(2025, 7, 1, 12, 0, 0, TimeSpan.Zero)));
         prices[100].Should().Be(new GamePrice(29.99m, "EUR", new DateTimeOffset(2025, 7, 1, 12, 0, 0, TimeSpan.Zero)));
+    }
+
+    [Fact]
+    public async Task GetPricesAsync_readsLastCheckedAt_fromTimestamptz_column()
+    {
+        // Arrange — insert a game row using Npgsql directly with DateTimeOffset
+        // (mimics what EF Core writes via SteamTracker.Worker)
+        var connStr = SharedDbFixture.Instance.SteamTrackerConnectionString;
+        using var conn = new NpgsqlConnection(connStr);
+        await conn.OpenAsync();
+        const string insertSql = @"
+            INSERT INTO ""games"" (""app_id"", ""name"", ""current_price"", ""last_checked_at"")
+            VALUES (@appId, @name, @priceStr, @checkedAt)
+            ON CONFLICT (""app_id"") DO NOTHING";
+        await conn.ExecuteAsync(insertSql, new
+        {
+            appId = 7777,
+            name = "Timestamptz Test Game",
+            priceStr = "49.99|EUR",
+            checkedAt = new DateTimeOffset(2026, 7, 7, 10, 30, 0, TimeSpan.Zero).UtcDateTime
+        });
+
+        // Act
+        var prices = await _priceReader.GetPricesAsync([7777]);
+
+        // Assert — LastCheckedAt should NOT be null when the column has a timestamptz value
+        prices.Should().HaveCount(1);
+        prices[7777].Amount.Should().Be(49.99m);
+        prices[7777].LastCheckedAt.Should().NotBeNull(
+            "Dapper should map PostgreSQL timestamptz to DateTimeOffset, not DateTime");
+        prices[7777].LastCheckedAt.Should().BeCloseTo(
+            new DateTimeOffset(2026, 7, 7, 10, 30, 0, TimeSpan.Zero), TimeSpan.FromSeconds(1));
     }
 
     [Fact]

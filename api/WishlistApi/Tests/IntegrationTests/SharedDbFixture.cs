@@ -105,24 +105,29 @@ public sealed class SharedDbFixture : IAsyncLifetime
         await connection.OpenAsync();
 
         const string sql = @"
+            -- Drop and recreate tables to ensure schema matches EF Core
+            DROP TABLE IF EXISTS ""price_snapshots"";
+            DROP TABLE IF EXISTS ""alert_rules"";
+            DROP TABLE IF EXISTS ""games"";
+            DROP TABLE IF EXISTS ""tracked_games"";
+
             -- Create tracked_games table (snake_case to match EF Core naming convention)
-            CREATE TABLE IF NOT EXISTS ""tracked_games"" (
+            CREATE TABLE ""tracked_games"" (
                 ""app_id"" INT PRIMARY KEY,
                 ""is_active"" BOOLEAN NOT NULL,
                 ""tracked_since"" TIMESTAMPTZ NOT NULL
             );
 
             -- Create games table (snake_case to match EF Core naming convention)
-            CREATE TABLE IF NOT EXISTS ""games"" (
+            CREATE TABLE ""games"" (
                 ""app_id"" INT PRIMARY KEY,
                 ""name"" VARCHAR(256) NOT NULL,
-                ""current_price_amount"" DECIMAL(10,2),
-                ""current_price_currency"" VARCHAR(3),
+                ""current_price"" TEXT,
                 ""last_checked_at"" TIMESTAMPTZ
             );
 
             -- Create alert_rules table (snake_case to match EF Core naming convention)
-            CREATE TABLE IF NOT EXISTS ""alert_rules"" (
+            CREATE TABLE ""alert_rules"" (
                 ""alert_rule_id"" UUID PRIMARY KEY,
                 ""user_id"" VARCHAR(128) NOT NULL,
                 ""app_id"" INT NOT NULL,
@@ -139,11 +144,11 @@ public sealed class SharedDbFixture : IAsyncLifetime
                 (300, false, '2025-01-04T00:00:00Z')
             ON CONFLICT (""app_id"") DO NOTHING;
 
-            -- Insert test games with prices
-            INSERT INTO ""games"" (""app_id"", ""name"", ""current_price_amount"", ""current_price_currency"", ""last_checked_at"") VALUES
-                (42, 'Test Game Alpha', 19.99, 'EUR', '2025-07-01T12:00:00Z'),
-                (100, 'Test Game Beta', 29.99, 'EUR', '2025-07-01T12:00:00Z'),
-                (200, 'Free To Play Game', NULL, NULL, NULL)
+            -- Insert test games with prices (current_price is the EF Core string column ""Amount|Currency"")
+            INSERT INTO ""games"" (""app_id"", ""name"", ""current_price"", ""last_checked_at"") VALUES
+                (42, 'Test Game Alpha', '19.99|EUR', '2025-07-01T12:00:00Z'),
+                (100, 'Test Game Beta', '29.99|EUR', '2025-07-01T12:00:00Z'),
+                (200, 'Free To Play Game', NULL, NULL)
             ON CONFLICT (""app_id"") DO NOTHING;
 
             -- Insert test alert rules
@@ -160,9 +165,9 @@ public sealed class SharedDbFixture : IAsyncLifetime
         {
             await command.ExecuteNonQueryAsync();
         }
-        catch (Npgsql.PostgresException ex) when (ex.SqlState == "23505")
+        catch (Npgsql.PostgresException ex) when (ex.SqlState == "23505" || ex.SqlState == "42710")
         {
-            // Data already seeded — ignore unique violations
+            // Data already seeded — ignore unique violations (23505) or duplicate tables (42710)
         }
     }
 }
