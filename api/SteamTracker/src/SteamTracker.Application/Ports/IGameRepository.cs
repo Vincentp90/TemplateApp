@@ -11,4 +11,5 @@ public interface IGameRepository
 {
     Task<Game?> GetAsync(SteamAppId appId, CancellationToken cancellationToken = default);
     Task SaveAsync(Game game, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<SteamAppId>> GetAppIdsDueForPriceCheckAsync(DateTimeOffset now, CancellationToken cancellationToken = default);
 }

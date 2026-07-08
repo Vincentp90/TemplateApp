@@ -101,10 +101,12 @@ public class UseCasesIntegrationTests : IDisposable
     {
         // Arrange
         var trackedGameRepo = new Infrastructure.Repositories.TrackedGameRepository(_context);
+        var gameRepo = new Infrastructure.Repositories.GameRepository(_context);
         var publisher = new MockPriceCheckJobPublisher();
 
         var useCase = new HandleWishlistItemAddedUseCase(
             trackedGameRepo,
+            gameRepo,
             publisher);
 
         // Act

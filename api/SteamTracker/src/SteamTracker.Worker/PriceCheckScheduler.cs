@@ -1,28 +1,28 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SteamTracker.Application.Ports;
-using SteamTracker.Domain.Entities;
 using SteamTracker.Domain.ValueObjects;
 
 namespace SteamTracker.Worker;
 
 /// <summary>
-/// Runs every 24 hours and enqueues a price-check job for every active TrackedGame.
-/// This is the "scheduler" that drives the periodic price fetching pipeline.
+/// Runs every 24 hours and enqueues a price-check job for every game that is due.
+/// A game is due if it has never been price-checked, or if more than 24 hours have passed
+/// since the last price check (based on Game.LastCheckedAt).
 /// </summary>
 public class PriceCheckScheduler : BackgroundService
 {
-    private readonly ITrackedGameRepository _trackedGameRepo;
+    private readonly IGameRepository _gameRepo;
     private readonly IPriceCheckJobPublisher _publisher;
     private readonly ILogger<PriceCheckScheduler> _logger;
     private readonly TimeSpan _checkInterval = TimeSpan.FromHours(24);
 
     public PriceCheckScheduler(
-        ITrackedGameRepository trackedGameRepo,
+        IGameRepository gameRepo,
         IPriceCheckJobPublisher publisher,
         ILogger<PriceCheckScheduler> logger)
     {
-        _trackedGameRepo = trackedGameRepo;
+        _gameRepo = gameRepo;
         _publisher = publisher;
         _logger = logger;
     }
@@ -51,21 +51,19 @@ public class PriceCheckScheduler : BackgroundService
 
     private async Task EnqueueAllActiveGames(CancellationToken cancellationToken)
     {
-        var activeGames = await _trackedGameRepo.GetActiveAsync(cancellationToken);
-        var uniqueAppIds = activeGames
-            .Select(tg => tg.AppId.Value)
-            .Distinct()
-            .ToList();
+        var now = DateTimeOffset.UtcNow;
+        var appIdsDue = await _gameRepo.GetAppIdsDueForPriceCheckAsync(now, cancellationToken);
+        var uniqueAppIds = appIdsDue.Distinct().ToList();
 
         foreach (var appId in uniqueAppIds)
         {
             try
             {
-                await _publisher.EnqueueAsync(appId, cancellationToken);
+                await _publisher.EnqueueAsync(appId.Value, cancellationToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to enqueue price-check job for AppId {AppId}", appId);
+                _logger.LogError(ex, "Failed to enqueue price-check job for AppId {AppId}", appId.Value);
             }
         }
     }

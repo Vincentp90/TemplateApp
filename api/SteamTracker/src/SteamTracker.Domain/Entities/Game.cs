@@ -30,4 +30,11 @@ public class Game
 
         PriceSnapshots.Add(new PriceSnapshot(AppId.Value, newPrice, at));
     }
+
+    /// <summary>
+    /// Returns true if the game is due for a price check — i.e. it has never been
+    /// checked, or more than 24 hours have passed since the last check.
+    /// </summary>
+    public bool CanPriceCheck(DateTimeOffset now)
+        => !LastCheckedAt.HasValue || (now - LastCheckedAt.Value) >= TimeSpan.FromHours(24);
 }

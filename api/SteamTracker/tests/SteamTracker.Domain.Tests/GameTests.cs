@@ -39,4 +39,42 @@ public class GameTests
         game.CurrentPrice.Should().Be(Money.Free);
         game.Name.Should().Be("Free Game");
     }
+
+    [Fact]
+    public void CanPriceCheck_returns_true_when_never_checked()
+    {
+        var game = new Game(new SteamAppId(42));
+
+        game.CanPriceCheck(DateTimeOffset.UtcNow).Should().BeTrue();
+    }
+
+    [Fact]
+    public void CanPriceCheck_returns_true_when_more_than_24h_since_last_check()
+    {
+        var game = new Game(new SteamAppId(42));
+        var now = DateTimeOffset.UtcNow;
+        game.ApplyPriceUpdate(new Money(1000, "USD"), "Test", now);
+
+        game.CanPriceCheck(now.AddHours(25)).Should().BeTrue();
+    }
+
+    [Fact]
+    public void CanPriceCheck_returns_false_within_24h()
+    {
+        var game = new Game(new SteamAppId(42));
+        var now = DateTimeOffset.UtcNow;
+        game.ApplyPriceUpdate(new Money(1000, "USD"), "Test", now);
+
+        game.CanPriceCheck(now.AddHours(12)).Should().BeFalse();
+    }
+
+    [Fact]
+    public void CanPriceCheck_returns_true_at_exactly_24h()
+    {
+        var game = new Game(new SteamAppId(42));
+        var now = DateTimeOffset.UtcNow;
+        game.ApplyPriceUpdate(new Money(1000, "USD"), "Test", now);
+
+        game.CanPriceCheck(now.AddHours(24)).Should().BeTrue();
+    }
 }

@@ -48,4 +48,15 @@ public class GameRepository : IGameRepository
 
         await _context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<SteamAppId>> GetAppIdsDueForPriceCheckAsync(DateTimeOffset now, CancellationToken cancellationToken = default)
+    {
+        var cutoff = now - TimeSpan.FromHours(24);
+
+        return await _context.Games
+            .AsNoTracking()
+            .Where(g => g.LastCheckedAt == null || g.LastCheckedAt < cutoff)
+            .Select(g => g.AppId)
+            .ToListAsync(cancellationToken);
+    }
 }

@@ -5,10 +5,9 @@ https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
 
 Final steps:
-- Read through tests
-- Test without steamtracker
-- add steamtracker to dockercompose
-- final test
+-Get .http file for steam price call and add httpclient plugin to vs code devcontainer
+- Counter-Strike 2: should show as free
+- Grand Theft Auto V: should show as no longer available
 
 Things I'm going to try/add/learn more about later :
 - Switch to usecases instead of services in application layer
