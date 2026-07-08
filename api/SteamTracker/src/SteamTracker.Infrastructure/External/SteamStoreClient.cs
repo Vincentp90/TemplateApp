@@ -37,7 +37,7 @@ public class SteamStoreClient : ISteamStoreClient
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger?.LogDebug("Non-success response {StatusCode} for appId={AppId}", response.StatusCode, appId);
+            _logger?.LogInformation("Non-success response {StatusCode} for appId={AppId}", response.StatusCode, appId);
             return null;
         }
 
@@ -72,7 +72,7 @@ public class SteamStoreClient : ISteamStoreClient
 
             var amount = finalProp.GetInt32() / 100m;
             var currency = currencyProp.GetString() ?? "EUR";
-            _logger?.LogDebug("Game {Name} (appId={AppId}) price: {Amount} {Currency}", name, appId, amount, currency);
+            _logger?.LogInformation("Game {Name} (appId={AppId}) price: {Amount} {Currency}", name, appId, amount, currency);
             return (new Money(amount, currency), name);
         }
 
