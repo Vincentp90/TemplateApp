@@ -65,57 +65,62 @@ export default function WLItemsList() {
 
   return (
     <>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 items-center w-full">
         <h2 className="text-xl font-semibold">Wishlist</h2>
-        <div className="inline-block rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-800">
-          {/* Header */}
-          <div className="grid grid-cols-[1fr_auto_auto_auto] bg-gray-100 dark:bg-gray-900 font-semibold px-6 py-3 border-b border-gray-200 dark:border-gray-800">
-            <span className="whitespace-nowrap">Name</span>
-            <span className="whitespace-nowrap text-center">Price</span>
-            <span className="whitespace-nowrap text-center">Status</span>
-            <span className="whitespace-nowrap text-right">Date Added</span>
-          </div>
+        <div className="rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-800">
+          <table className="w-full">
+            {/* Header */}
+            <thead>
+              <tr className="bg-gray-100 dark:bg-gray-900 font-semibold border-b border-gray-200 dark:border-gray-800">
+                <th className="text-left px-6 py-3 whitespace-nowrap">Name</th>
+                <th className="text-center px-6 py-3 whitespace-nowrap">Price</th>
+                <th className="text-center px-6 py-3 whitespace-nowrap">Status</th>
+                <th className="text-right px-6 py-3 whitespace-nowrap">Date Added</th>
+              </tr>
+            </thead>
+            {/* Rows */}
+            <tbody>
+              {wishlistItems.map((item, i) => {
+                const currentPrice = item.price ?? null;
+                const currency = item.priceCurrency ?? 'EUR';
+                const hasSnapshots = item.lastCheckedAt != null;
+                const alertRuleId = item.alertRuleId;
 
-          {/* Rows */}
-          {wishlistItems.map((item, i) => {
-            const currentPrice = item.price ?? null;
-            const currency = item.priceCurrency ?? 'EUR';
-            const hasSnapshots = item.lastCheckedAt != null;
-            const alertRuleId = item.alertRuleId;
+                const renderPrice = () => {
+                  if (item.isUnavailable) return 'N/A';
+                  if (currentPrice === null) return '—';
+                  if (currentPrice === 0) return 'Free';
+                  return `${currentPrice.toFixed(2)} ${currency}`;
+                };
 
-            const renderPrice = () => {
-              if (item.isUnavailable) return 'N/A';
-              if (currentPrice === null) return '—';
-              if (currentPrice === 0) return 'Free';
-              return `${currentPrice.toFixed(2)} ${currency}`;
-            };
-
-            return (
-              <div
-                key={i}
-                className={`grid grid-cols-[1fr_auto_auto_auto] px-6 py-3 items-center ${
-                  i % 2 === 0 ? "bg-white dark:bg-gray-700" : "bg-gray-50 dark:bg-gray-600"
-                } hover:bg-gray-400 transition-colors duration-200`}
-              >
-                <span className="min-w-0 truncate">{item.name ?? '—'}</span>
-                <span className="text-center tabular-nums">
-                  {renderPrice()}
-                </span>
-                <div className="flex items-center justify-center gap-2">
-                  <WishlistPriceBadge currentPrice={currentPrice} hasSnapshots={hasSnapshots} isUnavailable={item.isUnavailable} />
-                  {hasUserId && (
-                    <button
-                      onClick={() => setAlertModalAppId(item.appId ?? 0)}
-                      className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
-                    >
-                      {alertRuleId ? 'Edit alert' : 'Set alert'}
-                    </button>
-                  )}
-                </div>
-                <span className="min-w-0 truncate text-right">{toLocalTime(item.dateAdded)}</span>
-              </div>
-            );
-          })}
+                return (
+                  <tr
+                    key={i}
+                    className={`${
+                      i % 2 === 0 ? "bg-white dark:bg-gray-700" : "bg-gray-50 dark:bg-gray-600"
+                    } hover:bg-gray-400 transition-colors duration-200`}
+                  >
+                    <td className="px-6 py-3 min-w-0 truncate">{item.name ?? '—'}</td>
+                    <td className="px-6 py-3 text-center tabular-nums">{renderPrice()}</td>
+                    <td className="px-6 py-3">
+                      <div className="flex items-center justify-center gap-2">
+                        <WishlistPriceBadge currentPrice={currentPrice} hasSnapshots={hasSnapshots} isUnavailable={item.isUnavailable} />
+                        {hasUserId && (
+                          <button
+                            onClick={() => setAlertModalAppId(item.appId ?? 0)}
+                            className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                          >
+                            {alertRuleId ? 'Edit alert' : 'Set alert'}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-3 text-right whitespace-nowrap">{toLocalTime(item.dateAdded)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 

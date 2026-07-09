@@ -5,8 +5,8 @@ https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
 
 Final steps:
-- current_price_amount	current_price_currency columns in games table not used?
-- point of the price_snapshots table ?
+- fix overview header
+- claude review SteamPriceChecker and tests
 - Review frontend changes (probably diff in github pull request easiest way)
 
 Things I'm going to try/add/learn more about later :
