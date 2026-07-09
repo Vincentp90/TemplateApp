@@ -12,6 +12,7 @@ public class GameConfig : IEntityTypeConfiguration<Game>
         builder.HasKey(g => g.AppId);
 
         builder.Property(g => g.Name).HasMaxLength(256).IsRequired();
+        builder.Property(g => g.IsUnavailable).HasDefaultValue(false);
         
         // Store CurrentPrice as separate columns with shadow properties
         builder.Property<decimal?>("CurrentPriceAmount")

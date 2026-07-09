@@ -34,7 +34,7 @@ public class SharedDbPriceReader : ISharedDbPriceReader
             using var connection = new NpgsqlConnection(_connectionString);
 
             const string sql = @"
-                SELECT ""app_id"" AS ""AppId"", ""current_price"" AS ""CurrentPrice"", ""last_checked_at"" AS ""LastCheckedAt""
+                SELECT ""app_id"" AS ""AppId"", ""current_price"" AS ""CurrentPrice"", ""last_checked_at"" AS ""LastCheckedAt"", ""is_unavailable"" AS ""IsUnavailable""
                 FROM ""games""
                 WHERE ""app_id"" = ANY(@Ids)";
 
@@ -104,7 +104,7 @@ public class SharedDbPriceReader : ISharedDbPriceReader
             }
         }
 
-        return (row.AppId, new GamePrice(amount, currency, ToDateTimeOffset(row.LastCheckedAt)));
+        return (row.AppId, new GamePrice(amount, currency, ToDateTimeOffset(row.LastCheckedAt), row.IsUnavailable));
     }
 
     private static (int AppId, AlertRuleInfo Info)? ParseAlertRule(AlertRuleRow row)
@@ -115,7 +115,7 @@ public class SharedDbPriceReader : ISharedDbPriceReader
         return (row.AppId, new AlertRuleInfo(row.AlertRuleId, money.Amount, money.Currency));
     }
 
-    private record GamePriceRow(int AppId, string? CurrentPrice, DateTime? LastCheckedAt);
+    private record GamePriceRow(int AppId, string? CurrentPrice, DateTime? LastCheckedAt, bool IsUnavailable);
 
     private static DateTimeOffset? ToDateTimeOffset(DateTime? dt)
     {

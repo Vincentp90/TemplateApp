@@ -138,7 +138,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         // Mock: Steam returns a price that triggers the alert
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
-            .ReturnsAsync((steamPrice, gameName));
+            .ReturnsAsync((steamPrice, gameName, false));
 
         // Create alert rule (TrackedGame will be created by HandleWishlistItemAddedUseCase)
         var alertRule = new AlertRule(Guid.NewGuid(), userId, new SteamAppId(appId), alertThreshold);
@@ -185,8 +185,8 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         var processUseCase = _serviceProvider.GetRequiredService<IProcessPriceCheckUseCase>();
         var result = await _steamClientMock.Object.FetchPriceAsync(priceRequest!.AppId);
         Assert.NotNull(result);
-        var (price, name) = result.Value;
-        await processUseCase.ExecuteAsync(priceRequest.AppId, price, name, CancellationToken.None);
+        var (price, name, isUnavailable) = result;
+        await processUseCase.ExecuteAsync(priceRequest.AppId, price, name, isUnavailable, CancellationToken.None);
 
         // ===== ASSERT =====
         // 1. TrackedGame exists and is active
@@ -234,7 +234,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
-            .ReturnsAsync((steamPrice, gameName));
+            .ReturnsAsync((steamPrice, gameName, false));
 
         // Create alert rule (TrackedGame will be created by HandleWishlistItemAddedUseCase)
         var alertRule = new AlertRule(Guid.NewGuid(), userId, new SteamAppId(appId), alertThreshold);
@@ -281,8 +281,8 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         var processUseCase = _serviceProvider.GetRequiredService<IProcessPriceCheckUseCase>();
         var result = await _steamClientMock.Object.FetchPriceAsync(priceRequest!.AppId);
         Assert.NotNull(result);
-        var (price, name) = result.Value;
-        await processUseCase.ExecuteAsync(priceRequest.AppId, price, name, CancellationToken.None);
+        var (price, name, isUnavailable) = result;
+        await processUseCase.ExecuteAsync(priceRequest.AppId, price, name, isUnavailable, CancellationToken.None);
 
         // ===== ASSERT =====
         // Price was saved

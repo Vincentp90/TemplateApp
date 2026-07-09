@@ -19,5 +19,5 @@ public interface ISharedDbPriceReader
     Task<Dictionary<int, AlertRuleInfo>> GetAlertRulesAsync(string userId);
 }
 
-public record GamePrice(decimal? Amount, string Currency, DateTimeOffset? LastCheckedAt);
+public record GamePrice(decimal? Amount, string Currency, DateTimeOffset? LastCheckedAt, bool IsUnavailable = false);
 public record AlertRuleInfo(Guid Id, decimal ThresholdAmount, string Currency);

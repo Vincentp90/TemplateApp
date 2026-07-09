@@ -7,6 +7,7 @@ public record WishlistItemDto(
     decimal? Price = null,
     string? PriceCurrency = "EUR",
     DateTimeOffset? LastCheckedAt = null,
+    bool IsUnavailable = false,
     Guid? AlertRuleId = null,
     decimal? AlertThreshold = null,
     string? AlertCurrency = "EUR"

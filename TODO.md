@@ -5,9 +5,10 @@ https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
 
 Final steps:
--Get .http file for steam price call and add httpclient plugin to vs code devcontainer
+- Right now when a game is free, the frontend still shows a dash and not fetched. Also when the game is no longer available. See api/SteamTracker/example.txt for how to distict the two based on the response (no data tag if no longer available). When a game is free i want to see 'Free', when a game is no longer available i want the frontend to show 'N/A'.
 - Counter-Strike 2: should show as free
 - Grand Theft Auto V: should show as no longer available
+- Review frontend changes (probably diff in github pull request easiest way)
 
 Things I'm going to try/add/learn more about later :
 - Switch to usecases instead of services in application layer

@@ -85,6 +85,11 @@ namespace SteamTracker.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_checked_at");
 
+                    b.Property<bool>("IsUnavailable")
+                        .HasDefaultValue(false)
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_unavailable");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(256)

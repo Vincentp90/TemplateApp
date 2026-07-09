@@ -8,9 +8,9 @@ namespace SteamTracker.Application.Ports;
 public interface ISteamStoreClient
 {
     /// <summary>
-    /// Returns (price, name) for the given app ID.
-    /// Returns null if the app is not found.
+    /// Returns (price, name, isUnavailable) for the given app ID.
+    /// When price is null and isUnavailable is true, the game no longer exists on Steam.
     /// Throws SteamRateLimitException on HTTP 429.
     /// </summary>
-    Task<(Money Price, string Name)?> FetchPriceAsync(int appId);
+    Task<(Money? Price, string Name, bool IsUnavailable)> FetchPriceAsync(int appId);
 }

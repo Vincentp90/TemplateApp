@@ -122,9 +122,12 @@ public class SteamStoreClientTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.Value.Price.Amount.Should().Be(19.99m);
-        result.Value.Price.Currency.Value.Should().Be("EUR");
-        result.Value.Name.Should().Be("Test Game");
+        var price = result!.Price;
+        price.Should().NotBeNull();
+        price.Value.Amount.Should().Be(19.99m);
+        price.Value.Currency.Value.Should().Be("EUR");
+        result.Name.Should().Be("Test Game");
+        result.IsUnavailable.Should().BeFalse();
     }
 
     [Fact]
@@ -170,8 +173,11 @@ public class SteamStoreClientTests
 
         // Assert — should still extract price even when name/is_free are missing
         result.Should().NotBeNull();
-        result!.Value.Price.Amount.Should().Be(1.95m);
-        result.Value.Price.Currency.Value.Should().Be("EUR");
+        var price = result!.Price;
+        price.Should().NotBeNull();
+        price.Value.Amount.Should().Be(1.95m);
+        price.Value.Currency.Value.Should().Be("EUR");
+        result.IsUnavailable.Should().BeFalse();
     }
 
     [Fact]
@@ -214,8 +220,51 @@ public class SteamStoreClientTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.Value.Price.IsFree.Should().BeTrue();
-        result.Value.Name.Should().Be("Free Game");
+        result.Price.Should().NotBeNull();
+        result.Price!.Value.IsFree.Should().BeTrue();
+        result.Name.Should().Be("Free Game");
+        result.IsUnavailable.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task FetchPriceAsync_UnavailableGame_ReturnsUnavailableFlag()
+    {
+        // Arrange — success: false means the game no longer exists on Steam
+        var json = """
+        {
+            "362003": {
+                "success": false
+            }
+        }
+        """;
+        var handler = new FakeHttpMessageHandler();
+        handler.SetResponse(json);
+
+        var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
+
+        var config = new Dictionary<string, string?> { ["Steam:ApiKey"] = "test-key" };
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(config!)
+            .Build();
+
+        var rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
+        {
+            QueueLimit = 1,
+            TokenLimit = 100,
+            TokensPerPeriod = 100,
+            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
+            AutoReplenishment = true
+        });
+        var client = new SteamStoreClient(httpClient, configuration, rateLimiter);
+
+        // Act
+        var result = await client.FetchPriceAsync(362003);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Price.Should().BeNull();
+        result.Name.Should().BeEmpty();
+        result.IsUnavailable.Should().BeTrue();
     }
 }
 

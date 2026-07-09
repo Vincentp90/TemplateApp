@@ -45,15 +45,30 @@ public class ProcessPriceCheckUseCase : IProcessPriceCheckUseCase
         _alertsEnabled = configuration?["RabbitMQ:AlertsEnabled"] != "false";
     }
 
-    public async Task ExecuteAsync(int appId, Money price, string name, CancellationToken cancellationToken = default)
+    public async Task ExecuteAsync(int appId, Money? price, string name, bool isUnavailable, CancellationToken cancellationToken = default)
     {
         var game = await _gameRepo.GetAsync(appId, cancellationToken) ?? new Game(appId);
 
-        game.ApplyPriceUpdate(price, name, DateTimeOffset.UtcNow);
+        if (isUnavailable)
+        {
+            game.MarkUnavailable();
+        }
+        else if (price != null)
+        {
+            game.ApplyPriceUpdate(price.Value, name, DateTimeOffset.UtcNow);
+        }
+        else
+        {
+            // Price data available but no price_overview (free game) — still update name and timestamp
+            game.ApplyNameUpdate(name, DateTimeOffset.UtcNow);
+        }
+
         await _gameRepo.SaveAsync(game, cancellationToken);
 
-        if (!_alertsEnabled)
+        if (isUnavailable || !_alertsEnabled)
             return;
+
+        if (price == null) return;
 
         var rules = await _alertRuleRepo.GetActiveRulesForAsync(game.AppId, cancellationToken);
         var triggered = _evaluator.Evaluate(game, rules);
@@ -67,8 +82,8 @@ public class ProcessPriceCheckUseCase : IProcessPriceCheckUseCase
                 rule.AlertRuleId,
                 rule.UserId,
                 game.AppId.Value,
-                price.Amount,
-                price.Currency);
+                price.Value.Amount,
+                price.Value.Currency);
         }
     }
 }

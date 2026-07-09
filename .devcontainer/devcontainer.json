@@ -6,9 +6,10 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-vscode.vscode-dev-containers", 
+        "ms-vscode.vscode-dev-containers",
         "ms-dotnettools.csdevkit",
-        "ms-dotnettools.csharp"
+        "ms-dotnettools.csharp",
+        "humao.rest-client"
       ]
     }
   },

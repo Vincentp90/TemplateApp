@@ -49,17 +49,21 @@ namespace WishlistApi.Controllers
             var alertRules = await _priceReader.GetAlertRulesAsync(internalUserId.ToString());
 
             // 4. Merge everything
-            var result = localItems.Select(x => new WishlistItemDto(
-                AppId: Has("appid") ? x.AppId : null,
-                DateAdded: Has("dateadded") ? x.DateAdded : null,
-                Name: Has("name") ? x.AppName : null,
-                Price: prices.TryGetValue(x.AppId, out var price) && Has("price") ? price.Amount : null,
-                PriceCurrency: prices.TryGetValue(x.AppId, out price) && Has("pricecurrency") ? price.Currency : (string?)"EUR",
-                LastCheckedAt: prices.TryGetValue(x.AppId, out price) && Has("lastcheckedat") ? price.LastCheckedAt : null,
-                AlertRuleId: alertRules.TryGetValue(x.AppId, out var alert) && Has("alertruleid") ? alert.Id : null,
-                AlertThreshold: alertRules.TryGetValue(x.AppId, out alert) && Has("alertthreshold") ? alert.ThresholdAmount : null,
-                AlertCurrency: alertRules.TryGetValue(x.AppId, out alert) && Has("alertcurrency") ? alert.Currency : (string?)"EUR"
-            ));
+            var result = localItems.Select(x => {
+                var hasPrice = prices.TryGetValue(x.AppId, out var price);
+                return new WishlistItemDto(
+                    AppId: Has("appid") ? x.AppId : null,
+                    DateAdded: Has("dateadded") ? x.DateAdded : null,
+                    Name: Has("name") ? x.AppName : null,
+                    Price: hasPrice && Has("price") ? price.Amount : null,
+                    PriceCurrency: hasPrice && Has("pricecurrency") ? price.Currency : (string?)"EUR",
+                    LastCheckedAt: hasPrice && Has("lastcheckedat") ? price.LastCheckedAt : null,
+                    IsUnavailable: hasPrice && price.IsUnavailable,
+                    AlertRuleId: alertRules.TryGetValue(x.AppId, out var alert) && Has("alertruleid") ? alert.Id : null,
+                    AlertThreshold: alertRules.TryGetValue(x.AppId, out alert) && Has("alertthreshold") ? alert.ThresholdAmount : null,
+                    AlertCurrency: alertRules.TryGetValue(x.AppId, out alert) && Has("alertcurrency") ? alert.Currency : (string?)"EUR"
+                );
+            });
 
             return Ok(new Wishlist(result));
         }

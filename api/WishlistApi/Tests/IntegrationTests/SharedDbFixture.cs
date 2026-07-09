@@ -123,7 +123,8 @@ public sealed class SharedDbFixture : IAsyncLifetime
                 ""app_id"" INT PRIMARY KEY,
                 ""name"" VARCHAR(256) NOT NULL,
                 ""current_price"" TEXT,
-                ""last_checked_at"" TIMESTAMPTZ
+                ""last_checked_at"" TIMESTAMPTZ,
+                ""is_unavailable"" BOOLEAN NOT NULL DEFAULT false
             );
 
             -- Create alert_rules table (snake_case to match EF Core naming convention)

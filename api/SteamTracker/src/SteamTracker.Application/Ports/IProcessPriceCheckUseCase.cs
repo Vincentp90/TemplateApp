@@ -9,5 +9,5 @@ namespace SteamTracker.Application.Ports;
 /// </summary>
 public interface IProcessPriceCheckUseCase
 {
-    Task ExecuteAsync(int appId, Money price, string name, CancellationToken cancellationToken = default);
+    Task ExecuteAsync(int appId, Money? price, string name, bool isUnavailable, CancellationToken cancellationToken = default);
 }

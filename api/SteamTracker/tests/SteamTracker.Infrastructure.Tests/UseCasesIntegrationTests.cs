@@ -49,7 +49,7 @@ public class UseCasesIntegrationTests : IDisposable
             evaluator);
 
         // Act — price drops below threshold
-        await useCase.ExecuteAsync(42, new Money(15m, "EUR"), "Test Game", CancellationToken.None);
+        await useCase.ExecuteAsync(42, new Money(15m, "EUR"), "Test Game", false, CancellationToken.None);
 
         // Assert — price updated
         var updatedGame = await _context.Games.FindAsync(appId);
@@ -90,7 +90,7 @@ public class UseCasesIntegrationTests : IDisposable
             evaluator);
 
         // Act — price is above threshold (no alert)
-        await useCase.ExecuteAsync(42, new Money(50m, "EUR"), "Test Game", CancellationToken.None);
+        await useCase.ExecuteAsync(42, new Money(50m, "EUR"), "Test Game", false, CancellationToken.None);
 
         // Assert — no notifications
         notificationPublisher.Messages.Should().BeEmpty();

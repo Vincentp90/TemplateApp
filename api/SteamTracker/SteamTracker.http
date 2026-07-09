@@ -1,0 +1,37 @@
+### ============================================================
+# SteamTracker — HTTP Client Requests
+# ============================================================
+# Requires VS Code extension: "HTTP Client" by Huachao Mao (humao.rest-client)
+# Prerequisites: devcontainer running with db & rabbitmq services.
+# ============================================================
+
+### --- Steam External API — Fetch price for a game ---
+# Fetches price overview from the Steam Store API.
+# Replace <APP_ID> with a real Steam App ID, e.g. 730 (CS2) or 570 (Dota 2).
+GET https://store.steampowered.com/api/appdetails?appids=<APP_ID>&filters=price_overview&cc=de&l=german
+
+### Example: CS2 free
+GET https://store.steampowered.com/api/appdetails?appids=730&filters=price_overview&cc=de&l=german
+
+### Example: Grand Theft Auto V (no longer available)
+GET https://store.steampowered.com/api/appdetails?appids=362003&filters=price_overview&cc=de&l=german
+
+### --- SteamTracker Internal API (WishlistApi on port 5186) ---
+# The SteamTracker API runs inside the WishlistApi service on port 5186.
+# Set X-Internal-UserId header for internal callers.
+
+### Create an alert rule for a game
+# POST /api/games/{appId}/alert?thresholdAmount=<amount>&currency=<currency>
+# Requires: X-Internal-UserId header
+POST http://localhost:5186/api/games/730/alert?thresholdAmount=20.00&currency=EUR
+X-Internal-UserId: test-user-1
+
+### Create an alert rule for another game
+POST http://localhost:5186/api/games/570/alert?thresholdAmount=5.00&currency=EUR
+X-Internal-UserId: test-user-1
+
+### Delete an alert rule
+# DELETE /api/alert/{alertRuleId}
+# Replace <ALERT_RULE_ID> with a real GUID from your database.
+DELETE http://localhost:5186/api/alert/<ALERT_RULE_ID>
+X-Internal-UserId: test-user-1

@@ -13,6 +13,7 @@ export interface MergedWishlistItem {
   price: number | null;
   priceCurrency: string;
   lastCheckedAt: string | null;
+  isUnavailable: boolean;
   alertRuleId: string | null;
   alertThreshold: number | null;
   alertCurrency: string;
@@ -31,6 +32,7 @@ export default function WLItemsList() {
         price: item.price,
         priceCurrency: item.priceCurrency ?? 'EUR',
         lastCheckedAt: item.lastCheckedAt,
+        isUnavailable: item.isUnavailable ?? false,
         alertRuleId: item.alertRuleId,
         alertThreshold: item.alertThreshold,
         alertCurrency: item.alertCurrency ?? 'EUR',
@@ -81,6 +83,13 @@ export default function WLItemsList() {
             const hasSnapshots = item.lastCheckedAt != null;
             const alertRuleId = item.alertRuleId;
 
+            const renderPrice = () => {
+              if (item.isUnavailable) return 'N/A';
+              if (currentPrice === null) return '—';
+              if (currentPrice === 0) return 'Free';
+              return `${currentPrice.toFixed(2)} ${currency}`;
+            };
+
             return (
               <div
                 key={i}
@@ -90,10 +99,10 @@ export default function WLItemsList() {
               >
                 <span className="min-w-0 truncate">{item.name ?? '—'}</span>
                 <span className="text-center tabular-nums">
-                  {currentPrice != null ? `${currentPrice.toFixed(2)} ${currency}` : '—'}
+                  {renderPrice()}
                 </span>
                 <div className="flex items-center justify-center gap-2">
-                  <WishlistPriceBadge currentPrice={currentPrice} hasSnapshots={hasSnapshots} />
+                  <WishlistPriceBadge currentPrice={currentPrice} hasSnapshots={hasSnapshots} isUnavailable={item.isUnavailable} />
                   {hasUserId && (
                     <button
                       onClick={() => setAlertModalAppId(item.appId ?? 0)}

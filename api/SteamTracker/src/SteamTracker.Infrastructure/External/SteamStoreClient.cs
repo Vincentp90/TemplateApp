@@ -25,7 +25,7 @@ public class SteamStoreClient : ISteamStoreClient
         _logger = logger;
     }
 
-    public async Task<(Money Price, string Name)?> FetchPriceAsync(int appId)
+    public async Task<(Money? Price, string Name, bool IsUnavailable)> FetchPriceAsync(int appId)
     {
         using var lease = await _rateLimiter.AcquireAsync();
 
@@ -38,7 +38,7 @@ public class SteamStoreClient : ISteamStoreClient
         if (!response.IsSuccessStatusCode)
         {
             _logger?.LogInformation("Non-success response {StatusCode} for appId={AppId}", response.StatusCode, appId);
-            return null;
+            return (null, string.Empty, false);
         }
 
         var json = await response.Content.ReadAsStringAsync();
@@ -46,37 +46,40 @@ public class SteamStoreClient : ISteamStoreClient
 
         if (!doc.RootElement.TryGetProperty(appId.ToString(), out var appElement) ||
             !appElement.GetProperty("success").GetBoolean())
-            return null;
+        {
+            // success: false means the game no longer exists on Steam
+            return (null, string.Empty, true);
+        }
 
         var data = appElement.GetProperty("data");
         if (data.ValueKind != JsonValueKind.Object)
-            return null;
+            return (null, string.Empty, false);
 
         var name = string.Empty;
         if (data.TryGetProperty("name", out var nameProp) && nameProp.ValueKind == JsonValueKind.String)
             name = nameProp.GetString() ?? string.Empty;
 
         if (data.TryGetProperty("is_free", out var isFreeProp) && isFreeProp.GetBoolean())
-            return (Money.Free, name);
+            return (Money.Free, name, false);
 
         if (data.TryGetProperty("price_overview", out var priceOverview))
         {
             if (priceOverview.ValueKind != JsonValueKind.Object)
-                return null;
+                return (null, string.Empty, false);
 
             if (!priceOverview.TryGetProperty("final", out var finalProp) || finalProp.ValueKind != JsonValueKind.Number)
-                return null;
+                return (null, string.Empty, false);
 
             if (!priceOverview.TryGetProperty("currency", out var currencyProp) || currencyProp.ValueKind != JsonValueKind.String)
-                return null;
+                return (null, string.Empty, false);
 
             var amount = finalProp.GetInt32() / 100m;
             var currency = currencyProp.GetString() ?? "EUR";
             _logger?.LogInformation("Game {Name} (appId={AppId}) price: {Amount} {Currency}", name, appId, amount, currency);
-            return (new Money(amount, currency), name);
+            return (new Money(amount, currency), name, false);
         }
 
-        return null;
+        return (null, string.Empty, false);
     }
 }
 
