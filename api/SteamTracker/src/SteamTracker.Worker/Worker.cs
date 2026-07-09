@@ -95,12 +95,11 @@ public class PriceCheckConsumer : AsyncEventingBasicConsumer
             }
 
             // Fetch price from Steam
-            var result = await _steamClient.FetchPriceAsync(request.AppId);
+            var result = await _steamClient.FetchPriceAsync(request.AppId, cancellationToken);
 
-            var (price, gameName, isUnavailable) = result;
-            if (price != null || isUnavailable)
+            if (result is not null && (result.Price != null || result.IsUnavailable))
             {
-                await _useCase.ExecuteAsync(request.AppId, price, gameName, isUnavailable, cancellationToken);
+                await _useCase.ExecuteAsync(request.AppId, result.Price, result.Name, result.IsUnavailable, cancellationToken);
             }
             else
             {

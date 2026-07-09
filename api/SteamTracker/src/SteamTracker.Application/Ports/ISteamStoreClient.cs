@@ -1,3 +1,4 @@
+using System.Threading;
 using SteamTracker.Domain.ValueObjects;
 
 namespace SteamTracker.Application.Ports;
@@ -12,5 +13,5 @@ public interface ISteamStoreClient
     /// When price is null and isUnavailable is true, the game no longer exists on Steam.
     /// Throws SteamRateLimitException on HTTP 429.
     /// </summary>
-    Task<(Money? Price, string Name, bool IsUnavailable)> FetchPriceAsync(int appId);
+    Task<SteamPriceResult?> FetchPriceAsync(int appId, CancellationToken cancellationToken = default);
 }

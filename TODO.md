@@ -5,9 +5,12 @@ https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
 
 Final steps:
-- fix overview header
-- claude review SteamPriceChecker and tests
+- all those constructors in api/SteamTracker/src/SteamTracker.Application/UseCases/ProcessPriceCheckUseCase.cs are really needed?
 - Review frontend changes (probably diff in github pull request easiest way)
+- split worker.cs into multiple files
+- read tests
+- bring api/SteamTracker/OVERVIEW.md up-to-date
+- At the end to final cleanup of migrations into one migration
 
 Things I'm going to try/add/learn more about later :
 - Switch to usecases instead of services in application layer

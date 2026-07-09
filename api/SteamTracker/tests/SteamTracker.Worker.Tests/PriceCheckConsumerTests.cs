@@ -46,7 +46,7 @@ public class PriceCheckConsumerTests
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
-            .ReturnsAsync((price, gameName, false));
+            .ReturnsAsync(SteamPriceResult.WithPrice(price, gameName));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -79,7 +79,7 @@ public class PriceCheckConsumerTests
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
-            .ReturnsAsync((null, string.Empty, false));
+            .ReturnsAsync((SteamPriceResult?)null);
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -237,10 +237,10 @@ public class PriceCheckConsumerTests
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId1))
-            .ReturnsAsync((price, gameName, false));
+            .ReturnsAsync(SteamPriceResult.WithPrice(price, gameName));
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId2))
-            .ReturnsAsync((price, gameName, false));
+            .ReturnsAsync(SteamPriceResult.WithPrice(price, gameName));
 
         var msg1 = new PriceCheckMessage(appId1, DateTimeOffset.UtcNow);
         var msg2 = new PriceCheckMessage(appId2, DateTimeOffset.UtcNow);
@@ -329,7 +329,7 @@ public class PriceCheckConsumerTests
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
-            .ReturnsAsync((price, gameName, false));
+            .ReturnsAsync(SteamPriceResult.WithPrice(price, gameName));
 
         // Act — redelivered = true should still be processed
         await _consumer.HandleBasicDeliverAsync(
@@ -395,7 +395,7 @@ public class PriceCheckConsumerTests
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
-            .ReturnsAsync((price, gameName, false));
+            .ReturnsAsync(SteamPriceResult.WithPrice(price, gameName));
         _useCaseMock
             .Setup(x => x.ExecuteAsync(appId, price, gameName, false, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Use case failed"));
@@ -430,7 +430,7 @@ public class PriceCheckConsumerTests
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
-            .ReturnsAsync((price, gameName, false));
+            .ReturnsAsync(SteamPriceResult.WithPrice(price, gameName));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -463,7 +463,7 @@ public class PriceCheckConsumerTests
 
         _steamClientMock
             .Setup(x => x.FetchPriceAsync(appId))
-            .ReturnsAsync((null, string.Empty, true));
+            .ReturnsAsync(SteamPriceResult.Unavailable());
 
         // Act
         await _consumer.HandleBasicDeliverAsync(

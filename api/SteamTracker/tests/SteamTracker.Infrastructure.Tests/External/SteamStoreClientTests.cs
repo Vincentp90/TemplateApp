@@ -1,6 +1,5 @@
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Http;
+using Microsoft.Extensions.Logging.Abstractions;
 using SteamTracker.Infrastructure.External;
 using System.Net;
 using System.Threading.RateLimiting;
@@ -9,42 +8,65 @@ namespace SteamTracker.Infrastructure.Tests.External;
 
 public class SteamStoreClientTests
 {
-    [Fact]
-    public async Task FetchPriceAsync_RateLimitThrottlesSubsequentCalls()
+    private static SteamStoreClient CreateClient(HttpMessageHandler handler, TokenBucketRateLimiter? rateLimiter = null)
     {
-        // Arrange — a handler that returns a successful response for any request
-        var handler = new FakeHttpMessageHandler();
-        handler.SetResponseForAnyApp();
-
         var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
-
-        var config = new Dictionary<string, string?> { ["Steam:ApiKey"] = "test-key" };
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(config!)
-            .Build();
-
-        var rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
+        rateLimiter ??= new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
         {
-            QueueLimit = 1,
+            QueueLimit = 100,
             TokenLimit = 100,
             TokensPerPeriod = 100,
             ReplenishmentPeriod = TimeSpan.FromSeconds(1),
             AutoReplenishment = true
         });
-        var client = new SteamStoreClient(httpClient, configuration, rateLimiter);
 
-        // First call should succeed
+        return new SteamStoreClient(httpClient, rateLimiter, NullLogger<SteamStoreClient>.Instance);
+    }
+
+    [Fact]
+    public async Task FetchPriceAsync_RateLimitThrottlesSubsequentCalls()
+    {
+        // Arrange — a handler that returns a successful response for any app ID
+        var handler = new FakeHttpMessageHandler();
+        handler.SetResponseForAnyApp();
+        var client = CreateClient(handler);
+
+        // Act — fire two calls; the second should simply wait for a token rather than fail
         var firstCall = client.FetchPriceAsync(12345);
-
-        // Second call should be throttled — it should wait while the limiter is exhausted
         var secondCall = client.FetchPriceAsync(12346);
-
-        // Wait for both to complete
         await Task.WhenAll(firstCall, secondCall);
 
-        // Both should have succeeded (the throttling just adds delay, doesn't fail)
+        // Assert — both succeed, throttling only adds delay
         (await firstCall).Should().NotBeNull();
         (await secondCall).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task FetchPriceAsync_LimiterRejectsWhenQueueIsFull_ThrowsSteamRateLimitException()
+    {
+        // Arrange — a limiter with no capacity and no queue room: the very first
+        // acquire attempt fails immediately.
+        var handler = new FakeHttpMessageHandler();
+        handler.SetResponseForAnyApp();
+
+        var exhaustedLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
+        {
+            QueueLimit = 0,
+            TokenLimit = 1,
+            TokensPerPeriod = 1,
+            ReplenishmentPeriod = TimeSpan.FromMinutes(5),
+            AutoReplenishment = false // no tokens will ever replenish during the test
+        });
+        // Consume the only token up front so the client's call has nothing to acquire.
+        exhaustedLimiter.AttemptAcquire();
+
+        var client = CreateClient(handler, exhaustedLimiter);
+
+        // Act
+        var act = () => client.FetchPriceAsync(12345);
+
+        // Assert
+        await act.Should().ThrowAsync<SteamRateLimitException>();
     }
 
     [Fact]
@@ -53,29 +75,43 @@ public class SteamStoreClientTests
         // Arrange
         var handler = new FakeHttpMessageHandler();
         handler.SetResponse(HttpStatusCode.TooManyRequests);
-
-        var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
-
-        var config = new Dictionary<string, string?> { ["Steam:ApiKey"] = "test-key" };
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(config!)
-            .Build();
-
-        var rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
-        {
-            QueueLimit = 1,
-            TokenLimit = 100,
-            TokensPerPeriod = 100,
-            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
-            AutoReplenishment = true
-        });
-        var client = new SteamStoreClient(httpClient, configuration, rateLimiter);
+        var client = CreateClient(handler);
 
         // Act
         var act = () => client.FetchPriceAsync(12345);
 
         // Assert
         await act.Should().ThrowAsync<SteamRateLimitException>();
+    }
+
+    [Fact]
+    public async Task FetchPriceAsync_NonSuccessStatusCode_ReturnsNull()
+    {
+        // Arrange — any other error (500, 503, ...) is treated as transient, not thrown
+        var handler = new FakeHttpMessageHandler();
+        handler.SetResponse(HttpStatusCode.ServiceUnavailable);
+        var client = CreateClient(handler);
+
+        // Act
+        var result = await client.FetchPriceAsync(12345);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task FetchPriceAsync_MalformedJson_ReturnsNullInsteadOfThrowing()
+    {
+        // Arrange
+        var handler = new FakeHttpMessageHandler();
+        handler.SetResponse("{not valid json");
+        var client = CreateClient(handler);
+
+        // Act
+        var result = await client.FetchPriceAsync(12345);
+
+        // Assert
+        result.Should().BeNull();
     }
 
     [Fact]
@@ -99,33 +135,16 @@ public class SteamStoreClientTests
         """;
         var handler = new FakeHttpMessageHandler();
         handler.SetResponse(json);
-
-        var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
-
-        var config = new Dictionary<string, string?> { ["Steam:ApiKey"] = "test-key" };
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(config!)
-            .Build();
-
-        var rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
-        {
-            QueueLimit = 1,
-            TokenLimit = 100,
-            TokensPerPeriod = 100,
-            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
-            AutoReplenishment = true
-        });
-        var client = new SteamStoreClient(httpClient, configuration, rateLimiter);
+        var client = CreateClient(handler);
 
         // Act
         var result = await client.FetchPriceAsync(12345);
 
         // Assert
         result.Should().NotBeNull();
-        var price = result!.Price;
-        price.Should().NotBeNull();
-        price.Value.Amount.Should().Be(19.99m);
-        price.Value.Currency.Value.Should().Be("EUR");
+        result!.Price.Should().NotBeNull();
+        result.Price!.Value.Amount.Should().Be(19.99m);
+        result.Price.Value.Currency.Value.Should().Be("EUR");
         result.Name.Should().Be("Test Game");
         result.IsUnavailable.Should().BeFalse();
     }
@@ -150,33 +169,16 @@ public class SteamStoreClientTests
         """;
         var handler = new FakeHttpMessageHandler();
         handler.SetResponse(json);
-
-        var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
-
-        var config = new Dictionary<string, string?> { ["Steam:ApiKey"] = "test-key" };
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(config!)
-            .Build();
-
-        var rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
-        {
-            QueueLimit = 1,
-            TokenLimit = 100,
-            TokensPerPeriod = 100,
-            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
-            AutoReplenishment = true
-        });
-        var client = new SteamStoreClient(httpClient, configuration, rateLimiter);
+        var client = CreateClient(handler);
 
         // Act
         var result = await client.FetchPriceAsync(220);
 
         // Assert — should still extract price even when name/is_free are missing
         result.Should().NotBeNull();
-        var price = result!.Price;
-        price.Should().NotBeNull();
-        price.Value.Amount.Should().Be(1.95m);
-        price.Value.Currency.Value.Should().Be("EUR");
+        result!.Price.Should().NotBeNull();
+        result.Price!.Value.Amount.Should().Be(1.95m);
+        result.Price.Value.Currency.Value.Should().Be("EUR");
         result.IsUnavailable.Should().BeFalse();
     }
 
@@ -197,30 +199,14 @@ public class SteamStoreClientTests
         """;
         var handler = new FakeHttpMessageHandler();
         handler.SetResponse(json);
-
-        var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
-
-        var config = new Dictionary<string, string?> { ["Steam:ApiKey"] = "test-key" };
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(config!)
-            .Build();
-
-        var rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
-        {
-            QueueLimit = 1,
-            TokenLimit = 100,
-            TokensPerPeriod = 100,
-            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
-            AutoReplenishment = true
-        });
-        var client = new SteamStoreClient(httpClient, configuration, rateLimiter);
+        var client = CreateClient(handler);
 
         // Act
         var result = await client.FetchPriceAsync(54321);
 
         // Assert
         result.Should().NotBeNull();
-        result.Price.Should().NotBeNull();
+        result!.Price.Should().NotBeNull();
         result.Price!.Value.IsFree.Should().BeTrue();
         result.Name.Should().Be("Free Game");
         result.IsUnavailable.Should().BeFalse();
@@ -241,30 +227,14 @@ public class SteamStoreClientTests
         """;
         var handler = new FakeHttpMessageHandler();
         handler.SetResponse(json);
-
-        var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
-
-        var config = new Dictionary<string, string?> { ["Steam:ApiKey"] = "test-key" };
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(config!)
-            .Build();
-
-        var rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
-        {
-            QueueLimit = 1,
-            TokenLimit = 100,
-            TokensPerPeriod = 100,
-            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
-            AutoReplenishment = true
-        });
-        var client = new SteamStoreClient(httpClient, configuration, rateLimiter);
+        var client = CreateClient(handler);
 
         // Act
         var result = await client.FetchPriceAsync(730);
 
         // Assert — should be treated as a free game so the use case can persist it
         result.Should().NotBeNull();
-        result.Price.Should().NotBeNull();
+        result!.Price.Should().NotBeNull();
         result.Price!.Value.IsFree.Should().BeTrue();
         result.Price.Value.Amount.Should().Be(0m);
         result.IsUnavailable.Should().BeFalse();
@@ -283,30 +253,14 @@ public class SteamStoreClientTests
         """;
         var handler = new FakeHttpMessageHandler();
         handler.SetResponse(json);
-
-        var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
-
-        var config = new Dictionary<string, string?> { ["Steam:ApiKey"] = "test-key" };
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(config!)
-            .Build();
-
-        var rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
-        {
-            QueueLimit = 1,
-            TokenLimit = 100,
-            TokensPerPeriod = 100,
-            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
-            AutoReplenishment = true
-        });
-        var client = new SteamStoreClient(httpClient, configuration, rateLimiter);
+        var client = CreateClient(handler);
 
         // Act
         var result = await client.FetchPriceAsync(362003);
 
         // Assert
         result.Should().NotBeNull();
-        result.Price.Should().BeNull();
+        result!.Price.Should().BeNull();
         result.Name.Should().BeEmpty();
         result.IsUnavailable.Should().BeTrue();
     }
@@ -322,7 +276,6 @@ public class FakeHttpMessageHandler : HttpMessageHandler
 
     public FakeHttpMessageHandler()
     {
-        // Default: successful response for app 12345
         SetResponse("""{"12345":{"success":true,"data":{"name":"Default","is_free":false,"price_overview":{"final":999,"currency":"EUR"}}}}""");
     }
 
@@ -340,7 +293,6 @@ public class FakeHttpMessageHandler : HttpMessageHandler
 
     public void SetResponseForAnyApp()
     {
-        // Reset so dynamic mode is active
         _fixedJson = null;
         _statusCode = null;
     }
@@ -364,20 +316,16 @@ public class FakeHttpMessageHandler : HttpMessageHandler
             });
         }
 
-        // Dynamic mode: extract app ID from query string and build a response
         var query = request.RequestUri?.Query ?? string.Empty;
-        var appId = int.Parse(query.Split('&')[0].Replace("?", "").Replace("appids=", ""));
+        var appId = int.Parse(query.TrimStart('?').Split('&')[0].Replace("appids=", ""));
 
         var json = BuildAppResponse(appId);
-        var dynamicResponse = new HttpResponseMessage(HttpStatusCode.OK)
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent(json)
-        };
-        return Task.FromResult(dynamicResponse);
+        });
     }
 
-    private static string BuildAppResponse(int appId)
-    {
-        return "{\"" + appId + "\":{\"success\":true,\"data\":{\"name\":\"Any Game\",\"is_free\":false,\"price_overview\":{\"final\":999,\"currency\":\"EUR\"}}}}";
-    }
+    private static string BuildAppResponse(int appId) =>
+        "{\"" + appId + "\":{\"success\":true,\"data\":{\"name\":\"Any Game\",\"is_free\":false,\"price_overview\":{\"final\":999,\"currency\":\"EUR\"}}}}";
 }
