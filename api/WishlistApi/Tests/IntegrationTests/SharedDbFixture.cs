@@ -149,7 +149,7 @@ public sealed class SharedDbFixture : IAsyncLifetime
             INSERT INTO ""games"" (""app_id"", ""name"", ""current_price"", ""last_checked_at"") VALUES
                 (42, 'Test Game Alpha', '19.99|EUR', '2025-07-01T12:00:00Z'),
                 (100, 'Test Game Beta', '29.99|EUR', '2025-07-01T12:00:00Z'),
-                (200, 'Free To Play Game', NULL, NULL)
+                (200, 'Free To Play Game', '0.00|EUR', '2025-07-01T12:00:00Z')
             ON CONFLICT (""app_id"") DO NOTHING;
 
             -- Insert test alert rules

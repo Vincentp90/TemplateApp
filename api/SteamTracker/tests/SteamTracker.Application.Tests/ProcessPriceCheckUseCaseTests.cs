@@ -257,4 +257,34 @@ public class ProcessPriceCheckUseCaseTests
         // Game should still be saved with IsUnavailable = true
         gameRepo.Verify(r => r.SaveAsync(It.Is<Game>(g => g.IsUnavailable == true), It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_freeGame_savesWithFreePrice()
+    {
+        var gameRepo = new Mock<IGameRepository>();
+        gameRepo.Setup(r => r.GetAsync(It.IsAny<SteamAppId>())).ReturnsAsync((Game?)null);
+
+        var alertRuleRepo = new Mock<IAlertRuleRepository>();
+        alertRuleRepo.Setup(r => r.GetActiveRulesForAsync(It.IsAny<SteamAppId>())).ReturnsAsync(Array.Empty<AlertRule>());
+        var notificationPublisher = new Mock<INotificationPublisher>();
+        var evaluator = new PriceAlertEvaluator();
+        var config = new Mock<IConfiguration>();
+        config.Setup(c => c["RabbitMQ:AlertsEnabled"]).Returns("true");
+
+        var useCase = new ProcessPriceCheckUseCase(
+            gameRepo.Object,
+            alertRuleRepo.Object,
+            notificationPublisher.Object,
+            evaluator,
+            config.Object);
+
+        // Simulates Steam returning Money.Free for empty data array (e.g. CS2 / app 730)
+        Money freePrice = new Money(0m) { IsFree = true };
+        await useCase.ExecuteAsync(730, freePrice, "Counter-Strike 2", false);
+
+        gameRepo.Verify(r => r.SaveAsync(It.Is<Game>(g =>
+            g.AppId.Value == 730 &&
+            g.Name == "Counter-Strike 2" &&
+            g.CurrentPrice != null)), Times.Once);
+    }
 }

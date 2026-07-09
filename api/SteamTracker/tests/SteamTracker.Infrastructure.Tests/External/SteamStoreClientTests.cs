@@ -227,6 +227,50 @@ public class SteamStoreClientTests
     }
 
     [Fact]
+    public async Task FetchPriceAsync_EmptyDataArray_ReturnsFreeMoney()
+    {
+        // Arrange — Steam returns empty data array for free games like CS2 (app 730)
+        // when using filters=price_overview. success is true but data is [].
+        var json = """
+        {
+            "730": {
+                "success": true,
+                "data": []
+            }
+        }
+        """;
+        var handler = new FakeHttpMessageHandler();
+        handler.SetResponse(json);
+
+        var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(5) };
+
+        var config = new Dictionary<string, string?> { ["Steam:ApiKey"] = "test-key" };
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(config!)
+            .Build();
+
+        var rateLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
+        {
+            QueueLimit = 1,
+            TokenLimit = 100,
+            TokensPerPeriod = 100,
+            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
+            AutoReplenishment = true
+        });
+        var client = new SteamStoreClient(httpClient, configuration, rateLimiter);
+
+        // Act
+        var result = await client.FetchPriceAsync(730);
+
+        // Assert — should be treated as a free game so the use case can persist it
+        result.Should().NotBeNull();
+        result.Price.Should().NotBeNull();
+        result.Price!.Value.IsFree.Should().BeTrue();
+        result.Price.Value.Amount.Should().Be(0m);
+        result.IsUnavailable.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task FetchPriceAsync_UnavailableGame_ReturnsUnavailableFlag()
     {
         // Arrange — success: false means the game no longer exists on Steam

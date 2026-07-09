@@ -36,6 +36,7 @@ public class Game
     public void MarkUnavailable()
     {
         IsUnavailable = true;
+        LastCheckedAt = DateTimeOffset.UtcNow;
     }
 
     public void ApplyNameUpdate(string name, DateTimeOffset at)

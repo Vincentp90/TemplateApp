@@ -77,4 +77,30 @@ public class GameTests
 
         game.CanPriceCheck(now.AddHours(24)).Should().BeTrue();
     }
+
+    [Fact]
+    public void MarkUnavailable_records_last_check_time()
+    {
+        var game = new Game(new SteamAppId(362003));
+
+        game.MarkUnavailable();
+
+        game.IsUnavailable.Should().BeTrue();
+        game.LastCheckedAt.Should().NotBeNull();
+        game.LastCheckedAt.Value.DateTime.Should().BeCloseTo(DateTimeOffset.UtcNow.DateTime, TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public void MarkUnavailable_respects_24h_cooldown()
+    {
+        var game = new Game(new SteamAppId(362003));
+        var at = DateTimeOffset.UtcNow;
+
+        game.MarkUnavailable();
+
+        // Should not be due for check within 24h
+        game.CanPriceCheck(at.AddHours(12)).Should().BeFalse();
+        // Should be due after 24h
+        game.CanPriceCheck(at.AddHours(25)).Should().BeTrue();
+    }
 }

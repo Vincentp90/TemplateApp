@@ -118,16 +118,16 @@ public class SharedDbPriceReaderIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetPricesAsync_returnsNullPriceForF2PGame()
+    public async Task GetPricesAsync_returnsZeroPriceForFreeGame()
     {
         // Act
         var prices = await _priceReader.GetPricesAsync([200]);
 
         // Assert
         prices.Should().HaveCount(1);
-        prices[200].Amount.Should().BeNull();
-        prices[200].Currency.Should().BeNull();
-        prices[200].LastCheckedAt.Should().BeNull();
+        prices[200].Amount.Should().Be(0m);
+        prices[200].Currency.Should().Be("EUR");
+        prices[200].LastCheckedAt.Should().NotBeNull();
     }
 
     [Fact]

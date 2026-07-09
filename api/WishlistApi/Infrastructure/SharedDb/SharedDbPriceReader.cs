@@ -97,14 +97,14 @@ public class SharedDbPriceReader : ISharedDbPriceReader
         if (!string.IsNullOrWhiteSpace(row.CurrentPrice))
         {
             var money = ParseMoneyString(row.CurrentPrice);
-            if (money.Amount > 0)
+            if (money.Amount >= 0 && !string.IsNullOrWhiteSpace(money.Currency))
             {
                 amount = money.Amount;
-                currency = money.Currency!;
+                currency = money.Currency;
             }
         }
 
-        return (row.AppId, new GamePrice(amount, currency, ToDateTimeOffset(row.LastCheckedAt), row.IsUnavailable));
+        return (row.AppId, new GamePrice(amount, currency!, ToDateTimeOffset(row.LastCheckedAt), row.IsUnavailable));
     }
 
     private static (int AppId, AlertRuleInfo Info)? ParseAlertRule(AlertRuleRow row)
