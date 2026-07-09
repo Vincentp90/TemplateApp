@@ -14,16 +14,6 @@ public class GameConfig : IEntityTypeConfiguration<Game>
         builder.Property(g => g.Name).HasMaxLength(256).IsRequired();
         builder.Property(g => g.IsUnavailable).HasDefaultValue(false);
         
-        // Store CurrentPrice as separate columns with shadow properties
-        builder.Property<decimal?>("CurrentPriceAmount")
-            .HasColumnName("current_price_amount")
-            .HasPrecision(10, 2)
-            .IsRequired(false);
-        builder.Property<string>("CurrentPriceCurrency")
-            .HasColumnName("current_price_currency")
-            .HasMaxLength(3)
-            .IsRequired(false);
-
         // Convert Money value object to/from "Amount|Currency" string
         builder.Property<Money?>("CurrentPrice")
             .HasConversion(

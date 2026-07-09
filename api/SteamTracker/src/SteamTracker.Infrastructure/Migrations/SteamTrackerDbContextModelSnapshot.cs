@@ -71,16 +71,6 @@ namespace SteamTracker.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("current_price");
 
-                    b.Property<decimal?>("CurrentPriceAmount")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)")
-                        .HasColumnName("current_price_amount");
-
-                    b.Property<string>("CurrentPriceCurrency")
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)")
-                        .HasColumnName("current_price_currency");
-
                     b.Property<DateTimeOffset?>("LastCheckedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_checked_at");
