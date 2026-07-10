@@ -12,7 +12,6 @@ export const Route = createFileRoute('/auth/login')({
       const res = await api.get("/auth/me");
       const authStore = useAuthStore.getState();
       authStore.setUser({
-        userId: res.data.userId,
         username: res.data.username,
         role: res.data.role,
       });

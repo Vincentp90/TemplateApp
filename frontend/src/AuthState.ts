@@ -8,7 +8,6 @@ export const UserRole = {
 export type UserRole = typeof UserRole[keyof typeof UserRole];
 
 type User = {
-  userId: string;
   username: string;
   role: UserRole;
 };
