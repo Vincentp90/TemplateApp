@@ -21,12 +21,6 @@ public class ProcessPriceCheckUseCase : IProcessPriceCheckUseCase
     public ProcessPriceCheckUseCase(
         IGameRepository gameRepo,
         IAlertRuleRepository alertRuleRepo,
-        INotificationPublisher notificationPublisher)
-        : this(gameRepo, alertRuleRepo, notificationPublisher, new PriceAlertEvaluator(), null) { }
-
-    public ProcessPriceCheckUseCase(
-        IGameRepository gameRepo,
-        IAlertRuleRepository alertRuleRepo,
         INotificationPublisher notificationPublisher,
         PriceAlertEvaluator evaluator)
         : this(gameRepo, alertRuleRepo, notificationPublisher, evaluator, null) { }
