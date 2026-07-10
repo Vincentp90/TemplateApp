@@ -17,7 +17,7 @@ public sealed class RabbitMqContainerFixture : IAsyncLifetime
 
     private RabbitMqContainerFixture()
     {
-        Container = new RabbitMqBuilder("rabbitmq:3-management-alpine")
+        Container = new RabbitMqBuilder("rabbitmq:4.2-management-alpine")
             .Build();
     }
 

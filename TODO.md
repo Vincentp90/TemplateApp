@@ -5,13 +5,13 @@ https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
 
 Final steps:
-- Review frontend changes (probably diff in github pull request easiest way)
-- read tests
 - bring api/SteamTracker/OVERVIEW.md up-to-date
-- At the end to final cleanup of migrations into one migration
+- At the end do final cleanup of migrations into one migration
 
 Things I'm going to try/add/learn more about later :
 - Switch to usecases instead of services in application layer
+- get prices by api instead of shared db
+- finish alerts
 - Try to vibecode angular frontend
 - Auction: add end date to entity, remove static mutable Domain.Auction.Duration
 - Auction OCC: remove client side part since we also have the admin form which is more suitable for RowVersion round-trip, auction use case fits better with only server side OCC

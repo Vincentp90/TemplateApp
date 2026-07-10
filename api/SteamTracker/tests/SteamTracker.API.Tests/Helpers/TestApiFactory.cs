@@ -21,11 +21,11 @@ namespace SteamTracker.API.Tests.Helpers;
 /// </summary>
 public class TestApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _db = new PostgreSqlBuilder("postgres:17-alpine")
+    private readonly PostgreSqlContainer _db = new PostgreSqlBuilder("postgres:18.1")
         .WithPassword("testpassword")
         .Build();
 
-    private readonly RabbitMqContainer _rabbitMq = new RabbitMqBuilder("rabbitmq:3-management-alpine")
+    private readonly RabbitMqContainer _rabbitMq = new RabbitMqBuilder("rabbitmq:4.2-management")
         .Build();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
