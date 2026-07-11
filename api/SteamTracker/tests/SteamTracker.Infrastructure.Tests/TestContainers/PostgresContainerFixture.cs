@@ -19,7 +19,7 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
 
     private PostgresContainerFixture()
     {
-        Container = new PostgreSqlBuilder("postgres:17-alpine")
+        Container = new PostgreSqlBuilder("postgres:18.1")
             .WithPassword("testpassword")
             .Build();
     }

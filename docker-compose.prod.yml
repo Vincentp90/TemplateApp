@@ -2,7 +2,7 @@
 
 services:
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:4.2-management # TODO check non management better?
     restart: always
 
   db:

@@ -2,6 +2,7 @@ Agent: ignore this
 
 Things I'm going to try/add/learn more about later :
 - Switch to usecases instead of services in application layer
+- warnings in wishlist and steamtracker
 - get prices by api instead of shared db https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 - finish alerts
 - Try to vibecode angular frontend
