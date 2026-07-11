@@ -1,6 +1,6 @@
-using Application;
-using Application.Commands;
 using Application.Contracts;
+using Application.UseCases.Auth;
+using Application.UseCases.Auth.Requests;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,14 +11,17 @@ namespace WishlistApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class AuthController(IAuthService authService, IJwtTokenGenerator jwtTokenGenerator) : ControllerBase
+    public class AuthController(
+        IRegisterUserUseCase registerUserUseCase,
+        ILoginUserUseCase loginUserUseCase,
+        IJwtTokenGenerator jwtTokenGenerator) : ControllerBase
     {
         [HttpPost("register")]
         public async Task<ActionResult> RegisterAsync(RegisterRequest request)
         {
             try
             {
-                await authService.AddUserAsync(new RegisterUserCommand(request.Username, request.Password));
+                await registerUserUseCase.ExecuteAsync(new RegisterUserRequest(request.Username, request.Password));
             }
             catch (DomainException ex)
             {
@@ -29,14 +32,14 @@ namespace WishlistApi.Controllers
 
         // Could be improved by returning short lived token (<5 mins) and then other call returns bearer token, after doing extra checks (MFA, device, IP, risk scoring)
         [HttpPost("login")]
-        public async Task<ActionResult<AuthResponse>> LoginAsync(LoginRequest request)
+        public async Task<ActionResult> LoginAsync(LoginRequest request)
         {
-            var user = await authService.LoginAsync(new LoginCommand(request.Username, request.Password));
+            var loginResult = await loginUserUseCase.ExecuteAsync(new LoginUserRequest(request.Username, request.Password));
 
-            if (user == null)
+            if (loginResult == null)
                 return Unauthorized();
 
-            Response.Cookies.Append("auth_token", jwtTokenGenerator.Generate(user), new CookieOptions
+            Response.Cookies.Append("auth_token", jwtTokenGenerator.Generate(loginResult), new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,

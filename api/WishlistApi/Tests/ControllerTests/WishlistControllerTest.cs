@@ -1,16 +1,15 @@
-﻿using Application;
-using Domain.Helpers;
-using Domain.Repositories;
+using Application;
+using Application.Contracts;
+using Application.UseCases.Wishlist;
+using Application.UseCases.Wishlist.Requests;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
 using System.Security.Claims;
-using Application.Contracts;
 using WishlistApi.Controllers;
 using WishlistApi.Helpers;
 
@@ -39,8 +38,19 @@ namespace Tests.ControllerTests
             var mockAccessor = new Mock<IHttpContextAccessor>();
             mockAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
-            var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
-            repositoryMock.Setup(x => x.GetWishlistItemsAsync(3)).ReturnsAsync(
+            var userServiceMock = new Mock<IUserService>(MockBehavior.Strict);
+            userServiceMock.Setup(x => x.GetInternalUserIdAsync(externalID)).ReturnsAsync(3);
+
+            IUserContext userContextMock = new UserContext(mockAccessor.Object, userServiceMock.Object);
+
+            var eventPublisherMock = new Mock<IEventPublisher>();
+            var priceReaderMock = new Mock<ISharedDbPriceReader>();
+            priceReaderMock.Setup(x => x.GetPricesAsync(It.IsAny<IEnumerable<int>>())).ReturnsAsync(new Dictionary<int, GamePrice>());
+            priceReaderMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new Dictionary<int, AlertRuleInfo>());
+            var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
+
+            var getWishlistUseCaseMock = new Mock<IGetWishlistUseCase>();
+            getWishlistUseCaseMock.Setup(x => x.ExecuteAsync(It.IsAny<GetWishlistRequest>())).ReturnsAsync(
                 new List<Domain.WishlistItem>()
                 {
                     new Domain.WishlistItem(
@@ -52,20 +62,23 @@ namespace Tests.ControllerTests
                     ),
                 });
 
-            var userServiceMock = new Mock<IUserService>(MockBehavior.Strict);
-            userServiceMock.Setup(x => x.GetInternalUserIdAsync(externalID)).ReturnsAsync(3);
+            var addWishlistItemUseCaseMock = new Mock<IAddWishlistItemUseCase>();
+            var deleteWishlistItemUseCaseMock = new Mock<IDeleteWishlistItemUseCase>();
+            var getWishlistStatsUseCaseMock = new Mock<IGetWishlistStatsUseCase>();
+            var publishBackfillEventUseCaseMock = new Mock<IPublishBackfillEventUseCase>();
+            var setAlertRuleUseCaseMock = new Mock<ISetAlertRuleUseCase>();
+            var deleteAlertRuleUseCaseMock = new Mock<IDeleteAlertRuleUseCase>();
 
-            IUserContext userContextMock = new UserContext(mockAccessor.Object, userServiceMock.Object);
-
-            var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
-            uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
-
-            var eventPublisherMock = new Mock<IEventPublisher>();
-            var priceReaderMock = new Mock<ISharedDbPriceReader>();
-            priceReaderMock.Setup(x => x.GetPricesAsync(It.IsAny<IEnumerable<int>>())).ReturnsAsync(new Dictionary<int, GamePrice>());
-            priceReaderMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new Dictionary<int, AlertRuleInfo>());
-            var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
-            var controller = new WishlistController(userContextMock, new WishlistService(repositoryMock.Object, uowMock.Object, eventPublisherMock.Object), priceReaderMock.Object, alertProxyMock.Object);
+            var controller = new WishlistController(
+                userContextMock,
+                getWishlistUseCaseMock.Object,
+                addWishlistItemUseCaseMock.Object,
+                deleteWishlistItemUseCaseMock.Object,
+                getWishlistStatsUseCaseMock.Object,
+                publishBackfillEventUseCaseMock.Object,
+                setAlertRuleUseCaseMock.Object,
+                deleteAlertRuleUseCaseMock.Object,
+                priceReaderMock.Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = httpContext
@@ -76,8 +89,8 @@ namespace Tests.ControllerTests
 
             // Assert
             
-            // Check data access calls were only called once
-            repositoryMock.Verify(x => x.GetWishlistItemsAsync(3), Times.Once);
+            // Check use case was called once
+            getWishlistUseCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<GetWishlistRequest>()), Times.Once);
             userServiceMock.Verify(x => x.GetInternalUserIdAsync(externalID), Times.Once);
 
             actionResult.Should().NotBeNull();

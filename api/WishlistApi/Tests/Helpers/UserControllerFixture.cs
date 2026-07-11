@@ -1,4 +1,6 @@
-using Application;
+using Application.Contracts;
+using Application.UseCases.User;
+using Application.UseCases.User.Requests;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Users;
 using Infrastructure.ReadAdapters;
@@ -29,9 +31,12 @@ namespace Tests.Helpers
 
         public void SetUserIdentity() => SetUserIdentity(Guid.NewGuid().ToString());
 
-        protected UsersController BuildController(IUserService service)
+        protected UsersController BuildController(
+            IGetUserProfileUseCase getUserProfileUseCase,
+            IUpdateUserProfileUseCase updateUserProfileUseCase,
+            IGetPaginatedUsersUseCase getPaginatedUsersUseCase)
         {
-            return new UsersController(service)
+            return new UsersController(getUserProfileUseCase, updateUserProfileUseCase, getPaginatedUsersUseCase)
             {
                 ControllerContext = new ControllerContext { HttpContext = HttpContext }
             };
@@ -41,17 +46,30 @@ namespace Tests.Helpers
     // Unit tests
     public class UserControllerMockFixture : UserControllerFixtureBase
     {
-        public Mock<IUserService> UserServiceMock { get; } = new(MockBehavior.Strict);
-        public UsersController CreateController() => BuildController(UserServiceMock.Object);
+        public Mock<IGetUserProfileUseCase> GetUserProfileUseCaseMock { get; } = new(MockBehavior.Strict);
+        public Mock<IUpdateUserProfileUseCase> UpdateUserProfileUseCaseMock { get; } = new(MockBehavior.Strict);
+        public Mock<IGetPaginatedUsersUseCase> GetPaginatedUsersUseCaseMock { get; } = new(MockBehavior.Strict);
+
+        public UsersController CreateController() => BuildController(
+            GetUserProfileUseCaseMock.Object,
+            UpdateUserProfileUseCaseMock.Object,
+            GetPaginatedUsersUseCaseMock.Object);
     }
 
     // Integration tests
     public class UserControllerFixture : UserControllerFixtureBase
     {
         private readonly WishlistDbContext? _context;
-        private readonly IUserService _userService;
+        private readonly IGetUserProfileUseCase _getUserProfileUseCase;
+        private readonly IUpdateUserProfileUseCase _updateUserProfileUseCase;
+        private readonly IGetPaginatedUsersUseCase _getPaginatedUsersUseCase;
 
-        public UserControllerFixture(IUserService userService) => _userService = userService;
+        public UserControllerFixture(IGetUserProfileUseCase getUserProfileUseCase, IUpdateUserProfileUseCase updateUserProfileUseCase, IGetPaginatedUsersUseCase getPaginatedUsersUseCase)
+        {
+            _getUserProfileUseCase = getUserProfileUseCase;
+            _updateUserProfileUseCase = updateUserProfileUseCase;
+            _getPaginatedUsersUseCase = getPaginatedUsersUseCase;
+        }
 
         public UserControllerFixture()
         {
@@ -62,11 +80,13 @@ namespace Tests.Helpers
             var userRepository = new UserRepository(_context);
             var userReadModel = new UserReadAdapter(_context);
             var cache = new MemoryCache(new MemoryCacheOptions());
-            _userService = new UserService(userRepository, cache, _context, userReadModel);
+            _getUserProfileUseCase = new GetUserProfileUseCase(userRepository, cache);
+            _updateUserProfileUseCase = new UpdateUserProfileUseCase(userRepository, cache, _context);
+            _getPaginatedUsersUseCase = new GetPaginatedUsersUseCase(userReadModel);
         }
 
         public WishlistDbContext GetContext() => _context!;
 
-        public UsersController CreateController() => BuildController(_userService);
+        public UsersController CreateController() => BuildController(_getUserProfileUseCase, _updateUserProfileUseCase, _getPaginatedUsersUseCase);
     }
 }

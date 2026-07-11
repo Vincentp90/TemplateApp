@@ -1,7 +1,7 @@
-using Application;
-using Application.Commands;
 using Application.Contracts;
 using Application.Queries;
+using Application.UseCases.Auction;
+using Application.UseCases.Auction.Requests;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +18,12 @@ namespace WishlistApi.Controllers
     [ApiController]
     [Authorize]
     [Route("[controller]")]
-    public class AuctionsController(IUserContext userContext, IAuctionService auctionService, IAuctionReadModel auctionReadModel, IHubContext<AuctionHub> hub) : ControllerBase
+    public class AuctionsController(
+        IUserContext userContext,
+        IPlaceBidUseCase placeBidUseCase,
+        ISimulateBidUseCase simulateBidUseCase,
+        IAuctionReadModel auctionReadModel,
+        IHubContext<AuctionHub> hub) : ControllerBase
     {
         [HttpGet("current")]
         public async Task<ActionResult<AuctionDto>> GetCurrentAuctionAsync()
@@ -42,12 +47,11 @@ namespace WishlistApi.Controllers
 
             try
             {
-                await auctionService.PlaceBidAsync(new PlaceBidCommand(
-                    AuctionId: auction.ID, 
-                    Amount: auction.CurrentPrice.Value, 
-                    RowVersion: auction.RowVersion,
-                    UserId: internalUserId
-                ));
+                await placeBidUseCase.ExecuteAsync(new PlaceBidRequest(
+                    AuctionId: auction.ID,
+                    UserId: internalUserId,
+                    Amount: auction.CurrentPrice.Value,
+                    RowVersion: auction.RowVersion));
                 _ = hub.Clients.All.SendAsync("AuctionUpdated");
                 return Ok();
             }
@@ -71,7 +75,7 @@ namespace WishlistApi.Controllers
         {
             try
             {
-                await auctionService.SimulateBid();
+                await simulateBidUseCase.ExecuteAsync();
                 _ = hub.Clients.All.SendAsync("AuctionUpdated");
                 return Ok();
             }

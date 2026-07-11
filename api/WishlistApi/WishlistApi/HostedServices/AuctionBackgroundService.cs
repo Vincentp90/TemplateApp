@@ -1,4 +1,5 @@
-﻿using Application;
+﻿using Application.UseCases.Auction;
+using Application.UseCases.Auction.Requests;
 using Domain;
 
 namespace WishlistApi.HostedServices
@@ -22,16 +23,15 @@ namespace WishlistApi.HostedServices
                 try
                 {
                     using var scope = _scopeFactory.CreateScope();
-                    var auctionService = scope.ServiceProvider.GetRequiredService<IAuctionService>();
-                    var appListingService = scope.ServiceProvider.GetRequiredService<IAppListingService>();
+                    var startNextAuctionUseCase = scope.ServiceProvider.GetRequiredService<IStartNextAuctionUseCase>();
 
-                    await auctionService.StartNextAuctionAsync();
+                    await startNextAuctionUseCase.ExecuteAsync(new StartNextAuctionRequest());
                 }
                 catch (Exception ex)
                 {
                     // To deal with fresh start and fresh DB, GetRandomAppListingAsync will throw exception
                     // Just wait until next task run
-                    _logger.LogError(ex, "AuctionService encountered an error.");
+                    _logger.LogError(ex, "AuctionBackgroundService encountered an error.");
                 }
 
                 await Task.Delay(Auction.Duration, stoppingToken);
