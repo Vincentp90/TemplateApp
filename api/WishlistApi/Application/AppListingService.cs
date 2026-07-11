@@ -11,7 +11,7 @@ namespace Application
 {
     public interface IAppListingService
     {
-        Task<List<Domain.AppListing>> SearchAppListingsAsync(string term);
+        Task<List<Contracts.AppListingDto>> SearchAppListingsAsync(string term);
         Task<Domain.AppListing> GetRandomAppListingAsync();
         Task EnsureAppListingsPopulatedAsync(CancellationToken cancellationToken = default);
     }
@@ -34,11 +34,12 @@ namespace Application
             return await _appListingRepository.GetRandomAsync();
         }
 
-        public async Task<List<Domain.AppListing>> SearchAppListingsAsync(string term)
+        public async Task<List<Contracts.AppListingDto>> SearchAppListingsAsync(string term)
         {
             if (string.IsNullOrEmpty(term) || term.Length < 3)
-                return new List<Domain.AppListing>();
-            return await _appListingRepository.SearchAsync(term);
+                return new List<Contracts.AppListingDto>();
+            var results = await _appListingRepository.SearchAsync(term);
+            return results.Select(a => new Contracts.AppListingDto(a.Id, a.Name)).ToList();
         }
 
         public async Task EnsureAppListingsPopulatedAsync(CancellationToken cancellationToken = default)

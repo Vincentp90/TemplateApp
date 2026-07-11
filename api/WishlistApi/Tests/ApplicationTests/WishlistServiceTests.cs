@@ -50,7 +50,8 @@ namespace Tests.ApplicationTests
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
-            var wishlistService = new WishlistService(repositoryMock.Object, uowMock.Object);
+            var eventPublisherMock = new Mock<IEventPublisher>();
+            var wishlistService = new WishlistService(repositoryMock.Object, uowMock.Object, eventPublisherMock.Object);
 
             // Act
             var result = await wishlistService.GetWishlistStatsAsync(USERID);
@@ -76,7 +77,8 @@ namespace Tests.ApplicationTests
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
-            var WishlistService = new WishlistService(repositoryMock.Object, uowMock.Object);
+            var eventPublisherMock = new Mock<IEventPublisher>();
+            var WishlistService = new WishlistService(repositoryMock.Object, uowMock.Object, eventPublisherMock.Object);
 
             // Act
             var result = await WishlistService.GetWishlistStatsAsync(USERID);
@@ -111,7 +113,8 @@ namespace Tests.ApplicationTests
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
-            var WishlistService = new WishlistService(repositoryMock.Object, uowMock.Object);
+            var eventPublisherMock = new Mock<IEventPublisher>();
+            var WishlistService = new WishlistService(repositoryMock.Object, uowMock.Object, eventPublisherMock.Object);
 
             // Act
             var result = await WishlistService.GetWishlistStatsAsync(USERID);
@@ -158,7 +161,8 @@ namespace Tests.ApplicationTests
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
-            var WishlistService = new WishlistService(repositoryMock.Object, uowMock.Object);
+            var eventPublisherMock = new Mock<IEventPublisher>();
+            var WishlistService = new WishlistService(repositoryMock.Object, uowMock.Object, eventPublisherMock.Object);
 
             // Act
             var result = await WishlistService.GetWishlistStatsAsync(USERID);
@@ -191,7 +195,8 @@ namespace Tests.ApplicationTests
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
-            var WishlistService = new WishlistService(repositoryMock.Object, uowMock.Object);
+            var eventPublisherMock = new Mock<IEventPublisher>();
+            var WishlistService = new WishlistService(repositoryMock.Object, uowMock.Object, eventPublisherMock.Object);
 
             // Act
             var result = await WishlistService.GetWishlistStatsAsync(USERID);
@@ -221,7 +226,8 @@ namespace Tests.ApplicationTests
             var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
             uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
 
-            var wishlistService = new WishlistService(repositoryMock.Object, uowMock.Object);
+            var eventPublisherMock = new Mock<IEventPublisher>();
+            var wishlistService = new WishlistService(repositoryMock.Object, uowMock.Object, eventPublisherMock.Object);
             var command = new AddToWishlistCommand(USERID, APPID);
 
             // Act
@@ -230,6 +236,7 @@ namespace Tests.ApplicationTests
             // Assert
             capturedItem.Should().NotBeNull();
             capturedItem!.DateAdded.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
+            eventPublisherMock.Verify(p => p.PublishAsync(It.IsAny<object>()), Times.Once);
         }
     }
 }

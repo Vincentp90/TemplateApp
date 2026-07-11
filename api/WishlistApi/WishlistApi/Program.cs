@@ -1,4 +1,5 @@
 using Application;
+using Application.Contracts;
 using Application.Queries;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.AppListings;
@@ -6,11 +7,13 @@ using Infrastructure.Persistence.Auctions;
 using Infrastructure.Persistence.Users;
 using Infrastructure.Persistence.Wishlist;
 using Infrastructure.ReadAdapters;
+using Infrastructure.Messaging;
 using Domain;
 using Domain.Helpers;
 using Domain.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System;
@@ -19,6 +22,7 @@ using WishlistApi.Controllers;
 using WishlistApi.Helpers;
 using WishlistApi.HostedServices;
 using Infrastructure.ExternalServices;
+using Infrastructure.SharedDb;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,7 +88,19 @@ builder.Services.AddScoped<IAppListingService, AppListingService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IWishlistService, WishlistService>();
+
+// RabbitMQ infrastructure
+builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.SectionName));
+builder.Services.AddSingleton<IRabbitMqConnectionFactory, RabbitMqConnectionFactory>();
+builder.Services.AddScoped<IEventPublisher>(sp =>
+    new RabbitMqEventPublisher(
+        sp.GetRequiredService<IRabbitMqConnectionFactory>(),
+        "wishlist.events"));
 builder.Services.AddScoped<IAuctionService, AuctionService>();
+
+// Shared DB readers and SteamTracker proxy
+builder.Services.AddScoped<ISharedDbPriceReader, SharedDbPriceReader>();
+builder.Services.AddHttpClient<ISteamTrackerAlertProxy, SteamTrackerAlertProxy>();
 
 
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
@@ -127,6 +143,11 @@ using (var scope = app.Services.CreateScope())
     try
     {
         db.Database.Migrate();
+    }
+    catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P07")
+    {
+        // Tables already exist from a previous migration — ignore
+        Console.WriteLine($"Migration skipped (tables already exist): {ex.Message}");
     }
     catch (Exception ex)
     {

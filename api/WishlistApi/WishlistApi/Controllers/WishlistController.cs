@@ -4,6 +4,7 @@ using Application.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WishlistApi.Helpers;
+using System.Globalization;
 
 namespace WishlistApi.Controllers
 {
@@ -13,12 +14,16 @@ namespace WishlistApi.Controllers
     public class WishlistController : ControllerBase
     {
         private readonly IUserContext _userContext;
-        private readonly IWishlistService _wishlistService;        
+        private readonly IWishlistService _wishlistService;
+        private readonly ISharedDbPriceReader _priceReader;
+        private readonly ISteamTrackerAlertProxy _alertProxy;
 
-        public WishlistController(IUserContext userContext, IWishlistService wishlistService)
+        public WishlistController(IUserContext userContext, IWishlistService wishlistService, ISharedDbPriceReader priceReader, ISteamTrackerAlertProxy alertProxy)
         {
             _userContext = userContext;
-            _wishlistService = wishlistService;            
+            _wishlistService = wishlistService;
+            _priceReader = priceReader;
+            _alertProxy = alertProxy;
         }
 
         [HttpGet()]
@@ -30,15 +35,35 @@ namespace WishlistApi.Controllers
                                 .Select(f => f.ToLower())
                                 .ToHashSet();
             bool includeAll = fieldList.Count == 0;
-            
+
             bool Has(string field) => includeAll || fieldList.Contains(field);
 
-            var result = (await _wishlistService.GetWishlistItemsAsync(internalUserId))
-                .Select(x => new WishlistItemDto(
+            // 1. Get local wishlist items
+            var localItems = await _wishlistService.GetWishlistItemsAsync(internalUserId);
+            var appIds = localItems.Select(x => x.AppId).ToList();
+
+            // 2. Read prices from shared DB (SteamTracker)
+            var prices = await _priceReader.GetPricesAsync(appIds);
+
+            // 3. Read alert rules from shared DB (SteamTracker)
+            var alertRules = await _priceReader.GetAlertRulesAsync(internalUserId.ToString());
+
+            // 4. Merge everything
+            var result = localItems.Select(x => {
+                var hasPrice = prices.TryGetValue(x.AppId, out var price);
+                return new WishlistItemDto(
                     AppId: Has("appid") ? x.AppId : null,
                     DateAdded: Has("dateadded") ? x.DateAdded : null,
-                    Name: Has("name") ? x.AppName : null
-                ));
+                    Name: Has("name") ? x.AppName : null,
+                    Price: hasPrice && Has("price") ? price.Amount : null,
+                    PriceCurrency: hasPrice && Has("pricecurrency") ? price.Currency : (string?)"EUR",
+                    LastCheckedAt: hasPrice && Has("lastcheckedat") ? price.LastCheckedAt : null,
+                    IsUnavailable: hasPrice && price.IsUnavailable,
+                    AlertRuleId: alertRules.TryGetValue(x.AppId, out var alert) && Has("alertruleid") ? alert.Id : null,
+                    AlertThreshold: alertRules.TryGetValue(x.AppId, out alert) && Has("alertthreshold") ? alert.ThresholdAmount : null,
+                    AlertCurrency: alertRules.TryGetValue(x.AppId, out alert) && Has("alertcurrency") ? alert.Currency : (string?)"EUR"
+                );
+            });
 
             return Ok(new Wishlist(result));
         }
@@ -79,6 +104,52 @@ namespace WishlistApi.Controllers
         {
             int internalUserId = await _userContext.GetIdAsync();
             await _wishlistService.DeleteWishlistItemAsync(internalUserId, appId);
+            return Ok();
+        }
+
+        /// <summary>
+        /// Backfill: publishes WishlistItemAdded events for all wishlist items.
+        /// Used to sync SteamTracker when the service is deployed after users already have items.
+        /// </summary>
+        [HttpPost("_backfill")]
+        public async Task<ActionResult> BackfillAsync()
+        {
+            int internalUserId = await _userContext.GetIdAsync();
+
+            var items = await _wishlistService.GetWishlistItemsAsync(internalUserId);
+
+            if (!items.Any())
+            {
+                return new ObjectResult(new { Count = 0 }) { StatusCode = 202 };
+            }
+
+            foreach (var item in items)
+            {
+                await _wishlistService.PublishBackfillEventAsync(item);
+            }
+
+            return new ObjectResult(new { Count = items.Count }) { StatusCode = 202 };
+        }
+
+        /// <summary>
+        /// Proxy: sets an alert rule for a wishlisted game (delegates to SteamTracker).
+        /// </summary>
+        [HttpPost("{appId}/alert")]
+        public async Task<ActionResult> SetAlertAsync(int appId, [FromQuery] decimal thresholdAmount, [FromQuery] string currency = "EUR")
+        {
+            int internalUserId = await _userContext.GetIdAsync();
+            await _alertProxy.SetAlertRuleAsync(internalUserId.ToString(), appId, thresholdAmount, currency);
+            return Ok();
+        }
+
+        /// <summary>
+        /// Proxy: deletes an alert rule (delegates to SteamTracker).
+        /// </summary>
+        [HttpDelete("{alertRuleId}/alert")]
+        public async Task<ActionResult> DeleteAlertAsync(Guid alertRuleId)
+        {
+            int internalUserId = await _userContext.GetIdAsync();
+            await _alertProxy.DeleteAlertRuleAsync(internalUserId.ToString(), alertRuleId);
             return Ok();
         }
     }

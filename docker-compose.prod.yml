@@ -1,6 +1,10 @@
 # postres, web api, react, reverse proxy
 
 services:
+  rabbitmq:
+    image: rabbitmq:4.2-management # TODO check non management better?
+    restart: always
+
   db:
     image: postgres:18.1
     restart: always
@@ -23,6 +27,7 @@ services:
       context: ./api/WishlistApi
     depends_on:
       - db
+      - rabbitmq
     container_name: my-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Production

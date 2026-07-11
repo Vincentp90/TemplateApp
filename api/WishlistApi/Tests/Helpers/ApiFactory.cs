@@ -1,4 +1,9 @@
-﻿using Infrastructure.Persistence;
+﻿using Application;
+using Application.Contracts;
+using Infrastructure.Messaging;
+using Infrastructure.Persistence;
+using Infrastructure.SharedDb;
+using Moq;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -43,14 +48,32 @@ namespace Tests.Helpers
                     services.Remove(svc);
 
                 // Replace DB connection string
-                var descriptor = services.SingleOrDefault(
+                var dbDescriptor = services.SingleOrDefault(
                     d => d.ServiceType == typeof(DbContextOptions<WishlistDbContext>));
 
-                if (descriptor != null)
-                    services.Remove(descriptor);
+                if (dbDescriptor != null)
+                    services.Remove(dbDescriptor);
 
                 services.AddDbContext<WishlistDbContext>(options =>
                     options.UseNpgsql(_db.GetConnectionString()).UseSnakeCaseNamingConvention());
+
+                // Replace RabbitMQ with a no-op publisher so integration tests don't need a real broker
+                var rmqFactoryDescriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(IRabbitMqConnectionFactory));
+                if (rmqFactoryDescriptor != null)
+                    services.Remove(rmqFactoryDescriptor);
+
+                services.AddSingleton<IRabbitMqConnectionFactory>(_ => new NoOpRabbitMqConnectionFactory());
+                services.AddScoped<IEventPublisher>(_ => new NoOpRabbitMqEventPublisher());
+
+                // Mock shared DB reader and SteamTracker proxy for integration tests
+                var priceReaderMock = new Mock<ISharedDbPriceReader>();
+                priceReaderMock.Setup(x => x.GetPricesAsync(It.IsAny<IEnumerable<int>>())).ReturnsAsync(new Dictionary<int, GamePrice>());
+                priceReaderMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new Dictionary<int, AlertRuleInfo>());
+                services.AddScoped(_ => priceReaderMock.Object);
+
+                var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
+                services.AddScoped(_ => alertProxyMock.Object);
             });
         }
 

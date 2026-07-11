@@ -58,7 +58,8 @@ namespace WishlistApi.Controllers
         [HttpGet("me")]
         public IActionResult Me()
         {
-            return Ok(new { 
+            return Ok(new {
+                userId = User.FindFirstValue(ClaimTypes.NameIdentifier),
                 username = User.FindFirstValue(ClaimTypes.Name),
                 role = User.FindFirstValue(ClaimTypes.Role)
             });

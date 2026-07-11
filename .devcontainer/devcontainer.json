@@ -5,7 +5,12 @@
   "workspaceFolder": "/workspace",
   "customizations": {
     "vscode": {
-      "extensions": ["ms-vscode.vscode-dev-containers", "ms-dotnettools.csharp"]
+      "extensions": [
+        "ms-vscode.vscode-dev-containers",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.csharp",
+        "humao.rest-client"
+      ]
     }
   },
   "remoteEnv": {
@@ -14,6 +19,9 @@
     "ASPNETCORE_ENVIRONMENT": "Devcontainer",
     "DOTNET_USE_POLLING_FILE_WATCHER": "false"
   },
-  "features": { "ghcr.io/devcontainers/features/node:2.0.0": {} },
+  "features": { 
+    "ghcr.io/devcontainers/features/node:2.0.0": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
   "postCreateCommand": "mkdir -p ~/.pi/agent && ln -sf ${containerWorkspaceFolder}/.pi/agent/models.json ~/.pi/agent/models.json && npm install -g @earendil-works/pi-coding-agent"
 }
