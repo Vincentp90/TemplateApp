@@ -63,7 +63,7 @@ services:
     volumes: 
       - .:/workspace
     working_dir: /workspace/api/SteamTracker/src/SteamTracker.Worker
-    command: dotnet run --no-launch-profile -- --Logging:LogLevel:Default=Information
+    command: dotnet run --no-launch-profile -- --Logging:LogLevel:Default=Information # TODO switch to Warning
     environment:
       - ConnectionStrings__SteamTracker=Host=db;Database=steamtracker;Username=postgres;Password=example
       - RabbitMQ__HostName=rabbitmq
