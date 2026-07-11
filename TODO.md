@@ -1,17 +1,8 @@
 Agent: ignore this
 
-Microservices/message queue exercise:
-https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
-SteamTracker
-
-Final steps:
-- Analyse queries to steamtracker tables and indexes, do suitable indexes exist for the queries?
-- bring api/SteamTracker/OVERVIEW.md up-to-date
-
-
 Things I'm going to try/add/learn more about later :
 - Switch to usecases instead of services in application layer
-- get prices by api instead of shared db
+- get prices by api instead of shared db https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 - finish alerts
 - Try to vibecode angular frontend
 - Auction: add end date to entity, remove static mutable Domain.Auction.Duration

@@ -27,11 +27,10 @@ SteamTracker.slnx
 │   ├── ValueObjects
 │   │   ├── SteamAppId.cs              # wraps int, validates > 0
 │   │   ├── Money.cs                   # Amount (decimal) + Currency (ISO string)
-│   │   └── UserId.cs                  # wraps Guid
-│   ├── Events
-│   │   ├── PriceUpdatedEvent.cs
-│   │   ├── AlertTriggeredEvent.cs
-│   │   └── TrackingStoppedEvent.cs
+│   │   └── CurrencyCode.cs            # ISO 4217 currency code validation
+│   ├── Exceptions
+│   │   ├── AlertRuleNotFoundException.cs
+│   │   └── TrackingNotFoundException.cs
 │   └── Services
 │       └── PriceAlertEvaluator.cs     # Pure alert trigger logic
 │
@@ -45,19 +44,16 @@ SteamTracker.slnx
 │   │   ├── INotificationPublisher.cs  # External (driven)
 │   │   ├── ISetAlertRuleUseCase.cs    # Driving
 │   │   ├── IDeleteAlertRuleUseCase.cs # Driving
-│   │   ├── IGetWishlistWithPricesQuery.cs  # Driving
 │   │   ├── IProcessPriceCheckUseCase.cs    # Driving
 │   │   ├── IHandleWishlistItemAddedUseCase.cs
-│   │   └── IHandleWishlistItemRemovedUseCase.cs
-│   ├── UseCases/                      # Implementation of driving ports
-│   │   ├── SetAlertRuleUseCase.cs
-│   │   ├── DeleteAlertRuleUseCase.cs
-│   │   ├── GetWishlistWithPricesQuery.cs
-│   │   ├── ProcessPriceCheckUseCase.cs
-│   │   ├── HandleWishlistItemAddedUseCase.cs
-│   │   └── HandleWishlistItemRemovedUseCase.cs
-│   └── DTOs/
-│       └── WishlistItemWithPriceDto.cs
+│   │   ├── IHandleWishlistItemRemovedUseCase.cs
+│   │   └── SteamPriceResult.cs        # Steam API response model
+│   └── UseCases/                      # Implementation of driving ports
+│       ├── SetAlertRuleUseCase.cs
+│       ├── DeleteAlertRuleUseCase.cs
+│       ├── ProcessPriceCheckUseCase.cs
+│       ├── HandleWishlistItemAddedUseCase.cs
+│       └── HandleWishlistItemRemovedUseCase.cs
 │
 ├── SteamTracker.Infrastructure/       # Adapters: EF, RabbitMQ, Steam HTTP
 │   ├── Data/
@@ -72,12 +68,13 @@ SteamTracker.slnx
 │   │   ├── GameRepository.cs
 │   │   └── AlertRuleRepository.cs
 │   ├── External/
-│   │   └── SteamStoreClient.cs        # HTTP adapter (EUR pricing, F2P support)
+│   │   ├── SteamStoreClient.cs        # HTTP adapter (EUR pricing, F2P support)
+│   │   └── SteamRateLimitException.cs
 │   ├── Messaging/
 │   │   ├── PriceCheckJobPublisher.cs  # RabbitMQ publisher
 │   │   └── NotificationPublisher.cs   # RabbitMQ publisher
 │   ├── Migrations/
-│   │   └── 20260705080135_InitialCreate.cs
+│   │   └── 20260711114733_InitialCreate.cs
 │   └── DependencyInjection.cs         # DI registration
 │
 ├── SteamTracker.API/                  # Minimal API (internal-facing)
@@ -86,11 +83,16 @@ SteamTracker.slnx
 │
 ├── SteamTracker.Worker/               # BackgroundServices
 │   ├── Program.cs                     # Host builder, DI, migration
-│   ├── Worker.cs                      # PriceCheckWorker + WishlistSyncWorker
-│   └── PriceCheckScheduler.cs         # 24h scheduler
+│   ├── PriceCheckScheduler.cs         # 24h scheduler
+│   ├── PriceCheckConsumer.cs          # RabbitMQ consumer for price-check jobs
+│   ├── PriceCheckWorker.cs            # Fetches price from Steam API
+│   ├── WishlistSyncConsumer.cs        # RabbitMQ consumer for wishlist events
+│   ├── WishlistSyncWorker.cs          # Handles wishlist add/remove events
+│   ├── MessageContracts.cs            # Message DTOs (PriceCheckMessage, etc.)
+│   └── WorkerHelpers.cs               # Transient error detection
 │
 ├── Tests/
-│   ├── SteamTracker.Domain.Tests/     # 54 tests — pure C#, no mocks
+│   ├── SteamTracker.Domain.Tests/     # 63 tests — pure C#, no mocks
 │   │   ├── GameTests.cs
 │   │   ├── TrackedGameTests.cs
 │   │   ├── AlertRuleTests.cs
@@ -98,28 +100,38 @@ SteamTracker.slnx
 │   │   ├── PriceAlertEvaluatorTests.cs
 │   │   ├── MoneyTests.cs
 │   │   ├── SteamAppIdTests.cs
-│   │   └── UserIdTests.cs
-│   ├── SteamTracker.Application.Tests/ # 17 tests — Moq mocks
+│   │   └── CurrencyCodeTests.cs
+│   ├── SteamTracker.Application.Tests/ # 21 tests — Moq mocks
 │   │   ├── SetAlertRuleUseCaseTests.cs
 │   │   ├── DeleteAlertRuleUseCaseTests.cs
-│   │   ├── GetWishlistWithPricesQueryTests.cs
 │   │   ├── ProcessPriceCheckUseCaseTests.cs
 │   │   ├── HandleWishlistItemAddedUseCaseTests.cs
 │   │   └── HandleWishlistItemRemovedUseCaseTests.cs
-│   ├── SteamTracker.Infrastructure.Tests/ # 28 tests — testcontainers
+│   ├── SteamTracker.Infrastructure.Tests/ # 38 tests — testcontainers
 │   │   ├── Repositories/
 │   │   │   ├── AlertRuleRepositoryTests.cs
 │   │   │   ├── GameRepositoryTests.cs
 │   │   │   └── TrackedGameRepositoryTests.cs
-│   │   └── Messaging/
-│   │       └── RabbitMqIntegrationTests.cs
-│   ├── SteamTracker.API.Tests/        # 8 tests — WebApplicationFactory
+│   │   │   └── PostgresRepositoryIntegrationTests.cs
+│   │   ├── Messaging/
+│   │   │   └── RabbitMqIntegrationTests.cs
+│   │   ├── External/
+│   │   │   └── SteamStoreClientTests.cs
+│   │   ├── TestContainers/
+│   │   │   ├── PostgresContainerFixture.cs
+│   │   │   └── RabbitMqContainerFixture.cs
+│   │   ├── TestDbContextFactory.cs
+│   │   └── UseCasesIntegrationTests.cs
+│   ├── SteamTracker.API.Tests/        # 3 tests — WebApplicationFactory
 │   │   ├── WishlistApiIntegrationTests.cs
 │   │   └── Helpers/TestApiFactory.cs
 │   ├── SteamTracker.Integration.Tests/ # 3 tests — E2E (testcontainers)
-│   │   └── E2E/
-│   │       └── WishlistToAlertEndToEndTests.cs
-│   └── SteamTracker.Worker.Tests/     # 46 tests — unit
+│   │   ├── E2E/
+│   │   │   └── WishlistToAlertEndToEndTests.cs
+│   │   └── TestContainers/
+│   │       ├── PostgresContainerFixture.cs
+│   │       └── RabbitMqContainerFixture.cs
+│   └── SteamTracker.Worker.Tests/     # 48 tests — unit
 │       ├── PriceCheckConsumerTests.cs
 │       ├── PriceCheckSchedulerTests.cs
 │       ├── PriceCheckWorkerTests.cs
@@ -137,8 +149,7 @@ All endpoints are **internal-facing only** — called by WishlistApi proxy or wo
 
 | Method | Path | Used by | Description |
 |--------|------|---------|-------------|
-| GET | `/api/wishlist` | WishlistApi proxy | Returns wishlist with prices (userId from `X-Internal-UserId` header) |
-| POST | `/api/games/{appId}/alert` | WishlistApi proxy | Create alert rule (threshold from query params) |
+| POST | `/api/games/{appId}/alert` | WishlistApi proxy | Create alert rule (threshold/currency from query params) |
 | DELETE | `/api/alert/{alertRuleId}` | WishlistApi proxy | Delete alert rule |
 | POST | `/api/internal/price-check` | PriceCheckWorker | Process a price check result |
 | POST | `/api/internal/wishlist-item-added` | WishlistSyncWorker | Handle wishlist item added event |
@@ -149,8 +160,8 @@ All endpoints are **internal-facing only** — called by WishlistApi proxy or wo
 | Worker | Queue Consumed | Description |
 |--------|---------------|-------------|
 | `PriceCheckScheduler` | — | Every 24h, enqueues one `PriceCheckJob` per active `TrackedGame` |
-| `PriceCheckWorker` | `price-check-jobs` | Fetches price from Steam API, processes via use case, ack/nack |
-| `WishlistSyncWorker` | `steamtracker.wishlist-sync` | Consumes `WishlistItemAdded`/`Removed` events from existing app |
+| `PriceCheckConsumer` + `PriceCheckWorker` | `price-check-jobs` | Fetches price from Steam API, processes via use case, ack/nack |
+| `WishlistSyncConsumer` + `WishlistSyncWorker` | `steamtracker.wishlist-sync` | Consumes `WishlistItemAdded`/`Removed` events from existing app |
 
 ### RabbitMQ Topology
 ```
@@ -177,7 +188,11 @@ Dead-letter exchange: steamtracker.dlx
 ### Value Objects
 - **SteamAppId** — wraps `int`, validates > 0
 - **Money** — `Amount` (decimal) + `Currency` (ISO string, default "EUR") + `Money.Free` for F2P games
-- **UserId** — wraps `Guid`
+- **CurrencyCode** — ISO 4217 currency code validation
+
+### Exceptions
+- **AlertRuleNotFoundException** — thrown when an alert rule doesn't exist for the given user
+- **TrackingNotFoundException** — thrown when a tracked game is not found for the given user
 
 ### Key Technical Details
 - **Hexagonal Architecture**: Domain and Application have **zero references** to Infrastructure. All cross-boundary communication goes through port interfaces.
