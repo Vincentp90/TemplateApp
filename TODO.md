@@ -5,8 +5,9 @@ https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 SteamTracker
 
 Final steps:
+- Analyse queries to steamtracker tables and indexes, do suitable indexes exist for the queries?
 - bring api/SteamTracker/OVERVIEW.md up-to-date
-- At the end do final cleanup of migrations into one migration
+
 
 Things I'm going to try/add/learn more about later :
 - Switch to usecases instead of services in application layer

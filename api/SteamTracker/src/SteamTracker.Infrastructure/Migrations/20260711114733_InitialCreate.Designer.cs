@@ -12,7 +12,7 @@ using SteamTracker.Infrastructure.Data;
 namespace SteamTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(SteamTrackerDbContext))]
-    [Migration("20260705080135_InitialCreate")]
+    [Migration("20260711114733_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace SteamTracker.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.1")
+                .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -74,15 +74,11 @@ namespace SteamTracker.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("current_price");
 
-                    b.Property<decimal?>("CurrentPriceAmount")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)")
-                        .HasColumnName("current_price_amount");
-
-                    b.Property<string>("CurrentPriceCurrency")
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)")
-                        .HasColumnName("current_price_currency");
+                    b.Property<bool>("IsUnavailable")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_unavailable");
 
                     b.Property<DateTimeOffset?>("LastCheckedAt")
                         .HasColumnType("timestamp with time zone")

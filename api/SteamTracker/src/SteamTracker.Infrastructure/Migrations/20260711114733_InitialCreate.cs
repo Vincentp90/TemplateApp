@@ -34,9 +34,8 @@ namespace SteamTracker.Infrastructure.Migrations
                     app_id = table.Column<int>(type: "integer", nullable: false),
                     name = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
                     current_price = table.Column<string>(type: "text", nullable: true),
-                    last_checked_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    current_price_amount = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
-                    current_price_currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: true)
+                    is_unavailable = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    last_checked_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
