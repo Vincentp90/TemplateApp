@@ -1,4 +1,14 @@
 services:
+  devc:
+    build: 
+      context: ./.devcontainer
+      dockerfile: Dockerfile.dev
+    volumes: 
+      - .:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace
+    command: sleep infinity
+
   rabbitmq:
     image: rabbitmq:4.2-management
     restart: on-failure:3

@@ -1,6 +1,6 @@
 ## Environment
 Linux + Bash 
-You are running in dev container api specified in docker-compose.devcontainer.yml
+You are running in dev container devc specified in docker-compose.devcontainer.yml
 Current year: 2026
 
 ## Important:

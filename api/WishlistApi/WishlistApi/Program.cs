@@ -114,6 +114,7 @@ builder.Services.AddScoped<EnsureAppListingsPopulatedUseCase, EnsureAppListingsP
 builder.Services.AddScoped<IPlaceBidUseCase, PlaceBidUseCase>();
 builder.Services.AddScoped<ISimulateBidUseCase, SimulateBidUseCase>();
 builder.Services.AddScoped<IStartNextAuctionUseCase, StartNextAuctionUseCase>();
+builder.Services.AddScoped<IEnsureAppListingsPopulatedUseCase, EnsureAppListingsPopulatedUseCase>();
 
 // RabbitMQ infrastructure
 builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.SectionName));
