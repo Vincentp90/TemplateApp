@@ -16,14 +16,14 @@ public class SharedDbPriceReaderIntegrationTests : IAsyncLifetime
     private readonly SharedDbApiFactory _factory = new();
     private ISharedDbPriceReader _priceReader = null!;
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _factory.InitializeAsync();
         await _factory.SeedSteamTrackerAsync();
         _priceReader = _factory.Services.GetRequiredService<ISharedDbPriceReader>();
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await _factory.DisposeAsync();
     }

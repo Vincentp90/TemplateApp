@@ -1,6 +1,6 @@
 Agent: ignore this
 
-Make a plan for api/WishlistApi, Switch to usecases instead of services in application layer. Write the plan to an md file.
+Make an overview of the build warnings in wishlist and steamtracker
 
 Things I'm going to try/add/learn more about later :
 - warnings in wishlist and steamtracker

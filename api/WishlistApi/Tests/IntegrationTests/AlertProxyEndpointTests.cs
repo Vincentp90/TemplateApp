@@ -23,7 +23,7 @@ public class AlertProxyEndpointTests : IAsyncLifetime
     private HttpClient _client = null!;
     private CapturingHandler _capturingHandler = null!;
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         _fixture = SharedDbFixture.Instance;
         await _fixture.InitializeAsync();
@@ -40,7 +40,7 @@ public class AlertProxyEndpointTests : IAsyncLifetime
         _client = await factory.CreateAuthenticatedClientAsync();
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         _client?.Dispose();
         // Don't dispose the shared singleton fixture — other test classes may still need it
@@ -231,7 +231,7 @@ public class AlertProxyEndpointTests : IAsyncLifetime
             });
         }
 
-        public async Task InitializeAsync()
+        public async ValueTask InitializeAsync()
         {
             if (!_initialized)
             {
@@ -240,7 +240,7 @@ public class AlertProxyEndpointTests : IAsyncLifetime
             }
         }
 
-        public new async Task DisposeAsync()
+        public new async ValueTask DisposeAsync()
         {
             // Don't dispose the shared singleton fixture — other test classes may still need it
         }

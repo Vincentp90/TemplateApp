@@ -77,8 +77,7 @@ namespace Tests.Helpers
             });
         }
 
-        public async Task InitializeAsync() => await _db.StartAsync();
-        async Task IAsyncLifetime.DisposeAsync() => await _db.DisposeAsync();
+        public async ValueTask InitializeAsync() => await _db.StartAsync();
         public override async ValueTask DisposeAsync()
         {
             await _db.DisposeAsync();

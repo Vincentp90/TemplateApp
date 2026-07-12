@@ -74,7 +74,7 @@ public sealed class SharedDbFixture : IAsyncLifetime
         }
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         if (!_initialized)
         {
@@ -83,7 +83,7 @@ public sealed class SharedDbFixture : IAsyncLifetime
         }
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (_initialized)
         {

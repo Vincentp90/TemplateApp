@@ -67,7 +67,7 @@ public class SharedDbApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         });
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         if (!_initialized)
         {
@@ -76,7 +76,7 @@ public class SharedDbApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         }
     }
 
-    public new async Task DisposeAsync()
+    public new async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();
     }

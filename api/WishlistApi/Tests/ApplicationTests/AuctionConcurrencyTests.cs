@@ -20,14 +20,14 @@ namespace Tests.ApplicationTests
             .WithPassword("pass")
             .Build();
 
-        public async Task InitializeAsync()
+        public async ValueTask InitializeAsync()
         {
             await _db.StartAsync();
             var ctx = CreateContext();
             await ctx.Database.EnsureCreatedAsync();
             await ctx.DisposeAsync();
         }
-        public async Task DisposeAsync() => await _db.DisposeAsync();
+        public async ValueTask DisposeAsync() => await _db.DisposeAsync();
 
         WishlistDbContext CreateContext()
         {
