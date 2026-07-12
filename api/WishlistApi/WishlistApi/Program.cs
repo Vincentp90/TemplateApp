@@ -1,6 +1,12 @@
 using Application;
 using Application.Contracts;
 using Application.Queries;
+using Application.UseCases;
+using Application.UseCases.AppListing;
+using Application.UseCases.Auction;
+using Application.UseCases.Auth;
+using Application.UseCases.User;
+using Application.UseCases.Wishlist;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.AppListings;
 using Infrastructure.Persistence.Auctions;
@@ -84,10 +90,26 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuctionReadModel, AuctionReadAdapter>();
 builder.Services.AddScoped<IUserReadModel, UserReadAdapter>();
 
-builder.Services.AddScoped<IAppListingService, AppListingService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IWishlistService, WishlistService>();
+// Use case registrations
+builder.Services.AddScoped<IRegisterUserUseCase, RegisterUserUseCase>();
+builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
+builder.Services.AddScoped<IGetUserProfileUseCase, GetUserProfileUseCase>();
+builder.Services.AddScoped<IUpdateUserProfileUseCase, UpdateUserProfileUseCase>();
+builder.Services.AddScoped<IGetPaginatedUsersUseCase, GetPaginatedUsersUseCase>();
+builder.Services.AddScoped<IGetWishlistUseCase, GetWishlistUseCase>();
+builder.Services.AddScoped<IAddWishlistItemUseCase, AddWishlistItemUseCase>();
+builder.Services.AddScoped<IDeleteWishlistItemUseCase, DeleteWishlistItemUseCase>();
+builder.Services.AddScoped<IGetWishlistStatsUseCase, GetWishlistStatsUseCase>();
+builder.Services.AddScoped<IPublishBackfillEventUseCase, PublishBackfillEventUseCase>();
+builder.Services.AddScoped<ISetAlertRuleUseCase, SetAlertRuleUseCase>();
+builder.Services.AddScoped<IDeleteAlertRuleUseCase, DeleteAlertRuleUseCase>();
+builder.Services.AddScoped<ISearchAppListingsUseCase, SearchAppListingsUseCase>();
+builder.Services.AddScoped<IGetRandomAppListingUseCase, GetRandomAppListingUseCase>();
+builder.Services.AddScoped<EnsureAppListingsPopulatedUseCase, EnsureAppListingsPopulatedUseCase>();
+builder.Services.AddScoped<IPlaceBidUseCase, PlaceBidUseCase>();
+builder.Services.AddScoped<ISimulateBidUseCase, SimulateBidUseCase>();
+builder.Services.AddScoped<IStartNextAuctionUseCase, StartNextAuctionUseCase>();
+builder.Services.AddScoped<IEnsureAppListingsPopulatedUseCase, EnsureAppListingsPopulatedUseCase>();
 
 // RabbitMQ infrastructure
 builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.SectionName));
@@ -96,7 +118,6 @@ builder.Services.AddScoped<IEventPublisher>(sp =>
     new RabbitMqEventPublisher(
         sp.GetRequiredService<IRabbitMqConnectionFactory>(),
         "wishlist.events"));
-builder.Services.AddScoped<IAuctionService, AuctionService>();
 
 // Shared DB readers and SteamTracker proxy
 builder.Services.AddScoped<ISharedDbPriceReader, SharedDbPriceReader>();

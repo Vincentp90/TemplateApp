@@ -1,6 +1,6 @@
-using Application;
-using Application.Commands;
 using Application.Contracts;
+using Application.UseCases.User;
+using Application.UseCases.User.Requests;
 using Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +11,10 @@ namespace WishlistApi.Controllers
     [ApiController]
     [Authorize]
     [Route("[controller]")]
-    public class UsersController(IUserService userService) : ControllerBase
+    public class UsersController(
+        IGetUserProfileUseCase getUserProfileUseCase,
+        IUpdateUserProfileUseCase updateUserProfileUseCase,
+        IGetPaginatedUsersUseCase getPaginatedUsersUseCase) : ControllerBase
     {
         [HttpGet("me")]
         public async Task<ActionResult<UserDetailsDto>> GetUserMeAsync()
@@ -32,7 +35,7 @@ namespace WishlistApi.Controllers
 
         private async Task<ActionResult<UserDetailsDto>> GetUserDetailsDto(string UserId)
         {
-            var user = await userService.GetUserAsync(new GetUserCommand(new Guid(UserId)));
+            var user = await getUserProfileUseCase.ExecuteAsync(new GetUserProfileRequest(new Guid(UserId)));
             return Ok(new UserDetailsDto(
                 RowVersion: user.Details.RowVersion,
                 Email: user.Username,
@@ -64,9 +67,9 @@ namespace WishlistApi.Controllers
         {
             try
             {
-                await userService.UpdateUserDetailsAsync(new UpdateUserDetailsCommand(
-                    RowVersion: userDetailsDto.RowVersion,
+                await updateUserProfileUseCase.ExecuteAsync(new UpdateUserProfileRequest(
                     ExternalUserId: new Guid(userId),
+                    RowVersion: userDetailsDto.RowVersion,
                     Name: new FullName(userDetailsDto.FirstName, userDetailsDto.LastName),
                     Location: new Address(userDetailsDto.Country, userDetailsDto.City, userDetailsDto.Address)
                     ));
@@ -82,7 +85,7 @@ namespace WishlistApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult> GetAllUsersAsync(int page, int limit)
         {
-            var users = await userService.GetUsersAsync(page, limit);
+            var users = await getPaginatedUsersUseCase.ExecuteAsync(new GetPaginatedUsersRequest(page, limit));
             var hasNextPage = users.Count > limit;
             var usersDTO = users.Take(limit).ToList();
             return Ok(new

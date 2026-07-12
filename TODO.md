@@ -1,9 +1,13 @@
 Agent: ignore this
 
+Make a plan for api/WishlistApi, Switch to usecases instead of services in application layer. Write the plan to an md file.
+
 Things I'm going to try/add/learn more about later :
-- Switch to usecases instead of services in application layer
 - warnings in wishlist and steamtracker
+- warnings during api container startup
+- make diagram of architecture
 - get prices by api instead of shared db https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
+- gRPC for api-steamtracker communication
 - finish alerts
 - Try to vibecode angular frontend
 - Auction: add end date to entity, remove static mutable Domain.Auction.Duration

@@ -1,6 +1,6 @@
-using Application;
-using Application.Commands;
 using Application.Contracts;
+using Application.UseCases.User;
+using Application.UseCases.User.Requests;
 using Domain.ValueObjects;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +24,7 @@ public class UsersControllerUnitTests
         var user = new Domain.User(1, "testuser", userId,
             Array.Empty<byte>(), Array.Empty<byte>(), "Admin", userDetails);
 
-        fixture.UserServiceMock.Setup(x => x.GetUserAsync(It.IsAny<GetUserCommand>()))
+        fixture.GetUserProfileUseCaseMock.Setup(x => x.ExecuteAsync(It.IsAny<GetUserProfileRequest>()))
             .ReturnsAsync(user);
         fixture.SetUserIdentity();
 
@@ -52,7 +52,7 @@ public class UsersControllerUnitTests
             new UserSummaryDto(Guid.NewGuid(), "user2")
         };
 
-        fixture.UserServiceMock.Setup(x => x.GetUsersAsync(It.IsAny<int>(), It.IsAny<int>()))
+        fixture.GetPaginatedUsersUseCaseMock.Setup(x => x.ExecuteAsync(It.IsAny<GetPaginatedUsersRequest>()))
             .ReturnsAsync(users);
         fixture.SetUserIdentity();
 
@@ -77,7 +77,7 @@ public class UsersControllerUnitTests
         var fixture = new UserControllerMockFixture();
         var users = new List<UserSummaryDto>();
 
-        fixture.UserServiceMock.Setup(x => x.GetUsersAsync(It.IsAny<int>(), It.IsAny<int>()))
+        fixture.GetPaginatedUsersUseCaseMock.Setup(x => x.ExecuteAsync(It.IsAny<GetPaginatedUsersRequest>()))
             .ReturnsAsync(users);
         fixture.SetUserIdentity();
 
@@ -105,7 +105,7 @@ public class UsersControllerUnitTests
         var user = new Domain.User(1, "testuser", userId,
             Array.Empty<byte>(), Array.Empty<byte>(), "User", userDetails);
 
-        fixture.UserServiceMock.Setup(x => x.GetUserAsync(It.IsAny<GetUserCommand>()))
+        fixture.GetUserProfileUseCaseMock.Setup(x => x.ExecuteAsync(It.IsAny<GetUserProfileRequest>()))
             .ReturnsAsync(user);
         fixture.SetUserIdentity(userId.ToString());
 
@@ -143,8 +143,8 @@ public class UsersControllerUnitTests
         // Arrange
         var fixture = new UserControllerMockFixture();
         fixture.SetUserIdentity();
-        fixture.UserServiceMock
-            .Setup(x => x.UpdateUserDetailsAsync(It.IsAny<UpdateUserDetailsCommand>()))
+        fixture.UpdateUserProfileUseCaseMock
+            .Setup(x => x.ExecuteAsync(It.IsAny<UpdateUserProfileRequest>()))
             .Returns(Task.CompletedTask);
 
         var controller = fixture.CreateController();
@@ -162,7 +162,7 @@ public class UsersControllerUnitTests
         var result = await controller.PatchUserAsync(dto);
 
         // Assert
-        fixture.UserServiceMock.Verify(x => x.UpdateUserDetailsAsync(It.IsAny<UpdateUserDetailsCommand>()), Times.Once);
+        fixture.UpdateUserProfileUseCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<UpdateUserProfileRequest>()), Times.Once);
         Assert.IsType<OkResult>(result);
     }
 
@@ -196,8 +196,8 @@ public class UsersControllerUnitTests
         // Arrange
         var fixture = new UserControllerMockFixture();
         fixture.SetUserIdentity();
-        fixture.UserServiceMock
-            .Setup(x => x.UpdateUserDetailsAsync(It.IsAny<UpdateUserDetailsCommand>()))
+        fixture.UpdateUserProfileUseCaseMock
+            .Setup(x => x.ExecuteAsync(It.IsAny<UpdateUserProfileRequest>()))
             .Returns(Task.CompletedTask);
 
         var controller = fixture.CreateController();
@@ -215,7 +215,7 @@ public class UsersControllerUnitTests
         var result = await controller.PatchUserAsync(dto, Guid.NewGuid().ToString());
 
         // Assert
-        fixture.UserServiceMock.Verify(x => x.UpdateUserDetailsAsync(It.IsAny<UpdateUserDetailsCommand>()), Times.Once);
+        fixture.UpdateUserProfileUseCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<UpdateUserProfileRequest>()), Times.Once);
         Assert.IsType<OkResult>(result);
     }
 
@@ -225,8 +225,8 @@ public class UsersControllerUnitTests
         // Arrange
         var fixture = new UserControllerMockFixture();
         fixture.SetUserIdentity();
-        fixture.UserServiceMock
-            .Setup(x => x.UpdateUserDetailsAsync(It.IsAny<UpdateUserDetailsCommand>()))
+        fixture.UpdateUserProfileUseCaseMock
+            .Setup(x => x.ExecuteAsync(It.IsAny<UpdateUserProfileRequest>()))
             .ThrowsAsync(new DbUpdateConcurrencyException("Concurrency conflict"));
 
         var controller = fixture.CreateController();

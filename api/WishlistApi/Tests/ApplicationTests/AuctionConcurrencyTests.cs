@@ -1,12 +1,12 @@
-using Application;
-using Application.Commands;
+using Application.UseCases.Auction;
+using Application.UseCases.Auction.Requests;
+using Domain.Helpers;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.Auctions;
 using Domain;
 using Domain.Repositories;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Moq;
 using Testcontainers.PostgreSql;
 
@@ -65,27 +65,21 @@ namespace Tests.ApplicationTests
             var ctx2 = CreateContext();
 
             var repo1 = new AuctionRepository(ctx1);
-            var service1 = new AuctionService(
-                repo1, ctx1,
-                Mock.Of<IAuthService>(),
-                Mock.Of<IAppListingService>(),
-                Mock.Of<IConfiguration>(),
-                Mock.Of<IUserService>());
+            var uow1 = ctx1;
+            var useCase1 = new PlaceBidUseCase(repo1, uow1);
 
             var auction = await repo1.GetLatestAuctionAsync();
             var rowVersion = auction!.RowVersion;
 
-            var command1 = new PlaceBidCommand(AuctionId: auction.Id, Amount: 30m, UserId: 1, RowVersion: rowVersion);
-            var command2 = new PlaceBidCommand(AuctionId: auction.Id, Amount: 35m, UserId: 2, RowVersion: rowVersion);
+            var request1 = new PlaceBidRequest(AuctionId: auction.Id, Amount: 30m, UserId: 1, RowVersion: rowVersion);
+            var request2 = new PlaceBidRequest(AuctionId: auction.Id, Amount: 35m, UserId: 2, RowVersion: rowVersion);
 
             // Act - fire both bids concurrently
             var results = await Task.WhenAll(
-                TryPlaceBidAsync(service1, command1),
+                TryPlaceBidAsync(useCase1, request1),
                 TryPlaceBidAsync(
-                    new AuctionService(new AuctionRepository(ctx2), ctx2,
-                        Mock.Of<IAuthService>(), Mock.Of<IAppListingService>(),
-                        Mock.Of<IConfiguration>(), Mock.Of<IUserService>()),
-                    command2));
+                    new PlaceBidUseCase(new AuctionRepository(ctx2), ctx2),
+                    request2));
 
             // Assert
             var successes = results.Count(r => r.Success);
@@ -109,36 +103,31 @@ namespace Tests.ApplicationTests
             Seed(ctx);
 
             var repo = new AuctionRepository(ctx);
-            var service = new AuctionService(
-                repo, ctx,
-                Mock.Of<IAuthService>(),
-                Mock.Of<IAppListingService>(),
-                Mock.Of<IConfiguration>(),
-                Mock.Of<IUserService>());
+            var useCase = new PlaceBidUseCase(repo, ctx);
 
             // Synchronously get the current auction state
             var auction = await repo.GetLatestAuctionAsync();
             var rowVersion = auction!.RowVersion;
 
-            var command1 = new PlaceBidCommand(AuctionId: auction.Id, Amount: 30m, UserId: 1, RowVersion: rowVersion);
-            var command2 = new PlaceBidCommand(AuctionId: auction.Id, Amount: 35m, UserId: 2, RowVersion: rowVersion);
+            var request1 = new PlaceBidRequest(AuctionId: auction.Id, Amount: 30m, UserId: 1, RowVersion: rowVersion);
+            var request2 = new PlaceBidRequest(AuctionId: auction.Id, Amount: 35m, UserId: 2, RowVersion: rowVersion);
 
             // Act - user 1 bids first (succeeds)
-            var act1 = async () => await service.PlaceBidAsync(command1);
+            var act1 = async () => await useCase.ExecuteAsync(request1);
             await act1.Should().NotThrowAsync("user 1's bid should succeed");
 
             // Act - user 2 bids with stale RowVersion (fails)
-            var act2 = async () => await service.PlaceBidAsync(command2);
+            var act2 = async () => await useCase.ExecuteAsync(request2);
             await act2.Should().ThrowAsync<DbUpdateConcurrencyException>("user 2's bid should fail due to stale RowVersion");
 
             await ctx.DisposeAsync();
         }
 
-        static async Task<(bool Success, Exception? Exception)> TryPlaceBidAsync(AuctionService service, PlaceBidCommand command)
+        static async Task<(bool Success, Exception? Exception)> TryPlaceBidAsync(PlaceBidUseCase useCase, PlaceBidRequest request)
         {
             try
             {
-                await service.PlaceBidAsync(command);
+                await useCase.ExecuteAsync(request);
                 return (true, null);
             }
             catch (Exception ex)

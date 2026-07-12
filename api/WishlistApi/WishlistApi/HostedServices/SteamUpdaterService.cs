@@ -1,4 +1,4 @@
-﻿using Application;
+﻿using Application.UseCases.AppListing;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,8 +21,8 @@ namespace WishlistApi.HostedServices
             while (!stoppingToken.IsCancellationRequested)
             {
                 using var scope = _scopeFactory.CreateScope();
-                var appListingService = scope.ServiceProvider.GetRequiredService<IAppListingService>();
-                await appListingService.EnsureAppListingsPopulatedAsync(stoppingToken);
+                var ensureAppListingsPopulatedUseCase = scope.ServiceProvider.GetRequiredService<IEnsureAppListingsPopulatedUseCase>();
+                await ensureAppListingsPopulatedUseCase.ExecuteAsync(stoppingToken);
 
                 // TODO add db table to keep track of last update
                 // update existing data if longer than X ago

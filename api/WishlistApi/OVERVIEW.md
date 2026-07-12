@@ -43,23 +43,52 @@ WishlistApi.sln
 │   └── ISteamApiClient.cs     # External API contract
 │
 ├── Application/               # Business logic / use cases
-│   ├── Services
-│   │   ├── AuthService.cs     # Login/Register with PBKDF2 password hashing
-│   │   ├── WishlistService.cs # CRUD for wishlist items
-│   │   ├── UserService.cs     # User management with IMemoryCache
-│   │   ├── AppListingService.cs # Steam app listing sync + search
-│   │   └── AuctionService.cs  # Auction lifecycle + bid simulation
-│   ├── Commands               # Command objects (CQRS-like)
-│   │   ├── AuthCommands.cs
-│   │   ├── PlaceBidCommand.cs
-│   │   ├── UserCommands.cs
-│   │   └── WishlistItemCommands.cs
-│   ├── Queries
-│   │   ├── AuctionQueries.cs
-│   │   └── UserQueries.cs
-│   └── Contracts              # DTOs for cross-layer communication
-│       ├── AuctionDto.cs
-│       └── UserSummaryDto.cs
+│   ├── UseCases/              # Explicit use case classes (one per controller action)
+│   │   ├── Auth/
+│   │   │   ├── RegisterUserUseCase.cs
+│   │   │   ├── LoginUserUseCase.cs
+│   │   │   ├── Requests/
+│   │   │   │   ├── RegisterUserRequest.cs
+│   │   │   │   └── LoginUserRequest.cs
+│   │   ├── Wishlist/
+│   │   │   ├── GetWishlistUseCase.cs
+│   │   │   ├── AddWishlistItemUseCase.cs
+│   │   │   ├── DeleteWishlistItemUseCase.cs
+│   │   │   ├── GetWishlistStatsUseCase.cs
+│   │   │   ├── PublishBackfillEventUseCase.cs
+│   │   │   ├── SetAlertRuleUseCase.cs
+│   │   │   ├── DeleteAlertRuleUseCase.cs
+│   │   │   └── Requests/
+│   │   │       ├── AddWishlistItemRequest.cs
+│   │   │       └── DeleteWishlistItemRequest.cs
+│   │   ├── User/
+│   │   │   ├── GetUserProfileUseCase.cs
+│   │   │   ├── UpdateUserProfileUseCase.cs
+│   │   │   ├── GetPaginatedUsersUseCase.cs
+│   │   │   └── Requests/
+│   │   │       ├── GetUserProfileRequest.cs
+│   │   │       └── UpdateUserProfileRequest.cs
+│   │   ├── AppListing/
+│   │   │   ├── SearchAppListingsUseCase.cs
+│   │   │   ├── GetRandomAppListingUseCase.cs
+│   │   │   ├── EnsureAppListingsPopulatedUseCase.cs
+│   │   │   └── Requests/
+│   │   │       └── SearchAppListingsRequest.cs
+│   │   ├── Auction/
+│   │   │   ├── PlaceBidUseCase.cs
+│   │   │   ├── StartNextAuctionUseCase.cs
+│   │   │   ├── SimulateBidUseCase.cs
+│   │   │   └── Requests/
+│   │   │       ├── PlaceBidRequest.cs
+│   │   │       └── StartNextAuctionRequest.cs
+│   │   ├── Exceptions/
+│   │   │   ├── UseCaseException.cs
+│   │   │   └── ConflictException.cs
+│   │   └── IUseCase.cs        # Common interface (optional)
+│   ├── Queries                # Read model interfaces (kept — IAuctionReadModel, IUserReadModel)
+│   ├── Contracts              # Shared DTOs (kept — AuctionDto, WishlistDtos, etc.)
+│   ├── Events                 # Domain event records (kept — WishlistItemAdded, etc.)
+│   └── IEventPublisher.cs     # Port interface (kept)
 │
 ├── Infrastructure/            # Implementation details / persistence
 │   ├── Persistence
@@ -102,14 +131,30 @@ WishlistApi.sln
 │
 ├── Tests/                                 # Unit + integration tests
 │   ├── ApplicationTests/
-│   │   ├── AppListingServiceTests.cs
+│   │   ├── AddWishlistItemUseCaseTests.cs
 │   │   ├── AuctionConcurrencyTests.cs
-│   │   ├── AuctionTests.cs
-│   │   ├── UserQueriesTests.cs
-│   │   └── WishlistServiceTests.cs
+│   │   ├── DeleteAlertRuleUseCaseTests.cs
+│   │   ├── DeleteWishlistItemUseCaseTests.cs
+│   │   ├── EnsureAppListingsPopulatedUseCaseTests.cs
+│   │   ├── GetPaginatedUsersUseCaseTests.cs
+│   │   ├── GetRandomAppListingUseCaseTests.cs
+│   │   ├── GetUserProfileUseCaseTests.cs
+│   │   ├── GetWishlistStatsUseCaseTests.cs
+│   │   ├── LoginUserUseCaseTests.cs
+│   │   ├── PlaceBidUseCaseTests.cs
+│   │   ├── PublishBackfillEventUseCaseTests.cs
+│   │   ├── RabbitMqEventPublisherTests.cs
+│   │   ├── RegisterUserUseCaseTests.cs
+│   │   ├── SearchAppListingsUseCaseTests.cs
+│   │   ├── SetAlertRuleUseCaseTests.cs
+│   │   ├── SimulateBidUseCaseTests.cs
+│   │   ├── StartNextAuctionUseCaseTests.cs
+│   │   ├── UpdateUserProfileUseCaseTests.cs
+│   │   └── UserQueriesTests.cs
 │   ├── ControllerTests/
 │   │   ├── UsersControllerUnitTests.cs
 │   │   ├── UsersControllerIntegrationTests.cs
+│   │   ├── WishlistControllerBackfillTests.cs
 │   │   └── WishlistControllerTest.cs
 │   ├── DataAccessTests/
 │   │   └── AuctionRepoTest.cs

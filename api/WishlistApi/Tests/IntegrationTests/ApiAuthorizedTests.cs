@@ -1,5 +1,7 @@
 ﻿using Application;
 using Application.Contracts;
+using Application.UseCases.Auction;
+using Application.UseCases.Auction.Requests;
 using Infrastructure.Persistence;
 using Infrastructure.Persistence.AppListings;
 using FluentAssertions;
@@ -160,8 +162,8 @@ namespace Tests.IntegrationTests
                 dbContext.AppListings.AddRange(appList);
                 await dbContext.SaveChangesAsync();
 
-                var auctionService = sp.GetRequiredService<IAuctionService>();
-                await auctionService.StartNextAuctionAsync();
+                var startNextAuctionUseCase = sp.GetRequiredService<IStartNextAuctionUseCase>();
+                await startNextAuctionUseCase.ExecuteAsync(new StartNextAuctionRequest());
             });
 
             // Act

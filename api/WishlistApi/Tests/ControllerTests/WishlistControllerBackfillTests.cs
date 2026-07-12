@@ -1,7 +1,7 @@
-using Application;
-using Application.Commands;
 using Application.Contracts;
 using Application.Events;
+using Application.UseCases.Wishlist;
+using Application.UseCases.Wishlist.Requests;
 using Domain;
 using Domain.Helpers;
 using Domain.Repositories;
@@ -30,7 +30,7 @@ public class WishlistControllerBackfillTests
     private const int USERID = 42;
     private static readonly Guid EXTERNAL_GUID = new Guid("00000000-0000-0000-0000-000000000042");
 
-    private static (Mock<IWishlistItemRepository>, Mock<IEventPublisher>, WishlistController, DefaultHttpContext) CreateSut(
+    private static (Mock<IWishlistItemRepository>, Mock<IPublishBackfillEventUseCase>, WishlistController, DefaultHttpContext) CreateSut(
         List<Domain.WishlistItem> items)
     {
         var httpContext = new DefaultHttpContext();
@@ -44,29 +44,43 @@ public class WishlistControllerBackfillTests
         var mockAccessor = new Mock<IHttpContextAccessor>();
         mockAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
-        var userServiceMock = new Mock<IUserService>(MockBehavior.Strict);
-        userServiceMock.Setup(x => x.GetInternalUserIdAsync(EXTERNAL_GUID)).Returns(new ValueTask<int>(USERID));
+        var userRepoMock = new Mock<IUserRepository>(MockBehavior.Strict);
+        userRepoMock.Setup(x => x.GetInternalUserIdAsync(EXTERNAL_GUID)).ReturnsAsync(USERID);
 
-        var userContextMock = new UserContext(mockAccessor.Object, userServiceMock.Object);
+        var userContextMock = new UserContext(mockAccessor.Object, userRepoMock.Object);
 
         var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
         repositoryMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(items);
 
-        var eventPublisherMock = new Mock<IEventPublisher>(MockBehavior.Strict);
-        eventPublisherMock.Setup(p => p.PublishAsync(It.IsAny<object>())).Returns(Task.CompletedTask);
+        var getWishlistUseCaseMock = new Mock<IGetWishlistUseCase>();
+        getWishlistUseCaseMock.Setup(x => x.ExecuteAsync(It.IsAny<GetWishlistRequest>())).ReturnsAsync(items);
 
-        var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
-        uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
+        var publishBackfillEventUseCaseMock = new Mock<IPublishBackfillEventUseCase>();
+        publishBackfillEventUseCaseMock.Setup(p => p.ExecuteAsync(It.IsAny<PublishBackfillEventRequest>())).Returns(Task.CompletedTask);
 
-        var service = new WishlistService(repositoryMock.Object, uowMock.Object, eventPublisherMock.Object);
+        var addWishlistItemUseCaseMock = new Mock<IAddWishlistItemUseCase>();
+        var deleteWishlistItemUseCaseMock = new Mock<IDeleteWishlistItemUseCase>();
+        var getWishlistStatsUseCaseMock = new Mock<IGetWishlistStatsUseCase>();
+        var setAlertRuleUseCaseMock = new Mock<ISetAlertRuleUseCase>();
+        var deleteAlertRuleUseCaseMock = new Mock<IDeleteAlertRuleUseCase>();
+
         var priceReaderMock = new Mock<ISharedDbPriceReader>();
         priceReaderMock.Setup(x => x.GetPricesAsync(It.IsAny<IEnumerable<int>>())).ReturnsAsync(new Dictionary<int, GamePrice>());
         priceReaderMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new Dictionary<int, AlertRuleInfo>());
-        var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
-        var controller = new WishlistController(userContextMock, service, priceReaderMock.Object, alertProxyMock.Object);
+
+        var controller = new WishlistController(
+            userContextMock,
+            getWishlistUseCaseMock.Object,
+            addWishlistItemUseCaseMock.Object,
+            deleteWishlistItemUseCaseMock.Object,
+            getWishlistStatsUseCaseMock.Object,
+            publishBackfillEventUseCaseMock.Object,
+            setAlertRuleUseCaseMock.Object,
+            deleteAlertRuleUseCaseMock.Object,
+            priceReaderMock.Object);
         controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
 
-        return (repositoryMock, eventPublisherMock, controller, httpContext);
+        return (repositoryMock, publishBackfillEventUseCaseMock, controller, httpContext);
     }
 
     #region Backfill endpoint tests
@@ -82,7 +96,7 @@ public class WishlistControllerBackfillTests
             new(3, 300, "Game C", DateTimeOffset.UtcNow, USERID)
         };
 
-        var (_, eventPublisherMock, controller, _) = CreateSut(items);
+        var (_, publishBackfillEventUseCaseMock, controller, _) = CreateSut(items);
 
         // Act
         var result = await controller.BackfillAsync();
@@ -93,20 +107,20 @@ public class WishlistControllerBackfillTests
         objectResult.StatusCode.Should().Be(202);
         objectResult.Value.Should().NotBeNull();
 
-        eventPublisherMock.Verify(
-            p => p.PublishAsync(It.IsAny<object>()),
+        publishBackfillEventUseCaseMock.Verify(
+            p => p.ExecuteAsync(It.IsAny<PublishBackfillEventRequest>()),
             Times.Exactly(3));
 
-        var publishedEvents = eventPublisherMock.Invocations
-            .Where(i => i.Method.Name == "PublishAsync")
+        var publishedRequests = publishBackfillEventUseCaseMock.Invocations
+            .Where(i => i.Method.Name == "ExecuteAsync")
             .Select(i => i.Arguments[0])
-            .Cast<WishlistItemAdded>()
+            .Cast<PublishBackfillEventRequest>()
             .ToList();
 
-        publishedEvents.Should().HaveCount(3);
-        publishedEvents.Should().ContainSingle(ev => ev.AppId == 100);
-        publishedEvents.Should().ContainSingle(ev => ev.AppId == 200);
-        publishedEvents.Should().ContainSingle(ev => ev.AppId == 300);
+        publishedRequests.Should().HaveCount(3);
+        publishedRequests.Should().ContainSingle(ev => ev.AppId == 100);
+        publishedRequests.Should().ContainSingle(ev => ev.AppId == 200);
+        publishedRequests.Should().ContainSingle(ev => ev.AppId == 300);
     }
 
     [Fact]
@@ -115,7 +129,7 @@ public class WishlistControllerBackfillTests
         // Arrange
         var items = new List<Domain.WishlistItem>();
 
-        var (_, eventPublisherMock, controller, _) = CreateSut(items);
+        var (_, publishBackfillEventUseCaseMock, controller, _) = CreateSut(items);
 
         // Act
         var result = await controller.BackfillAsync();
@@ -124,8 +138,8 @@ public class WishlistControllerBackfillTests
         result.Should().BeOfType<ObjectResult>();
         ((ObjectResult)result).StatusCode.Should().Be(202);
 
-        eventPublisherMock.Verify(
-            p => p.PublishAsync(It.IsAny<object>()),
+        publishBackfillEventUseCaseMock.Verify(
+            p => p.ExecuteAsync(It.IsAny<PublishBackfillEventRequest>()),
             Times.Never);
     }
 
@@ -138,25 +152,25 @@ public class WishlistControllerBackfillTests
             new(1, 42, "TestGame", new DateTimeOffset(2024, 3, 15, 12, 0, 0, TimeSpan.Zero), USERID)
         };
 
-        var (_, eventPublisherMock, controller, _) = CreateSut(items);
+        var (_, publishBackfillEventUseCaseMock, controller, _) = CreateSut(items);
 
         // Act
         await controller.BackfillAsync();
 
         // Assert
-        eventPublisherMock.Verify(
-            p => p.PublishAsync(It.IsAny<object>()),
+        publishBackfillEventUseCaseMock.Verify(
+            p => p.ExecuteAsync(It.IsAny<PublishBackfillEventRequest>()),
             Times.Once);
 
-        var publishedEvent = eventPublisherMock.Invocations
-            .Where(i => i.Method.Name == "PublishAsync")
+        var publishedRequest = publishBackfillEventUseCaseMock.Invocations
+            .Where(i => i.Method.Name == "ExecuteAsync")
             .Select(i => i.Arguments[0])
-            .Cast<WishlistItemAdded>()
+            .Cast<PublishBackfillEventRequest>()
             .Single();
 
-        publishedEvent.UserId.Should().Be(USERID.ToString());
-        publishedEvent.AppId.Should().Be(42);
-        publishedEvent.AddedAt.Should().Be(new DateTimeOffset(2024, 3, 15, 12, 0, 0, TimeSpan.Zero));
+        publishedRequest.UserId.Should().Be(USERID);
+        publishedRequest.AppId.Should().Be(42);
+        publishedRequest.DateAdded.Should().Be(new DateTimeOffset(2024, 3, 15, 12, 0, 0, TimeSpan.Zero));
     }
 
     #endregion

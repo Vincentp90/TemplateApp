@@ -1,6 +1,8 @@
 using Application;
-using Application.Commands;
 using Application.Contracts;
+using Application.UseCases.Wishlist;
+using Application.UseCases.Wishlist.Requests;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WishlistApi.Helpers;
@@ -14,16 +16,35 @@ namespace WishlistApi.Controllers
     public class WishlistController : ControllerBase
     {
         private readonly IUserContext _userContext;
-        private readonly IWishlistService _wishlistService;
+        private readonly IGetWishlistUseCase _getWishlistUseCase;
+        private readonly IAddWishlistItemUseCase _addWishlistItemUseCase;
+        private readonly IDeleteWishlistItemUseCase _deleteWishlistItemUseCase;
+        private readonly IGetWishlistStatsUseCase _getWishlistStatsUseCase;
+        private readonly IPublishBackfillEventUseCase _publishBackfillEventUseCase;
+        private readonly ISetAlertRuleUseCase _setAlertRuleUseCase;
+        private readonly IDeleteAlertRuleUseCase _deleteAlertRuleUseCase;
         private readonly ISharedDbPriceReader _priceReader;
-        private readonly ISteamTrackerAlertProxy _alertProxy;
 
-        public WishlistController(IUserContext userContext, IWishlistService wishlistService, ISharedDbPriceReader priceReader, ISteamTrackerAlertProxy alertProxy)
+        public WishlistController(
+            IUserContext userContext,
+            IGetWishlistUseCase getWishlistUseCase,
+            IAddWishlistItemUseCase addWishlistItemUseCase,
+            IDeleteWishlistItemUseCase deleteWishlistItemUseCase,
+            IGetWishlistStatsUseCase getWishlistStatsUseCase,
+            IPublishBackfillEventUseCase publishBackfillEventUseCase,
+            ISetAlertRuleUseCase setAlertRuleUseCase,
+            IDeleteAlertRuleUseCase deleteAlertRuleUseCase,
+            ISharedDbPriceReader priceReader)
         {
             _userContext = userContext;
-            _wishlistService = wishlistService;
+            _getWishlistUseCase = getWishlistUseCase;
+            _addWishlistItemUseCase = addWishlistItemUseCase;
+            _deleteWishlistItemUseCase = deleteWishlistItemUseCase;
+            _getWishlistStatsUseCase = getWishlistStatsUseCase;
+            _publishBackfillEventUseCase = publishBackfillEventUseCase;
+            _setAlertRuleUseCase = setAlertRuleUseCase;
+            _deleteAlertRuleUseCase = deleteAlertRuleUseCase;
             _priceReader = priceReader;
-            _alertProxy = alertProxy;
         }
 
         [HttpGet()]
@@ -39,7 +60,7 @@ namespace WishlistApi.Controllers
             bool Has(string field) => includeAll || fieldList.Contains(field);
 
             // 1. Get local wishlist items
-            var localItems = await _wishlistService.GetWishlistItemsAsync(internalUserId);
+            var localItems = await _getWishlistUseCase.ExecuteAsync(new GetWishlistRequest(internalUserId));
             var appIds = localItems.Select(x => x.AppId).ToList();
 
             // 2. Read prices from shared DB (SteamTracker)
@@ -73,7 +94,7 @@ namespace WishlistApi.Controllers
         {
             int internalUserId = await _userContext.GetIdAsync();
 
-            var stats = await _wishlistService.GetWishlistStatsAsync(internalUserId);
+            var stats = await _getWishlistStatsUseCase.ExecuteAsync(new GetWishlistStatsRequest(internalUserId));
             return Ok(new Stats(
                 AvgTimeAdded: stats.AvgTimeAdded,
                 AvgTimeBetweenAdded: stats.AvgTimeBetweenAdded,
@@ -89,9 +110,9 @@ namespace WishlistApi.Controllers
             int internalUserId = await _userContext.GetIdAsync();
             try
             {
-                await _wishlistService.AddToWishlistAsync(new AddToWishlistCommand(UserId: internalUserId, AppId: appId));
+                await _addWishlistItemUseCase.ExecuteAsync(new AddWishlistItemRequest(internalUserId, appId));
             }
-            catch (Domain.Exceptions.DomainException ex)
+            catch (DomainException ex)
             {
                 return StatusCode(StatusCodes.Status409Conflict, ex.Message);
             }
@@ -103,7 +124,7 @@ namespace WishlistApi.Controllers
         public async Task<ActionResult> DeleteAppFromWishlistAsync(int appId)
         {
             int internalUserId = await _userContext.GetIdAsync();
-            await _wishlistService.DeleteWishlistItemAsync(internalUserId, appId);
+            await _deleteWishlistItemUseCase.ExecuteAsync(new DeleteWishlistItemRequest(internalUserId, appId));
             return Ok();
         }
 
@@ -116,7 +137,7 @@ namespace WishlistApi.Controllers
         {
             int internalUserId = await _userContext.GetIdAsync();
 
-            var items = await _wishlistService.GetWishlistItemsAsync(internalUserId);
+            var items = await _getWishlistUseCase.ExecuteAsync(new GetWishlistRequest(internalUserId));
 
             if (!items.Any())
             {
@@ -125,7 +146,10 @@ namespace WishlistApi.Controllers
 
             foreach (var item in items)
             {
-                await _wishlistService.PublishBackfillEventAsync(item);
+                await _publishBackfillEventUseCase.ExecuteAsync(new PublishBackfillEventRequest(
+                    internalUserId,
+                    item.AppId,
+                    item.DateAdded));
             }
 
             return new ObjectResult(new { Count = items.Count }) { StatusCode = 202 };
@@ -138,7 +162,7 @@ namespace WishlistApi.Controllers
         public async Task<ActionResult> SetAlertAsync(int appId, [FromQuery] decimal thresholdAmount, [FromQuery] string currency = "EUR")
         {
             int internalUserId = await _userContext.GetIdAsync();
-            await _alertProxy.SetAlertRuleAsync(internalUserId.ToString(), appId, thresholdAmount, currency);
+            await _setAlertRuleUseCase.ExecuteAsync(new SetAlertRuleRequest(internalUserId.ToString(), appId, thresholdAmount, currency));
             return Ok();
         }
 
@@ -149,7 +173,7 @@ namespace WishlistApi.Controllers
         public async Task<ActionResult> DeleteAlertAsync(Guid alertRuleId)
         {
             int internalUserId = await _userContext.GetIdAsync();
-            await _alertProxy.DeleteAlertRuleAsync(internalUserId.ToString(), alertRuleId);
+            await _deleteAlertRuleUseCase.ExecuteAsync(new DeleteAlertRuleRequest(internalUserId.ToString(), alertRuleId));
             return Ok();
         }
     }
