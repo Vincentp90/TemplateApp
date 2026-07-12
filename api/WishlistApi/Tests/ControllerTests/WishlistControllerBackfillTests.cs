@@ -1,4 +1,3 @@
-using Application;
 using Application.Contracts;
 using Application.Events;
 using Application.UseCases.Wishlist;
@@ -45,10 +44,10 @@ public class WishlistControllerBackfillTests
         var mockAccessor = new Mock<IHttpContextAccessor>();
         mockAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
-        var userServiceMock = new Mock<IUserService>(MockBehavior.Strict);
-        userServiceMock.Setup(x => x.GetInternalUserIdAsync(EXTERNAL_GUID)).ReturnsAsync(USERID);
+        var userRepoMock = new Mock<IUserRepository>(MockBehavior.Strict);
+        userRepoMock.Setup(x => x.GetInternalUserIdAsync(EXTERNAL_GUID)).ReturnsAsync(USERID);
 
-        var userContextMock = new UserContext(mockAccessor.Object, userServiceMock.Object);
+        var userContextMock = new UserContext(mockAccessor.Object, userRepoMock.Object);
 
         var repositoryMock = new Mock<IWishlistItemRepository>(MockBehavior.Strict);
         repositoryMock.Setup(x => x.GetWishlistItemsAsync(USERID)).ReturnsAsync(items);

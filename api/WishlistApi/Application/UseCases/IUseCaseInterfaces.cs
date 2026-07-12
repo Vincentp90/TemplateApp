@@ -1,4 +1,3 @@
-using Application.Commands;
 using Application.Contracts;
 using Application.UseCases.AppListing.Requests;
 using Application.UseCases.Auction.Requests;

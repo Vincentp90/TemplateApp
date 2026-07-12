@@ -1,4 +1,4 @@
-﻿using Application.Commands;
+﻿using Application.UseCases.Auth;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;

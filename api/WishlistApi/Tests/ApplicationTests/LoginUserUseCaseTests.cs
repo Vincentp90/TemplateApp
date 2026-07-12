@@ -1,6 +1,5 @@
 using Application;
 using System.Security.Cryptography;
-using Application.Commands;
 using Application.UseCases.Auth;
 using Application.UseCases.Auth.Requests;
 using Domain;

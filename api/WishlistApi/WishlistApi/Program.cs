@@ -90,11 +90,6 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuctionReadModel, AuctionReadAdapter>();
 builder.Services.AddScoped<IUserReadModel, UserReadAdapter>();
 
-builder.Services.AddScoped<IAppListingService, AppListingService>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IWishlistService, WishlistService>();
-
 // Use case registrations
 builder.Services.AddScoped<IRegisterUserUseCase, RegisterUserUseCase>();
 builder.Services.AddScoped<ILoginUserUseCase, LoginUserUseCase>();
@@ -123,7 +118,6 @@ builder.Services.AddScoped<IEventPublisher>(sp =>
     new RabbitMqEventPublisher(
         sp.GetRequiredService<IRabbitMqConnectionFactory>(),
         "wishlist.events"));
-builder.Services.AddScoped<IAuctionService, AuctionService>();
 
 // Shared DB readers and SteamTracker proxy
 builder.Services.AddScoped<ISharedDbPriceReader, SharedDbPriceReader>();

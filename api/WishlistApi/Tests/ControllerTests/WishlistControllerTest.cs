@@ -1,7 +1,9 @@
 using Application;
 using Application.Contracts;
+using Application.Events;
 using Application.UseCases.Wishlist;
 using Application.UseCases.Wishlist.Requests;
+using Domain.Repositories;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +14,6 @@ using System.Linq;
 using System.Security.Claims;
 using WishlistApi.Controllers;
 using WishlistApi.Helpers;
-
 namespace Tests.ControllerTests
 {
     //TODO how to organise a test like this. It's not a unit test since it tests 2 layers (API + application)
@@ -38,10 +39,10 @@ namespace Tests.ControllerTests
             var mockAccessor = new Mock<IHttpContextAccessor>();
             mockAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
-            var userServiceMock = new Mock<IUserService>(MockBehavior.Strict);
-            userServiceMock.Setup(x => x.GetInternalUserIdAsync(externalID)).ReturnsAsync(3);
+            var userRepoMock = new Mock<IUserRepository>(MockBehavior.Strict);
+            userRepoMock.Setup(x => x.GetInternalUserIdAsync(externalID)).ReturnsAsync(3);
 
-            IUserContext userContextMock = new UserContext(mockAccessor.Object, userServiceMock.Object);
+            IUserContext userContextMock = new UserContext(mockAccessor.Object, userRepoMock.Object);
 
             var eventPublisherMock = new Mock<IEventPublisher>();
             var priceReaderMock = new Mock<ISharedDbPriceReader>();
@@ -91,7 +92,7 @@ namespace Tests.ControllerTests
             
             // Check use case was called once
             getWishlistUseCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<GetWishlistRequest>()), Times.Once);
-            userServiceMock.Verify(x => x.GetInternalUserIdAsync(externalID), Times.Once);
+            userRepoMock.Verify(x => x.GetInternalUserIdAsync(externalID), Times.Once);
 
             actionResult.Should().NotBeNull();
             var okResult = actionResult.Result as OkObjectResult;

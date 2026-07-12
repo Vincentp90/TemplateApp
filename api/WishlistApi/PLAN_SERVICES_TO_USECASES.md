@@ -182,9 +182,9 @@ All 5 controllers have been refactored to inject and call use case interfaces di
 
 All unit tests have been created/updated to target the new use case classes.
 
-### Phase 6: Cleanup — ⏳ TODO
+### Phase 6: Cleanup — ✅ COMPLETE
 
-Delete old service files (`AuthService.cs`, `WishlistService.cs`, etc.), `Commands/` folder, update `OVERVIEW.md`.
+Deleted old service files (`AuthService.cs`, `WishlistService.cs`, `UserService.cs`, `AppListingService.cs`, `AuctionService.cs`), `Commands/` folder, old test files (`WishlistServiceTests.cs`, `AuctionTests.cs`, `AppListingServiceTests.cs`), removed dead DI registrations from `Program.cs`, updated `UserContext.cs` to use `IUserRepository` directly, migrated `LoginResult` to `UseCases/Auth/LoginResult.cs`, cleaned up unused `using` statements, updated remaining test files to use use cases instead of old services, and updated `OVERVIEW.md`.
 
 ## Implementation Steps
 

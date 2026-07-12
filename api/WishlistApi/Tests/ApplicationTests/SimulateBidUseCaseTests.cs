@@ -1,5 +1,4 @@
 using Application;
-using Application.Commands;
 using Application.UseCases.Auction;
 using Application.UseCases.Auction.Requests;
 using Application.UseCases.Auth;
