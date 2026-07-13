@@ -2,6 +2,18 @@ Agent: ignore this
 
 Make an overview of the build warnings in wishlist and steamtracker
 
+root@924186ffb5ae:/workspace# cd /workspace/api/WishlistApi && dotnet build --no-incremental 2>&1
+Restore complete (1.2s)
+  Domain net10.0 succeeded (0.7s) → Domain/bin/Debug/net10.0/Domain.dll
+  Application net10.0 succeeded (0.7s) → Application/bin/Debug/net10.0/Application.dll
+  Infrastructure net10.0 succeeded with 1 warning(s) (0.8s) → Infrastructure/bin/Debug/net10.0/Infrastructure.dll
+    /workspace/api/WishlistApi/Infrastructure/Persistence/Auctions/Auction.cs(28,39): warning CS8618: Non-nullable property 'AppListing' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.
+  WishlistApi net10.0 succeeded with 4 warning(s) (2.2s) → WishlistApi/bin/Debug/net10.0/WishlistApi.dll
+    /workspace/api/WishlistApi/WishlistApi/Controllers/WishlistController.cs(79,55): warning CS8602: Dereference of a possibly null reference.
+    /workspace/api/WishlistApi/WishlistApi/Controllers/WishlistController.cs(80,71): warning CS8602: Dereference of a possibly null reference.
+    /workspace/api/WishlistApi/WishlistApi/Controllers/WishlistController.cs(81,71): warning CS8602: Dereference of a possibly null reference.
+    /workspace/api/WishlistApi/WishlistApi/Controllers/WishlistController.cs(82,48): warning CS8602: Dereference of a possibly null reference.
+
 Things I'm going to try/add/learn more about later :
 - warnings in wishlist and steamtracker
 - warnings during api container startup
@@ -9,7 +21,6 @@ Things I'm going to try/add/learn more about later :
 - get prices by api instead of shared db https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 - gRPC for api-steamtracker communication
 - finish alerts
-- Try to vibecode angular frontend
 - Auction: add end date to entity, remove static mutable Domain.Auction.Duration
 - Auction OCC: remove client side part since we also have the admin form which is more suitable for RowVersion round-trip, auction use case fits better with only server side OCC
 - DDD add domain event example https://gemini.google.com/app/f3480cdb192b1625

@@ -86,7 +86,7 @@ public class GetUserProfileUseCaseTests
 
         var userRepoMock = new Mock<IUserRepository>(MockBehavior.Strict);
         userRepoMock.Setup(x => x.GetInternalUserIdAsync(externalUserId)).ReturnsAsync(internalUserId);
-        userRepoMock.Setup(x => x.GetUserAsync(internalUserId)).ReturnsAsync((Domain.User?)null);
+        userRepoMock.Setup(x => x.GetUserAsync(internalUserId)).Returns(Task.FromResult<User>(null!));
 
         var cache = new MemoryCache(new MemoryCacheOptions());
 

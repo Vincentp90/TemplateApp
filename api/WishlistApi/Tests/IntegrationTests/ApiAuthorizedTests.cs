@@ -36,11 +36,11 @@ namespace Tests.IntegrationTests
             var (client, username) = await _apiFactory.CreateAuthenticatedClientWithUserAsync();
 
             // Act
-            var response = await client.GetAsync("/auth/me");
+            var response = await client.GetAsync("/auth/me", TestContext.Current.CancellationToken);
 
             // Assert
             response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
 
             Assert.Equal(username, content.GetProperty("username").GetString());
         }
@@ -73,11 +73,11 @@ namespace Tests.IntegrationTests
             });
 
             // Act
-            var response = await client.GetAsync("/applistings/search/Dragon");
+            var response = await client.GetAsync("/applistings/search/Dragon", TestContext.Current.CancellationToken);
 
             // Assert
             response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadFromJsonAsync<List<AppListing>>();
+            var content = await response.Content.ReadFromJsonAsync<List<AppListing>>(TestContext.Current.CancellationToken);
             content.Should().NotBeNull();
             // Fuzzy dragon search should find the 2 dragon entries
             content.Count().Should().Be(2);
@@ -109,16 +109,16 @@ namespace Tests.IntegrationTests
             });
 
             // Add apps to wishlist
-            await client.PostAsync($"/wishlist/{appIdRandomOffset + 3}", null);// Oldest item
-            await client.PostAsync($"/wishlist/{appIdRandomOffset + 2}", null);
-            await client.PostAsync($"/wishlist/{appIdRandomOffset + 1}", null);
+            await client.PostAsync($"/wishlist/{appIdRandomOffset + 3}", null, TestContext.Current.CancellationToken);// Oldest item
+            await client.PostAsync($"/wishlist/{appIdRandomOffset + 2}", null, TestContext.Current.CancellationToken);
+            await client.PostAsync($"/wishlist/{appIdRandomOffset + 1}", null, TestContext.Current.CancellationToken);
 
             // Act
-            var response = await client.GetAsync("/wishlist/stats");
+            var response = await client.GetAsync("/wishlist/stats", TestContext.Current.CancellationToken);
 
             // Assert
             response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadFromJsonAsync<Stats>();
+            var content = await response.Content.ReadFromJsonAsync<Stats>(TestContext.Current.CancellationToken);
             content.Should().NotBeNull();
             content.AvgTimeAdded.Days.Should().Be(0);
             content.AvgTimeBetweenAdded.Days.Should().Be(0);
@@ -167,27 +167,27 @@ namespace Tests.IntegrationTests
             });
 
             // Act
-            var response = await client.GetAsync("/auctions/current");
+            var response = await client.GetAsync("/auctions/current", TestContext.Current.CancellationToken);
 
             // Assert
             response.EnsureSuccessStatusCode();
-            var auction = await response.Content.ReadFromJsonAsync<AuctionDto>();
+            var auction = await response.Content.ReadFromJsonAsync<AuctionDto>(TestContext.Current.CancellationToken);
             auction.Should().NotBeNull();
             // TODO doesn't work isolated from other tests, uncomment once we have proper isolated tests
             //auction.AppName.Should().BeOneOf("App1", "App2", "App3");
 
             // Act
             var updatedAuction = auction with { CurrentPrice = 15.0m };
-            response = await client.PostAsJsonAsync($"/auctions/current", updatedAuction);
+            response = await client.PostAsJsonAsync($"/auctions/current", updatedAuction, TestContext.Current.CancellationToken);
 
             // Assert
             response.EnsureSuccessStatusCode();
 
             // Act
-            response = await client.GetAsync("/auctions/current");
+            response = await client.GetAsync("/auctions/current", TestContext.Current.CancellationToken);
 
             // Assert
-            var updatedAuctionResponse = await response.Content.ReadFromJsonAsync<AuctionDto>();
+            var updatedAuctionResponse = await response.Content.ReadFromJsonAsync<AuctionDto>(TestContext.Current.CancellationToken);
             updatedAuctionResponse.Should().NotBeNull();
             updatedAuctionResponse.CurrentPrice.Should().Be(15.0m);
             var rowVersionIncrement = updatedAuctionResponse.RowVersion - auction.RowVersion;
@@ -221,21 +221,21 @@ namespace Tests.IntegrationTests
             });
 
             // Act
-            var response = await client.GetAsync("/wishlist");
+            var response = await client.GetAsync("/wishlist", TestContext.Current.CancellationToken);
 
             // Assert
             response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadFromJsonAsync<Wishlist>();
+            var content = await response.Content.ReadFromJsonAsync<Wishlist>(TestContext.Current.CancellationToken);
             content.Should().NotBeNull();
             content.Items.Count().Should().Be(2);
             content.Items.Select(x => x.AppId).Should().BeEquivalentTo(new[] { appIdRandomOffset + 1, appIdRandomOffset + 2 });
 
             // Act - test fields filtering
-            response = await client.GetAsync("/wishlist?fields=appid,name");
+            response = await client.GetAsync("/wishlist?fields=appid,name", TestContext.Current.CancellationToken);
 
             // Assert
             response.EnsureSuccessStatusCode();
-            content = await response.Content.ReadFromJsonAsync<Wishlist>();
+            content = await response.Content.ReadFromJsonAsync<Wishlist>(TestContext.Current.CancellationToken);
             content.Should().NotBeNull();
             content.Items.Should().AllSatisfy(item =>
             {
@@ -265,14 +265,14 @@ namespace Tests.IntegrationTests
             });
 
             // Act
-            var response = await client.PostAsync($"/wishlist/{appIdRandomOffset + 1}", null);
+            var response = await client.PostAsync($"/wishlist/{appIdRandomOffset + 1}", null, TestContext.Current.CancellationToken);
 
             // Assert
             response.EnsureSuccessStatusCode();
 
             // Verify the item was added
-            response = await client.GetAsync("/wishlist");
-            var content = await response.Content.ReadFromJsonAsync<Wishlist>();
+            response = await client.GetAsync("/wishlist", TestContext.Current.CancellationToken);
+            var content = await response.Content.ReadFromJsonAsync<Wishlist>(TestContext.Current.CancellationToken);
             content.Should().NotBeNull();
             content.Items.Count().Should().Be(1);
             content.Items.First().AppId.Should().Be(appIdRandomOffset + 1);
@@ -304,14 +304,14 @@ namespace Tests.IntegrationTests
             });
 
             // Act - delete one item
-            var response = await client.DeleteAsync($"/wishlist/{appIdRandomOffset + 1}");
+            var response = await client.DeleteAsync($"/wishlist/{appIdRandomOffset + 1}", TestContext.Current.CancellationToken);
 
             // Assert
             response.EnsureSuccessStatusCode();
 
             // Verify the item was removed and the other is still there
-            response = await client.GetAsync("/wishlist");
-            var content = await response.Content.ReadFromJsonAsync<Wishlist>();
+            response = await client.GetAsync("/wishlist", TestContext.Current.CancellationToken);
+            var content = await response.Content.ReadFromJsonAsync<Wishlist>(TestContext.Current.CancellationToken);
             content.Should().NotBeNull();
             content.Items.Count().Should().Be(1);
             content.Items.First().AppId.Should().Be(appIdRandomOffset + 2);

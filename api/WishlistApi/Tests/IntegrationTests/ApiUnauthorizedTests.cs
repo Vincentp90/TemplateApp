@@ -24,7 +24,7 @@ namespace Tests.IntegrationTests
                 Password = "Test123!"
             };
 
-            var response = await _client.PostAsJsonAsync("/auth/register", request);
+            var response = await _client.PostAsJsonAsync("/auth/register", request, TestContext.Current.CancellationToken);
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
@@ -39,15 +39,15 @@ namespace Tests.IntegrationTests
             };
 
             // first call succeeds
-            var first = await _client.PostAsJsonAsync("/auth/register", request);
+            var first = await _client.PostAsJsonAsync("/auth/register", request, TestContext.Current.CancellationToken);
             first.EnsureSuccessStatusCode();
 
             // second call should fail
-            var second = await _client.PostAsJsonAsync("/auth/register", request);
+            var second = await _client.PostAsJsonAsync("/auth/register", request, TestContext.Current.CancellationToken);
 
             Assert.Equal(HttpStatusCode.BadRequest, second.StatusCode);
 
-            var content = await second.Content.ReadAsStringAsync();
+            var content = await second.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             Assert.Contains("Username already taken", content);
         }
 
@@ -59,10 +59,10 @@ namespace Tests.IntegrationTests
             var password = Guid.NewGuid().ToString();
 
             var login = new { Username = userName, Password = password };
-            await _client.PostAsJsonAsync("/auth/register", login);
+            await _client.PostAsJsonAsync("/auth/register", login, TestContext.Current.CancellationToken);
 
             // Act
-            var response = await _client.PostAsJsonAsync("/auth/login", login);
+            var response = await _client.PostAsJsonAsync("/auth/login", login, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);

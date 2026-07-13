@@ -55,7 +55,7 @@ public class AlertProxyEndpointTests : IAsyncLifetime
         const int appId = 42;
 
         // Act
-        var response = await _client.PostAsync($"/wishlist/{appId}/alert?thresholdAmount=15.50&currency=EUR", null);
+        var response = await _client.PostAsync($"/wishlist/{appId}/alert?thresholdAmount=15.50&currency=EUR", null, TestContext.Current.CancellationToken);
 
         // Assert
         response.IsSuccessStatusCode.Should().BeTrue();
@@ -76,7 +76,7 @@ public class AlertProxyEndpointTests : IAsyncLifetime
         const int appId = 100;
 
         // Act — omit currency query param to test default
-        var response = await _client.PostAsync($"/wishlist/{appId}/alert?thresholdAmount=20", null);
+        var response = await _client.PostAsync($"/wishlist/{appId}/alert?thresholdAmount=20", null, TestContext.Current.CancellationToken);
 
         // Assert
         response.IsSuccessStatusCode.Should().BeTrue();
@@ -92,7 +92,7 @@ public class AlertProxyEndpointTests : IAsyncLifetime
         // (SteamTracker would handle that)
 
         // Act
-        var response = await _client.PostAsync("/wishlist/9999/alert?thresholdAmount=10&currency=EUR", null);
+        var response = await _client.PostAsync("/wishlist/9999/alert?thresholdAmount=10&currency=EUR", null, TestContext.Current.CancellationToken);
 
         // Assert — proxy returns whatever SteamTracker returns (which is mocked)
         // The proxy mock returns success, so we get 200
@@ -110,7 +110,7 @@ public class AlertProxyEndpointTests : IAsyncLifetime
         var alertRuleId = Guid.Parse("a0000000-0000-0000-0000-000000000001");
 
         // Act
-        var response = await _client.DeleteAsync($"/wishlist/{alertRuleId}/alert");
+        var response = await _client.DeleteAsync($"/wishlist/{alertRuleId}/alert", TestContext.Current.CancellationToken);
 
         // Assert
         response.IsSuccessStatusCode.Should().BeTrue();
@@ -129,7 +129,7 @@ public class AlertProxyEndpointTests : IAsyncLifetime
         // Arrange — invalid GUID but proxy doesn't validate (SteamTracker would)
 
         // Act
-        var response = await _client.DeleteAsync("/wishlist/00000000-0000-0000-0000-000000000000/alert");
+        var response = await _client.DeleteAsync("/wishlist/00000000-0000-0000-0000-000000000000/alert", TestContext.Current.CancellationToken);
 
         // Assert
         response.IsSuccessStatusCode.Should().BeTrue();

@@ -22,7 +22,7 @@ public class EnsureAppListingsPopulatedUseCaseTests
         var useCase = new EnsureAppListingsPopulatedUseCase(mockRepo.Object, mockApiClient.Object, mockConfig.Object);
 
         // Act
-        await useCase.ExecuteAsync();
+        await useCase.ExecuteAsync(TestContext.Current.CancellationToken);
 
         // Assert
         mockRepo.Verify(r => r.HasAnyAsync(), Times.Once());
@@ -52,7 +52,7 @@ public class EnsureAppListingsPopulatedUseCaseTests
         var useCase = new EnsureAppListingsPopulatedUseCase(mockRepo.Object, mockApiClient.Object, mockConfig.Object);
 
         // Act
-        await useCase.ExecuteAsync();
+        await useCase.ExecuteAsync(TestContext.Current.CancellationToken);
 
         // Assert
         mockApiClient.Verify(c => c.GetAppListingsAsync("test-key"), Times.Once());
@@ -82,7 +82,7 @@ public class EnsureAppListingsPopulatedUseCaseTests
         var useCase = new EnsureAppListingsPopulatedUseCase(mockRepo.Object, mockApiClient.Object, mockConfig.Object);
 
         // Act
-        await useCase.ExecuteAsync();
+        await useCase.ExecuteAsync(TestContext.Current.CancellationToken);
 
         // Assert
         mockRepo.Verify(r => r.SaveAsync(It.IsAny<IEnumerable<AppListing>>()), Times.Once());
@@ -105,7 +105,7 @@ public class EnsureAppListingsPopulatedUseCaseTests
 
         // Act & assert
         var exception = await Assert.ThrowsAsync<Exception>(
-            () => useCase.ExecuteAsync());
+            () => useCase.ExecuteAsync(TestContext.Current.CancellationToken));
         exception.Message.Should().Be("Failed to get game list from steam");
     }
 }

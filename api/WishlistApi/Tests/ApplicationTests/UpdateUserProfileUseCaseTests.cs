@@ -31,9 +31,8 @@ public class UpdateUserProfileUseCaseTests
 
         var userRepoMock = new Mock<IUserRepository>(MockBehavior.Strict);
         userRepoMock.Setup(x => x.GetInternalUserIdAsync(externalUserId)).ReturnsAsync(internalUserId);
-        userRepoMock.Setup(x => x.GetUserAsync(internalUserId)).ReturnsAsync(user);
+        userRepoMock.Setup(x => x.GetUserAsync(internalUserId)).Returns(Task.FromResult(user));
         userRepoMock.Setup(x => x.UpdateUserAsync(user)).Returns(Task.CompletedTask);
-        userRepoMock.Setup(x => x.GetUserAsync(internalUserId)).ReturnsAsync((Domain.User?)user);
 
         var uowMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
         uowMock.Setup(x => x.SaveChangesAsync()).ReturnsAsync(1);
@@ -65,7 +64,7 @@ public class UpdateUserProfileUseCaseTests
 
         var userRepoMock = new Mock<IUserRepository>(MockBehavior.Strict);
         userRepoMock.Setup(x => x.GetInternalUserIdAsync(externalUserId)).ReturnsAsync(internalUserId);
-        userRepoMock.Setup(x => x.GetUserAsync(internalUserId)).ReturnsAsync((Domain.User?)null);
+        userRepoMock.Setup(x => x.GetUserAsync(internalUserId)).Returns(Task.FromResult<User>(null!));
 
         var cache = new MemoryCache(new MemoryCacheOptions());
 

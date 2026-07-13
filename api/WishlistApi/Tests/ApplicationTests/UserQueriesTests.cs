@@ -45,9 +45,9 @@ namespace Tests.ApplicationTests
                     PasswordHash = passwordHash,
                     PasswordSalt = passwordSalt
                 };
-                await _context.Users.AddAsync(user);
+                await _context.Users.AddAsync(user, TestContext.Current.CancellationToken);
             }
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         [Fact]
@@ -197,8 +197,8 @@ namespace Tests.ApplicationTests
                 PasswordHash = passwordHash,
                 PasswordSalt = passwordSalt
             };
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
+            await _context.Users.AddAsync(user, TestContext.Current.CancellationToken);
+            await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             // Act
             var result = await _queries.GetUsersAsync(1, 10);

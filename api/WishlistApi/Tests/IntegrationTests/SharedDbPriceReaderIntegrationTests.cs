@@ -49,7 +49,7 @@ public class SharedDbPriceReaderIntegrationTests : IAsyncLifetime
         // (mimics what EF Core writes via SteamTracker.Worker)
         var connStr = SharedDbFixture.Instance.SteamTrackerConnectionString;
         using var conn = new NpgsqlConnection(connStr);
-        await conn.OpenAsync();
+        await conn.OpenAsync(TestContext.Current.CancellationToken);
         const string insertSql = @"
             INSERT INTO ""games"" (""app_id"", ""name"", ""current_price"", ""last_checked_at"")
             VALUES (@appId, @name, @priceStr, @checkedAt)

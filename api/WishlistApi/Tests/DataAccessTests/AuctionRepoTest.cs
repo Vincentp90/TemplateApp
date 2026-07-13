@@ -41,7 +41,7 @@ namespace Tests.DataAccessTests
             };
 
             ctx.Auctions.Add(existing);
-            await uow.SaveChangesAsync();
+            await uow.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var bid = await repo.GetLatestAuctionAsync();
             bid.Should().NotBeNull();
@@ -50,9 +50,9 @@ namespace Tests.DataAccessTests
             bid.PlaceBid(bidderUserId: 3, amount: 200m);
             
             repo.Update(bid, bid.RowVersion);
-            await uow.SaveChangesAsync();
+            await uow.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-            var updated = await ctx.Auctions.FindAsync(1);
+            var updated = await ctx.Auctions.FindAsync(new object?[] { 1 }, TestContext.Current.CancellationToken);
             updated.Should().NotBeNull();
             updated.CurrentPrice.Should().Be(200m);
             updated.UserID.Should().Be(3);
