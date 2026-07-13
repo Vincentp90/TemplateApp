@@ -32,10 +32,12 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
     private readonly PostgresContainerFixture _postgres = PostgresContainerFixture.Instance;
     private readonly RabbitMqContainerFixture _rabbitMq = RabbitMqContainerFixture.Instance;
 
-    private SteamTrackerDbContext? _context;
-    private IChannel? _publishChannel;
-    private IConnection? _connection;
-    private ServiceProvider? _serviceProvider;
+    // These fields are assigned in InitializeAsync and never null during test execution.
+    // A single null! at declaration documents that trust — every other usage is clean.
+    private SteamTrackerDbContext _context = null!;
+    private IChannel _publishChannel = null!;
+    private IConnection _connection = null!;
+    private ServiceProvider _serviceProvider = null!;
     private readonly string _testId = Guid.NewGuid().ToString("N");
 
     // Test doubles
@@ -98,7 +100,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         services.AddSingleton(_notificationPublisherMock.Object);
 
         // In-memory publisher that writes to our test RabbitMQ queue
-        services.AddSingleton<IPriceCheckJobPublisher>(new TestPriceCheckJobPublisher(_publishChannel!, PriceCheckQueue));
+        services.AddSingleton<IPriceCheckJobPublisher>(new TestPriceCheckJobPublisher(_publishChannel, PriceCheckQueue));
 
         // Use cases
         services.AddScoped<ISetAlertRuleUseCase, SetAlertRuleUseCase>();
@@ -142,13 +144,13 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
 
         // Create alert rule (TrackedGame will be created by HandleWishlistItemAddedUseCase)
         var alertRule = new AlertRule(Guid.NewGuid(), userId, new SteamAppId(appId), alertThreshold);
-        _context!.AlertRules.Add(alertRule);
+        _context.AlertRules.Add(alertRule);
         await _context.SaveChangesAsync();
 
         // 2. Publish WishlistItemAdded event to RabbitMQ
         var addedMessage = new { userId, appId, addedAt = addedAt.ToString("o") };
         var addedBody = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(addedMessage, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
-        await _publishChannel!.BasicPublishAsync(
+        await _publishChannel.BasicPublishAsync(
             exchange: "wishlist.events",
             routingKey: "",
             mandatory: false,
@@ -158,7 +160,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         var addedUseCase = _serviceProvider.GetRequiredService<IHandleWishlistItemAddedUseCase>();
         var removedUseCase = _serviceProvider.GetRequiredService<IHandleWishlistItemRemovedUseCase>();
 
-        var pollChannel = await _connection!.CreateChannelAsync();
+        var pollChannel = await _connection.CreateChannelAsync();
 
         // Poll for the WishlistItemAdded message
         var addedMsg = await PollForMessageAsync(pollChannel, SyncQueue, TimeSpan.FromSeconds(10));
@@ -189,7 +191,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
 
         // ===== ASSERT =====
         // 1. TrackedGame exists and is active
-        var savedTrackedGame = await _serviceProvider!.GetRequiredService<ITrackedGameRepository>().GetAsync(new SteamAppId(appId));
+        var savedTrackedGame = await _serviceProvider.GetRequiredService<ITrackedGameRepository>().GetAsync(new SteamAppId(appId));
         savedTrackedGame.Should().NotBeNull();
         savedTrackedGame!.IsActive.Should().BeTrue();
 
@@ -237,13 +239,13 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
 
         // Create alert rule (TrackedGame will be created by HandleWishlistItemAddedUseCase)
         var alertRule = new AlertRule(Guid.NewGuid(), userId, new SteamAppId(appId), alertThreshold);
-        _context!.AlertRules.Add(alertRule);
+        _context.AlertRules.Add(alertRule);
         await _context.SaveChangesAsync();
 
         // Publish WishlistItemAdded event
         var addedMessage = new { userId, appId, addedAt = addedAt.ToString("o") };
         var addedBody = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(addedMessage, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
-        await _publishChannel!.BasicPublishAsync(
+        await _publishChannel.BasicPublishAsync(
             exchange: "wishlist.events",
             routingKey: "",
             mandatory: false,
@@ -253,7 +255,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         var addedUseCase = _serviceProvider.GetRequiredService<IHandleWishlistItemAddedUseCase>();
         var removedUseCase = _serviceProvider.GetRequiredService<IHandleWishlistItemRemovedUseCase>();
 
-        var pollChannel = await _connection!.CreateChannelAsync();
+        var pollChannel = await _connection.CreateChannelAsync();
 
         // Poll for the WishlistItemAdded message
         var addedMsg = await PollForMessageAsync(pollChannel, SyncQueue, TimeSpan.FromSeconds(10));
@@ -305,19 +307,19 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         var addedAt = DateTimeOffset.UtcNow;
 
         // Seed TrackedGame and alert rule
-        var trackedGameRepo = _serviceProvider!.GetRequiredService<ITrackedGameRepository>();
+        var trackedGameRepo = _serviceProvider.GetRequiredService<ITrackedGameRepository>();
         var alertRuleRepo = _serviceProvider.GetRequiredService<IAlertRuleRepository>();
         var trackedGame = TrackedGame.StartTracking(new SteamAppId(appId), addedAt);
         await trackedGameRepo.SaveAsync(trackedGame);
 
         var alertRule = new AlertRule(Guid.NewGuid(), userId, new SteamAppId(appId), new Money(10m));
-        _context!.AlertRules.Add(alertRule);
+        _context.AlertRules.Add(alertRule);
         await _context.SaveChangesAsync();
 
         // Publish WishlistItemRemoved event
         var removedMessage = new { userId, appId, removedAt = DateTimeOffset.UtcNow.ToString("o") };
         var removedBody = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(removedMessage, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
-        await _publishChannel!.BasicPublishAsync(
+        await _publishChannel.BasicPublishAsync(
             exchange: "wishlist.events",
             routingKey: "",
             mandatory: false,
@@ -327,7 +329,7 @@ public class WishlistToAlertEndToEndTests : IAsyncLifetime
         var addedUseCase = _serviceProvider.GetRequiredService<IHandleWishlistItemAddedUseCase>();
         var removedUseCase = _serviceProvider.GetRequiredService<IHandleWishlistItemRemovedUseCase>();
 
-        var pollChannel = await _connection!.CreateChannelAsync();
+        var pollChannel = await _connection.CreateChannelAsync();
 
         // Poll for the WishlistItemRemoved message
         var removedMsg = await PollForMessageAsync(pollChannel, SyncQueue, TimeSpan.FromSeconds(10));

@@ -14,7 +14,8 @@ namespace SteamTracker.Infrastructure.Tests.Repositories;
 /// </summary>
 public class PostgresRepositoryIntegrationTests : IAsyncLifetime
 {
-    private SteamTrackerDbContext? _context;
+    // Assigned in InitializeAsync, never null during test execution.
+    private SteamTrackerDbContext _context = null!;
 
     public async Task InitializeAsync()
     {
@@ -24,7 +25,7 @@ public class PostgresRepositoryIntegrationTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        _context?.Dispose();
+        _context.Dispose();
         await PostgresContainerFixture.Instance.Container.StopAsync();
     }
 
@@ -33,7 +34,7 @@ public class PostgresRepositoryIntegrationTests : IAsyncLifetime
     {
         // Arrange
         var appId = new SteamAppId(123456);
-        var repository = new GameRepository(_context!);
+        var repository = new GameRepository(_context);
 
         // Act
         var game = new Game(appId);
@@ -57,7 +58,7 @@ public class PostgresRepositoryIntegrationTests : IAsyncLifetime
     {
         // Arrange
         var appId = new SteamAppId(789);
-        var repository = new TrackedGameRepository(_context!);
+        var repository = new TrackedGameRepository(_context);
 
         // Act
         var trackedGame = TrackedGame.StartTracking(appId, DateTimeOffset.UtcNow);
@@ -85,7 +86,7 @@ public class PostgresRepositoryIntegrationTests : IAsyncLifetime
         // Arrange
         var ruleId = Guid.NewGuid();
         var appId = new SteamAppId(42);
-        var repository = new AlertRuleRepository(_context!);
+        var repository = new AlertRuleRepository(_context);
 
         // Act
         var rule = new AlertRule(ruleId, "user-1", appId, new Money(15m, "EUR"));
@@ -112,7 +113,7 @@ public class PostgresRepositoryIntegrationTests : IAsyncLifetime
     {
         // Arrange
         var appId = new SteamAppId(999);
-        var repository = new GameRepository(_context!);
+        var repository = new GameRepository(_context);
 
         // Act
         var game = new Game(appId);

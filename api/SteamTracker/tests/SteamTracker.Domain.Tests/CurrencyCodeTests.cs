@@ -21,9 +21,9 @@ public class CurrencyCodeTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null!)]
-    public void Constructor_rejects_empty_codes(string code)
+    public void Constructor_rejects_empty_codes(string? code)
     {
-        var act = () => new CurrencyCode(code);
+        var act = () => new CurrencyCode(code!);
         act.Should().Throw<ArgumentException>().WithMessage("Currency code cannot be empty.*");
     }
 

@@ -17,8 +17,9 @@ public class RabbitMqIntegrationTests : IAsyncLifetime
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
 
-    private IChannel? _channel;
-    private ConnectionFactory? _factory;
+    // Assigned in InitializeAsync, never null during test execution.
+    private IChannel _channel = null!;
+    private ConnectionFactory _factory = null!;
 
     public async Task InitializeAsync()
     {
@@ -47,7 +48,7 @@ public class RabbitMqIntegrationTests : IAsyncLifetime
         var queueName = $"test-queue-{Guid.NewGuid():N}";
         var exchangeName = $"test-exchange-{Guid.NewGuid():N}";
 
-        await _channel!.ExchangeDeclareAsync(exchangeName, ExchangeType.Direct, durable: false);
+        await _channel.ExchangeDeclareAsync(exchangeName, ExchangeType.Direct, durable: false);
         await _channel.QueueDeclareAsync(queueName, durable: false, exclusive: true, autoDelete: true);
         await _channel.QueueBindAsync(queueName, exchangeName, "test-routing-key");
 
@@ -79,7 +80,7 @@ public class RabbitMqIntegrationTests : IAsyncLifetime
         var queueName = $"durable-queue-{Guid.NewGuid():N}";
 
         // Act
-        await _channel!.ExchangeDeclareAsync(exchangeName, ExchangeType.Direct, durable: true);
+        await _channel.ExchangeDeclareAsync(exchangeName, ExchangeType.Direct, durable: true);
         await _channel.QueueDeclareAsync(queueName, durable: true, exclusive: false, autoDelete: true);
 
         // Assert — declare again should not throw (idempotent)
@@ -94,7 +95,7 @@ public class RabbitMqIntegrationTests : IAsyncLifetime
         var exchangeName = $"topic-exchange-{Guid.NewGuid():N}";
         var queueName = $"topic-queue-{Guid.NewGuid():N}";
 
-        await _channel!.ExchangeDeclareAsync(exchangeName, ExchangeType.Topic, durable: false);
+        await _channel.ExchangeDeclareAsync(exchangeName, ExchangeType.Topic, durable: false);
         await _channel.QueueDeclareAsync(queueName, durable: false, exclusive: true, autoDelete: true);
         await _channel.QueueBindAsync(queueName, exchangeName, "alert.#");
 

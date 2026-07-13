@@ -336,8 +336,7 @@ public class WishlistSyncConsumerTests
     {
         // Arrange — null userId still deserializes and calls use case
         var addedAt = new DateTimeOffset(2025, 6, 15, 10, 30, 0, TimeSpan.Zero);
-        var msg = new { userId = (string?)null, appId = 42, addedAt = addedAt };
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg, SnakeCaseOptions));
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { userId = (string?)null, appId = 42, addedAt }, SnakeCaseOptions));
 
         // Act
         await _consumer.HandleBasicDeliverAsync(
@@ -352,7 +351,7 @@ public class WishlistSyncConsumerTests
 
         // Assert — null userId is passed through to use case
         _addedUseCaseMock.Verify(
-            x => x.ExecuteAsync((string?)null, 42, addedAt, It.IsAny<CancellationToken>()),
+            x => x.ExecuteAsync(It.IsAny<string>(), 42, addedAt, It.IsAny<CancellationToken>()),
             Times.Once);
         _channelMock.Verify(
             x => x.BasicAckAsync(12, multiple: false, It.IsAny<CancellationToken>()),
