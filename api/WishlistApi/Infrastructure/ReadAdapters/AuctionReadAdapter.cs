@@ -23,7 +23,7 @@ public class AuctionReadAdapter(WishlistDbContext context) : IAuctionReadModel
             StartingPrice: auction.StartingPrice,
             CurrentPrice: auction.CurrentPrice,
             AppID: auction.appid,
-            AppName: auction.AppListing.name,
+            AppName: auction.AppListing!.name,
             RowVersion: auction.RowVersion
         );
     }

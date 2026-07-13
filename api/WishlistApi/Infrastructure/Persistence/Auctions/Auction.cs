@@ -25,7 +25,7 @@ namespace Infrastructure.Persistence.Auctions
 
         [ForeignKey("AppListing")]
         public int appid { get; set; }
-        public AppListings.AppListing AppListing { get; set; }//TODO set required
+        public AppListings.AppListing? AppListing { get; set; }//TODO set required
 
         [ForeignKey("User")]
         public int? UserID { get; set; }

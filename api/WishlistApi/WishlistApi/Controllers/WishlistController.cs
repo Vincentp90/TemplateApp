@@ -76,13 +76,13 @@ namespace WishlistApi.Controllers
                     AppId: Has("appid") ? x.AppId : null,
                     DateAdded: Has("dateadded") ? x.DateAdded : null,
                     Name: Has("name") ? x.AppName : null,
-                    Price: hasPrice && Has("price") ? price.Amount : null,
-                    PriceCurrency: hasPrice && Has("pricecurrency") ? price.Currency : (string?)"EUR",
-                    LastCheckedAt: hasPrice && Has("lastcheckedat") ? price.LastCheckedAt : null,
-                    IsUnavailable: hasPrice && price.IsUnavailable,
-                    AlertRuleId: alertRules.TryGetValue(x.AppId, out var alert) && Has("alertruleid") ? alert.Id : null,
-                    AlertThreshold: alertRules.TryGetValue(x.AppId, out alert) && Has("alertthreshold") ? alert.ThresholdAmount : null,
-                    AlertCurrency: alertRules.TryGetValue(x.AppId, out alert) && Has("alertcurrency") ? alert.Currency : (string?)"EUR"
+                    Price: hasPrice && Has("price") ? price!.Amount : null,
+                    PriceCurrency: hasPrice && Has("pricecurrency") ? price!.Currency : (string?)"EUR",
+                    LastCheckedAt: hasPrice && Has("lastcheckedat") ? price!.LastCheckedAt : null,
+                    IsUnavailable: hasPrice && price!.IsUnavailable,
+                    AlertRuleId: alertRules.TryGetValue(x.AppId, out var alert) && Has("alertruleid") ? alert!.Id : null,
+                    AlertThreshold: alertRules.TryGetValue(x.AppId, out alert) && Has("alertthreshold") ? alert!.ThresholdAmount : null,
+                    AlertCurrency: alertRules.TryGetValue(x.AppId, out alert) && Has("alertcurrency") ? alert!.Currency : (string?)"EUR"
                 );
             });
 
