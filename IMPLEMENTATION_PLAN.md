@@ -54,13 +54,16 @@ WishlistApi becomes a **BFF (Backend for Frontend)** — the frontend makes two 
 
 ### 1.2 Green: Implement the endpoint
 
-- [ ] Add endpoint in `SteamTracker.API.Program.cs`:
+- [x] Add endpoint in `SteamTracker.API.Program.cs`:
   ```csharp
   // GET /api/games/prices?appIds=1&appIds=2
   api.MapGet("/games/prices", async (
       IGameRepository gameRepo,
-      [FromQuery] IEnumerable<int> appIds) =>
+      [FromQuery] int[] appIds) =>
   {
+      if (appIds.Length == 0)
+          return Results.Ok(Array.Empty<GamePriceDto>());
+
       var results = new List<GamePriceDto>();
       foreach (var appId in appIds)
       {
@@ -70,19 +73,17 @@ WishlistApi becomes a **BFF (Backend for Frontend)** — the frontend makes two 
               results.Add(new GamePriceDto(
                   AppId: game.AppId.Value,
                   Amount: game.CurrentPrice?.Amount,
-                  Currency: game.CurrentPrice?.Currency.ToString() ?? "EUR",
+                  Currency: game.CurrentPrice?.Currency ?? "EUR",
                   LastCheckedAt: game.LastCheckedAt,
                   IsUnavailable: game.IsUnavailable
               ));
           }
       }
-      return results;
+      return Results.Ok(results);
   });
   ```
 
-- [ ] Run `dotnet test api/SteamTracker/SteamTracker.slnx 2>&1 | tail -n 50` — all pass
-
-> **Status**: Red phase files created. Tests will fail with 404 (endpoint doesn't exist yet). Green phase = implement the endpoint and verify tests pass.
+- [x] Run `dotnet test api/SteamTracker/SteamTracker.slnx 2>&1 | tail -n 50` — all pass (176+ across all test projects, including 7 PriceEndpointTests)
 
 ---
 

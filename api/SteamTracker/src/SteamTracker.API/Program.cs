@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SteamTracker.API.Models;
 using SteamTracker.Application.Ports;
 using SteamTracker.Application.UseCases;
 using SteamTracker.Domain.Services;
+using SteamTracker.Domain.ValueObjects;
 using SteamTracker.Infrastructure;
 using SteamTracker.Infrastructure.Data;
 
@@ -59,6 +61,32 @@ api.MapDelete("/alert/{alertRuleId}", async (
     var userId = context.Request.Headers["X-Internal-UserId"].ToString();
     await useCase.ExecuteAsync(userId, alertRuleId);
     return Results.NoContent();
+});
+
+// GET /api/games/prices?appIds=1&appIds=2 — public price passthrough
+api.MapGet("/games/prices", async (
+    IGameRepository gameRepo,
+    [FromQuery] int[] appIds) =>
+{
+    if (appIds.Length == 0)
+        return Results.Ok(Array.Empty<GamePriceDto>());
+
+    var results = new List<GamePriceDto>();
+    foreach (var appId in appIds)
+    {
+        var game = await gameRepo.GetAsync(new SteamAppId(appId));
+        if (game != null)
+        {
+            results.Add(new GamePriceDto(
+                AppId: game.AppId.Value,
+                Amount: game.CurrentPrice?.Amount,
+                Currency: game.CurrentPrice?.Currency ?? "EUR",
+                LastCheckedAt: game.LastCheckedAt,
+                IsUnavailable: game.IsUnavailable
+            ));
+        }
+    }
+    return Results.Ok(results);
 });
 
 app.Run();

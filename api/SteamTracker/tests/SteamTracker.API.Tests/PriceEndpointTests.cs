@@ -76,12 +76,14 @@ public class PriceEndpointTests : IClassFixture<TestApiFactory>
         result.Should().NotBeNull();
         result!.Count.Should().Be(2);
 
-        var price1 = result.ShouldContain(r => r.AppId == appId1);
+        result.Should().Contain(r => r.AppId == appId1);
+        result.Should().Contain(r => r.AppId == appId2);
+        var price1 = result.Single(r => r.AppId == appId1);
         price1.Amount.Should().Be(29.99m);
         price1.Currency.Should().Be("EUR");
         price1.IsUnavailable.Should().BeFalse();
 
-        var price2 = result.ShouldContain(r => r.AppId == appId2);
+        var price2 = result.Single(r => r.AppId == appId2);
         price2.Amount.Should().Be(0m);
         price2.Currency.Should().Be("EUR");
         price2.IsUnavailable.Should().BeFalse();
