@@ -123,6 +123,12 @@ builder.Services.AddScoped<IEventPublisher>(sp =>
 builder.Services.AddScoped<ISharedDbPriceReader, SharedDbPriceReader>();
 builder.Services.AddHttpClient<ISteamTrackerAlertProxy, SteamTrackerAlertProxy>();
 
+// Named HttpClient for the prices passthrough endpoint
+builder.Services.AddHttpClient("SteamTracker", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("SteamTrackerUri")!);
+});
+
 
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddHttpContextAccessor();

@@ -1,5 +1,7 @@
 Agent: ignore this
 
+Continue with IMPLEMENTATION_PLAN.md, do phase 2
+
 Make a step-by-step plan with checkboxes, following TDD red phase-green phase principles: 
 - currently: WishlistController.GetWishlistAsync uses dapper calls to the SteamTracker db to enrich the prices into the request.
 - To be: SteamTracker api has an endpoint to retrieve prices. Input is a list of appids. Output is list of prices+appid. WishlistController.GetWishlistAsync no longer enriches the price info in its response. WishlistController gets a new controller action which is just a passthrough fo the SteamTracker API. This way we don't need security on SteamTracker API. WishlistApi acts as BFF. The frontend overview page does a second query to collect the price info.

@@ -18,7 +18,7 @@ AFTER:
 
 WishlistApi becomes a **BFF (Backend for Frontend)** — the frontend makes two queries:
 1. `GET /wishlist` → wishlist items (no price, no alert data)
-2. `GET /api/prices?appIds=1,2,3` → price data (passthrough to SteamTracker, no auth needed)
+2. `GET /api/prices?appIds=1,2,3` → price data (passthrough to SteamTracker, auth required)
 
 ---
 
@@ -87,23 +87,27 @@ WishlistApi becomes a **BFF (Backend for Frontend)** — the frontend makes two 
 
 ---
 
-## Phase 2: WishlistApi — Add passthrough prices endpoint (no auth)
+## Phase 2: WishlistApi — Add passthrough prices endpoint (auth required)
 
 ### 2.1 Red: Write failing integration test for the passthrough
 
-- [ ] **Create test** in `WishlistApi/Tests/IntegrationTests/PricesPassthroughTests.cs`:
-  - [ ] Uses `WebApplicationFactory` with mocked SteamTracker HTTP client
-  - [ ] Test: `GetPrices_forwardsToSteamTracker_and_returns_response` — no auth required
-  - [ ] Test: `GetPrices_forwards_appIds_query_params_correctly`
-  - [ ] Test: `GetPrices_returns_empty_when_steamtracker_returns_empty`
+- [x] **Create test** in `WishlistApi/Tests/IntegrationTests/PricesPassthroughTests.cs`:
+  - [x] Uses `WebApplicationFactory` with mocked SteamTracker HTTP client
+  - [x] Test: `GetPrices_forwardsToSteamTracker_and_returns_response` — authenticated request
+  - [x] Test: `GetPrices_forwards_appIds_query_params_correctly`
+  - [x] Test: `GetPrices_returns_empty_when_steamtracker_returns_empty`
+  - [x] Test: `GetPrices_returns_empty_when_no_appIds_provided`
 
 ### 2.2 Green: Implement the passthrough endpoint
 
-- [ ] **Create new controller** `api/WishlistApi/WishlistApi/Controllers/PricesController.cs`:
+- [x] **Create new controller** `api/WishlistApi/WishlistApi/Controllers/PricesController.cs`
+  - Uses `IHttpClientFactory` with named "SteamTracker" client
+  - `[Authorize]` — requires authentication
+  - Case-insensitive JSON deserialization
   ```csharp
   [ApiController]
   [Route("api/[controller]")]
-  [AllowAnonymous]  // No auth needed — frontend calls this directly
+  [Authorize]  // Auth required — frontend calls this via the BFF pattern
   public class PricesController : ControllerBase
   {
       private readonly HttpClient _httpClient;
@@ -135,12 +139,14 @@ WishlistApi becomes a **BFF (Backend for Frontend)** — the frontend makes two 
   }
   ```
 
-- [ ] **Add DTO** to `WishlistApi/Application/Contracts/WishlistDtos.cs`:
+- [x] **Add DTO** to `WishlistApi/Application/Contracts/WishlistDtos.cs`
+  - `GamePriceDto(int AppId, decimal? Amount, string Currency, DateTimeOffset? LastCheckedAt, bool IsUnavailable)`
   ```csharp
   public record GamePriceDto(int AppId, decimal? Amount, string Currency, DateTimeOffset? LastCheckedAt, bool IsUnavailable);
   ```
 
-- [ ] **Register the HttpClient** in `Program.cs` (similar to existing `AddHttpClient<ISteamTrackerAlertProxy>`, but for `PricesController`):
+- [x] **Register the HttpClient** in `Program.cs`
+  - Named client "SteamTracker" with base address from config
   ```csharp
   // Replace the existing SteamTrackerUri config usage — centralize it
   services.AddHttpClient("SteamTracker", client =>
@@ -149,7 +155,7 @@ WishlistApi becomes a **BFF (Backend for Frontend)** — the frontend makes two 
   });
   ```
 
-- [ ] Run `dotnet test api/WishlistApi/WishlistApi.sln 2>&1 | tail -n 50` — all pass
+- [x] Run `dotnet test api/WishlistApi/WishlistApi.sln 2>&1 | tail -n 50` — all pass (105 passed, 1 skipped)
 
 ---
 
