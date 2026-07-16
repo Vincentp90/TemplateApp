@@ -1,7 +1,5 @@
 Agent: ignore this
 
-test price retrieval
-
 Things I'm going to try/add/learn more about later :
 - Cross service test project referencing both steamtracker and wishlistapi
 - get prices by api instead of shared db https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100

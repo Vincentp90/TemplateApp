@@ -97,8 +97,6 @@ export default function WLItemsList() {
     window.location.reload();
   };
 
-  const hasUserId = true; // Auth is required for this route
-
   return (
     <>
       <div className="flex flex-col gap-2 items-center w-full">
@@ -140,14 +138,12 @@ export default function WLItemsList() {
                     <td className="px-6 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <WishlistPriceBadge currentPrice={currentPrice} hasSnapshots={hasSnapshots} isUnavailable={item.isUnavailable} />
-                        {hasUserId && (
-                          <button
-                            onClick={() => setAlertModalAppId(item.appId ?? 0)}
-                            className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
-                          >
-                            Set alert
-                          </button>
-                        )}
+                        <button
+                          onClick={() => setAlertModalAppId(item.appId ?? 0)}
+                          className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                        >
+                          Set alert
+                        </button>
                       </div>
                     </td>
                     <td className="px-6 py-3 text-right whitespace-nowrap">{toLocalTime(item.dateAdded)}</td>
