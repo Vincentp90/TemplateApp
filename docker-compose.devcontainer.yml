@@ -52,7 +52,8 @@ services:
       dockerfile: Dockerfile.dev
     depends_on:
       - db
-      - rabbitmq  
+      - rabbitmq
+      - steamtracker-api
     ports: ["5186:5186"]    
     volumes: 
       - .:/workspace
@@ -63,10 +64,24 @@ services:
       - ASPNETCORE_ENVIRONMENT=Devcontainer
       - ASPNETCORE_URLS=http://+:5186
 
+  steamtracker-api:
+    build:
+      context: ./api/SteamTracker/src
+      dockerfile: SteamTracker.API/Dockerfile
+    depends_on:
+      - db
+      - rabbitmq
+    ports:
+      - "5217:5217"
+    environment:
+      - ConnectionStrings__SteamTracker=Host=db;Database=steamtracker;Username=postgres;Password=example
+      - RabbitMQ__HostName=rabbitmq
+      - ASPNETCORE_URLS=http://+:5217
+
   steamtracker-worker:
     build: 
       context: ./api/SteamTracker/src
-      dockerfile: Dockerfile.dev
+      dockerfile: SteamTracker.Worker/Dockerfile.dev
     depends_on:
       - db
       - rabbitmq
