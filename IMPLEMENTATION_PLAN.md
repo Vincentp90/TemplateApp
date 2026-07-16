@@ -201,20 +201,25 @@ WishlistApi becomes a **BFF (Backend for Frontend)** — the frontend makes two 
 
 ### 4.1 Red: Write failing component test (or verify build fails)
 
-- [ ] The current `WLItemsList` component calls `/wishlist?fields=appid,name,dateadded,price,...` and expects price/alert data
-- [ ] After the backend changes, this call will return null for price fields → component should show "—" or "N/A" for prices
-- [ ] Verify the build fails or the component renders with null prices
+- [x] Created `frontend/src/components/wlItemsList.test.tsx` with 7 tests
+- [x] Tests verify the component makes two separate API calls: `/wishlist` and `/api/prices`
+- [x] Tests cover: normal prices, null prices ("—"), unavailable ("N/A"), free (0), empty wishlist, missing price data
 
 ### 4.2 Green: Update frontend to make two queries
 
-- [ ] **Modify** `frontend/src/components/wlItemsList.tsx`:
-  - [ ] Query 1: `GET /wishlist?fields=appid,name,dateadded` → `WishlistItem[]` (from WishlistApi)
-  - [ ] Query 2: `GET /api/prices?appIds=1&appIds=2&...` → `GamePriceDto[]` (from WishlistApi passthrough)
-  - [ ] Merge the two results client-side: match by `appId`
-  - [ ] Update `MergedWishlistItem` interface to still include price fields (filled from query 2)
-  - [ ] Handle the case where an app has no price data (show "—")
+- [x] **Modified** `frontend/src/components/wlItemsList.tsx`:
+  - [x] Query 1: `GET /wishlist` → `WishlistItemResponse[]` (from WishlistApi, returns appId, name, dateAdded)
+  - [x] Query 2: `GET /api/prices?appIds=1&appIds=2&...` → `GamePriceResponse[]` (from WishlistApi passthrough)
+  - [x] Merge the two results client-side: build a `Map<number, GamePriceResponse>` and match by `appId`
+  - [x] Updated `MergedWishlistItem` interface to include price fields (filled from query 2)
+  - [x] Handle the case where an app has no price data (show "—")
+  - [x] Changed prices query from `useSuspenseQuery` to `useQuery` (since it depends on the first query's data)
+  - [x] Simplified alert button text to "Set alert" (alert data no longer returned by wishlist endpoint)
 
-- [ ] **Update** `frontend/src/routes/app/overview.tsx` if needed (no changes expected — it just wraps `WLItemsList`)
+- [x] **No changes needed** to `frontend/src/routes/app/overview.tsx` — it just wraps `WLItemsList`
+
+- [x] Build passes: `npm run build` ✓
+- [x] All tests pass: 10 tests (7 new + 3 existing) ✓
 
 ---
 
