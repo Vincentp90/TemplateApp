@@ -225,13 +225,14 @@ WishlistApi becomes a **BFF (Backend for Frontend)** — the frontend makes two 
 
 ## Phase 5: Cleanup & Verification
 
-- [ ] Remove `ISharedDbPriceReader` interface and `SharedDbPriceReader` class entirely from WishlistApi
-- [ ] Verify `SteamTrackerAlertProxy` still works (it's used for alert set/delete — unaffected)
-- [ ] Run full test suites:
-  - [ ] `dotnet test api/WishlistApi/WishlistApi.sln 2>&1 | tail -n 50`
-  - [ ] `dotnet test api/SteamTracker/SteamTracker.slnx 2>&1 | tail -n 50`
-- [ ] Run frontend tests: `cd frontend && npm run test 2>&1 | tail -n 50`
-- [ ] Update API documentation / Swagger (if auto-generated, it should pick up the new endpoints)
+- [x] Remove `ISharedDbPriceReader` interface and `SharedDbPriceReader` class entirely from WishlistApi
+- [x] Verify `SteamTrackerAlertProxy` still works (it's used for alert set/delete — unaffected)
+- [x] Run full test suites:
+  - [x] `dotnet test api/WishlistApi/WishlistApi.sln 2>&1 | tail -n 50` — **92 passed, 1 skipped**
+  - [x] `dotnet test api/SteamTracker/SteamTracker.slnx 2>&1 | tail -n 50` — **180 passed** (fixed pre-existing package downgrade)
+- [x] Run frontend tests: `cd frontend && npm run test 2>&1 | tail -n 50` — **10 passed**
+- [x] Update API documentation — OVERVIEW.md updated with `/api/prices` endpoint and alert endpoints
+- [x] Fixed pre-existing dependency issue: bumped `Microsoft.Extensions.DependencyInjection` and `Microsoft.Extensions.Logging.Abstractions` to 10.0.10 in `SteamTracker.Integration.Tests.csproj`
 
 ---
 
