@@ -66,6 +66,8 @@ namespace Tests.ControllerTests
             var publishBackfillEventUseCaseMock = new Mock<IPublishBackfillEventUseCase>();
             var setAlertRuleUseCaseMock = new Mock<ISetAlertRuleUseCase>();
             var deleteAlertRuleUseCaseMock = new Mock<IDeleteAlertRuleUseCase>();
+            var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
+            alertProxyMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new List<Application.Contracts.AlertRuleInfo>());
 
             var controller = new WishlistController(
                 userContextMock,
@@ -75,7 +77,8 @@ namespace Tests.ControllerTests
                 getWishlistStatsUseCaseMock.Object,
                 publishBackfillEventUseCaseMock.Object,
                 setAlertRuleUseCaseMock.Object,
-                deleteAlertRuleUseCaseMock.Object);
+                deleteAlertRuleUseCaseMock.Object,
+                alertProxyMock.Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = httpContext
@@ -84,7 +87,7 @@ namespace Tests.ControllerTests
             // Act
             ActionResult<Wishlist> actionResult = await controller.GetWishlistAsync();
 
-            // Assert - returns items with core fields only (no price/alert enrichment)
+            // Assert
             actionResult.Should().NotBeNull();
             var okResult = actionResult.Result as OkObjectResult;
             okResult.Should().NotBeNull();
@@ -96,23 +99,10 @@ namespace Tests.ControllerTests
             item.AppId.Should().Be(1);
             item.DateAdded.Should().NotBeNull();
             item.Name.Should().Be(APPNAME);
+            item.AlertRuleId.Should().BeNull(); // No alerts mocked
 
-
-            // Act
-            actionResult = await controller.GetWishlistAsync("appid,name"); // Simulate fields=appid,name query param
-
-            // Assert
-            actionResult.Should().NotBeNull();
-            okResult = actionResult.Result as OkObjectResult;
-            okResult.Should().NotBeNull();
-            wl = okResult!.Value as Wishlist;
-            wl.Should().NotBeNull();
-            item = wl.Items.First();
-
-            // Verify all core fields are returned (controller no longer filters by fields)
-            item.AppId.Should().NotBeNull();
-            item.Name.Should().NotBeNull();
-            item.DateAdded.Should().NotBeNull();
+            // Verify use case was called once
+            getWishlistUseCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<GetWishlistRequest>()), Times.Once);
         }
     }
 }

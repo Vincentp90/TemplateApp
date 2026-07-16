@@ -68,6 +68,7 @@ namespace Tests.Helpers
 
                 // Mock SteamTracker proxy for integration tests
                 var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
+                alertProxyMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new List<AlertRuleInfo>());
                 services.AddScoped(_ => alertProxyMock.Object);
             });
         }

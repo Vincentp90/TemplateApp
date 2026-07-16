@@ -1,3 +1,5 @@
+using Application;
+using Application.Contracts;
 using Application.Events;
 using Application.UseCases.Wishlist;
 using Application.UseCases.Wishlist.Requests;
@@ -62,6 +64,8 @@ public class WishlistControllerBackfillTests
         var getWishlistStatsUseCaseMock = new Mock<IGetWishlistStatsUseCase>();
         var setAlertRuleUseCaseMock = new Mock<ISetAlertRuleUseCase>();
         var deleteAlertRuleUseCaseMock = new Mock<IDeleteAlertRuleUseCase>();
+        var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
+        alertProxyMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new List<AlertRuleInfo>());
 
         var controller = new WishlistController(
             userContextMock,
@@ -71,7 +75,8 @@ public class WishlistControllerBackfillTests
             getWishlistStatsUseCaseMock.Object,
             publishBackfillEventUseCaseMock.Object,
             setAlertRuleUseCaseMock.Object,
-            deleteAlertRuleUseCaseMock.Object);
+            deleteAlertRuleUseCaseMock.Object,
+            alertProxyMock.Object);
         controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
 
         return (repositoryMock, publishBackfillEventUseCaseMock, controller, httpContext);

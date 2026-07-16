@@ -35,8 +35,8 @@ describe('WLItemsList component', () => {
         return Promise.resolve({
           data: {
             items: [
-              { appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z' },
-              { appId: 42, name: 'Portal', dateAdded: '2024-02-01T00:00:00Z' },
+              { appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null },
+              { appId: 42, name: 'Portal', dateAdded: '2024-02-01T00:00:00Z', alertRuleId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' },
             ],
           },
         });
@@ -70,7 +70,7 @@ describe('WLItemsList component', () => {
       if (url === '/wishlist') {
         return Promise.resolve({
           data: {
-            items: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z' }],
+            items: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null }],
           },
         });
       }
@@ -96,7 +96,7 @@ describe('WLItemsList component', () => {
       if (url === '/wishlist') {
         return Promise.resolve({
           data: {
-            items: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z' }],
+            items: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null }],
           },
         });
       }
@@ -122,7 +122,7 @@ describe('WLItemsList component', () => {
       if (url === '/wishlist') {
         return Promise.resolve({
           data: {
-            items: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z' }],
+            items: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null }],
           },
         });
       }
@@ -150,7 +150,7 @@ describe('WLItemsList component', () => {
       if (url === '/wishlist') {
         return Promise.resolve({
           data: {
-            items: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z' }],
+            items: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null }],
           },
         });
       }
@@ -195,8 +195,8 @@ describe('WLItemsList component', () => {
         return Promise.resolve({
           data: {
             items: [
-              { appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z' },
-              { appId: 999, name: 'Unknown Game', dateAdded: '2024-01-01T00:00:00Z' },
+              { appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null },
+              { appId: 999, name: 'Unknown Game', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null },
             ],
           },
         });

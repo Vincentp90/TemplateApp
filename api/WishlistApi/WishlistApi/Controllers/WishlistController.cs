@@ -3,6 +3,7 @@ using Application.Contracts;
 using Application.UseCases.Wishlist;
 using Application.UseCases.Wishlist.Requests;
 using Domain.Exceptions;
+using Infrastructure.SharedDb;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WishlistApi.Helpers;
@@ -22,6 +23,7 @@ namespace WishlistApi.Controllers
         private readonly IPublishBackfillEventUseCase _publishBackfillEventUseCase;
         private readonly ISetAlertRuleUseCase _setAlertRuleUseCase;
         private readonly IDeleteAlertRuleUseCase _deleteAlertRuleUseCase;
+        private readonly ISteamTrackerAlertProxy _alertProxy;
 
         public WishlistController(
             IUserContext userContext,
@@ -31,7 +33,8 @@ namespace WishlistApi.Controllers
             IGetWishlistStatsUseCase getWishlistStatsUseCase,
             IPublishBackfillEventUseCase publishBackfillEventUseCase,
             ISetAlertRuleUseCase setAlertRuleUseCase,
-            IDeleteAlertRuleUseCase deleteAlertRuleUseCase)
+            IDeleteAlertRuleUseCase deleteAlertRuleUseCase,
+            ISteamTrackerAlertProxy alertProxy)
         {
             _userContext = userContext;
             _getWishlistUseCase = getWishlistUseCase;
@@ -41,21 +44,27 @@ namespace WishlistApi.Controllers
             _publishBackfillEventUseCase = publishBackfillEventUseCase;
             _setAlertRuleUseCase = setAlertRuleUseCase;
             _deleteAlertRuleUseCase = deleteAlertRuleUseCase;
+            _alertProxy = alertProxy;
         }
 
         [HttpGet()]
-        public async Task<ActionResult<Wishlist>> GetWishlistAsync([FromQuery] string? fields = null)
+        public async Task<ActionResult<Wishlist>> GetWishlistAsync()
         {
             int internalUserId = await _userContext.GetIdAsync();
 
             // Get local wishlist items
             var localItems = await _getWishlistUseCase.ExecuteAsync(new GetWishlistRequest(internalUserId));
 
-            // Return only core fields (price/alert data is available via /api/prices)
+            // Get alert rules from SteamTracker
+            var alertRules = await _alertProxy.GetAlertRulesAsync(internalUserId.ToString());
+            var alertMap = alertRules.ToDictionary(r => r.AppId, r => r.AlertRuleId);
+
+            // Return core fields + alert info (price data is available via /api/prices)
             var result = localItems.Select(x => new WishlistItemDto(
                 AppId: x.AppId,
                 DateAdded: x.DateAdded,
-                Name: x.AppName
+                Name: x.AppName,
+                AlertRuleId: alertMap.TryGetValue(x.AppId, out var alertId) ? alertId : null
             ));
 
             return Ok(new Wishlist(result));

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SteamTracker.API.Models;
 using SteamTracker.Application.Ports;
 using SteamTracker.Application.UseCases;
+using SteamTracker.Domain.Entities;
 using SteamTracker.Domain.Services;
 using SteamTracker.Domain.ValueObjects;
 using SteamTracker.Infrastructure;
@@ -63,7 +64,7 @@ api.MapDelete("/alert/{alertRuleId}", async (
     return Results.NoContent();
 });
 
-// GET /api/games/prices?appIds=1&appIds=2 — public price passthrough
+// GET /api/games/prices?appIds=1&appIds=2 — price passthrough
 api.MapGet("/games/prices", async (
     IGameRepository gameRepo,
     [FromQuery] int[] appIds) =>
@@ -86,6 +87,26 @@ api.MapGet("/games/prices", async (
             ));
         }
     }
+    return Results.Ok(results);
+});
+
+// GET /api/alerts — return active alert rules for a user (internal caller, userId from header)
+api.MapGet("/alerts", async (
+    IAlertRuleRepository alertRuleRepo,
+    HttpContext context) =>
+{
+    var userId = context.Request.Headers["X-Internal-UserId"].ToString();
+    if (string.IsNullOrEmpty(userId))
+        return Results.Ok(Array.Empty<AlertRuleDto>());
+
+    var rules = await alertRuleRepo.GetForUserAsync(userId);
+    var results = rules.Select(r => new AlertRuleDto(
+        AlertRuleId: r.AlertRuleId,
+        AppId: r.AppId.Value,
+        ThresholdAmount: r.TriggerBelowPrice.Amount,
+        Currency: r.TriggerBelowPrice.Currency
+    )).ToList();
+
     return Results.Ok(results);
 });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useSuspenseQuery, useQuery } from '@tanstack/react-query';
+import { useSuspenseQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from "../api";
 import WishlistPriceBadge from './WishlistPriceBadge';
 import AlertRuleModal from './AlertRuleModal';
@@ -14,12 +14,14 @@ export interface MergedWishlistItem {
   priceCurrency: string;
   lastCheckedAt: string | null;
   isUnavailable: boolean;
+  alertRuleId: string | null;
 }
 
 interface WishlistItemResponse {
   appId: number | null;
   name: string | null;
   dateAdded: string | null;
+  alertRuleId: string | null;
 }
 
 interface GamePriceResponse {
@@ -31,7 +33,9 @@ interface GamePriceResponse {
 }
 
 export default function WLItemsList() {
-  // Query 1: Get wishlist items (core fields only)
+  const queryClient = useQueryClient();
+
+  // Query 1: Get wishlist items (core fields + alert info)
   const { data: wishlistItems = [] } = useSuspenseQuery<WishlistItemResponse[]>({
     queryKey: ['wishlistOverview'],
     queryFn: async () => {
@@ -45,7 +49,6 @@ export default function WLItemsList() {
     .map(item => item.appId)
     .filter((id): id is number => id != null);
 
-  // Use useQuery (not useSuspenseQuery) since this query depends on the first one
   const { data: prices = [] } = useQuery<GamePriceResponse[]>({
     queryKey: ['prices', appIds],
     queryFn: async () => {
@@ -57,7 +60,7 @@ export default function WLItemsList() {
     enabled: appIds.length > 0,
   });
 
-  // Merge: build a map of appId -> price data
+  // Merge: build maps of appId -> price data and appId -> alert info
   const priceMap = new Map<number, GamePriceResponse>();
   for (const price of prices) {
     priceMap.set(price.appId, price);
@@ -73,6 +76,7 @@ export default function WLItemsList() {
       priceCurrency: priceData?.currency ?? 'EUR',
       lastCheckedAt: priceData?.lastCheckedAt ?? null,
       isUnavailable: priceData?.isUnavailable ?? false,
+      alertRuleId: item.alertRuleId,
     };
   });
 
@@ -94,7 +98,8 @@ export default function WLItemsList() {
   const handleAlertSuccess = () => {
     setAlertModalAppId(null);
     // Invalidate and refetch both queries
-    window.location.reload();
+    queryClient.invalidateQueries({ queryKey: ['wishlistOverview'] });
+    queryClient.invalidateQueries({ queryKey: ['prices'] });
   };
 
   return (
@@ -142,7 +147,7 @@ export default function WLItemsList() {
                           onClick={() => setAlertModalAppId(item.appId ?? 0)}
                           className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
                         >
-                          Set alert
+                          {item.alertRuleId ? 'Edit alert' : 'Set alert'}
                         </button>
                       </div>
                     </td>

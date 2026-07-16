@@ -8,4 +8,10 @@ public interface ISteamTrackerAlertProxy
 {
     Task SetAlertRuleAsync(string userId, int appId, decimal thresholdAmount, string currency = "EUR");
     Task DeleteAlertRuleAsync(string userId, Guid alertRuleId);
+    Task<List<AlertRuleInfo>> GetAlertRulesAsync(string userId);
 }
+
+/// <summary>
+/// DTO for alert rule info returned from SteamTracker proxy.
+/// </summary>
+public record AlertRuleInfo(Guid AlertRuleId, int AppId, decimal ThresholdAmount, string Currency);
