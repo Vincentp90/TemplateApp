@@ -188,28 +188,20 @@ public class AlertProxyEndpointTests : IAsyncLifetime
                     options.UseNpgsql(_fixture.WishlistApiConnectionString)
                            .UseSnakeCaseNamingConvention());
 
-                // Replace SharedDbPriceReader with real implementation
-                var priceReaderDescriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(ISharedDbPriceReader));
-                if (priceReaderDescriptor != null)
-                    services.Remove(priceReaderDescriptor);
-                var config = new ConfigurationBuilder()
+                // Remove existing IConfiguration so our config with JWT values is used
+                var configDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IConfiguration));
+                if (configDescriptor != null)
+                    services.Remove(configDescriptor);
+                var jwtConfig = new ConfigurationBuilder()
                     .AddInMemoryCollection(new Dictionary<string, string?>
                     {
-                        { "ConnectionStrings:SteamTrackerConnection", _fixture.SteamTrackerConnectionString },
                         { "SteamTrackerUri", "http://mock" },
                         { "Jwt:Key", "MuF2rOUXJnC8/rGtoB0sfXnjWWmlgu63AqfqoPUqNxw=" },
                         { "Jwt:Issuer", "WishlistApp" },
                         { "Jwt:Audience", "WishlistApp_audience" }
                     })
                     .Build();
-                services.AddScoped<ISharedDbPriceReader>(_ => new SharedDbPriceReader(config));
-
-                // Remove existing IConfiguration so our config with JWT values is used
-                var configDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IConfiguration));
-                if (configDescriptor != null)
-                    services.Remove(configDescriptor);
-                services.AddSingleton<IConfiguration>(config);
+                services.AddSingleton<IConfiguration>(jwtConfig);
 
                 // Replace SteamTracker proxy with our capturing handler
                 var proxyDescriptor = services.SingleOrDefault(

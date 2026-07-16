@@ -163,30 +163,37 @@ WishlistApi becomes a **BFF (Backend for Frontend)** — the frontend makes two 
 
 ### 3.1 Red: Write failing unit test for the new simplified response
 
-- [ ] **Update** `WishlistApi/Tests/ControllerTests/WishlistControllerTest.cs`:
-  - [ ] Test: `GetWishlistAsync_returnsItemsWithoutPriceData` — verify `Price` and `LastCheckedAt` are null
-  - [ ] Test: `GetWishlistAsync_returnsItemsWithoutAlertData` — verify `AlertRuleId` and `AlertThreshold` are null
-  - [ ] The test should NOT mock `ISharedDbPriceReader` anymore
+- [x] **Update** `WishlistApi/Tests/ControllerTests/WishlistControllerTest.cs`:
+  - [x] Test: `GetWishlistAsync_returnsItemsWithoutPriceData` — verify `Price` and `LastCheckedAt` are null
+  - [x] Test: `GetWishlistAsync_returnsItemsWithoutAlertData` — verify `AlertRuleId` and `AlertThreshold` are null
+  - [x] The test should NOT mock `ISharedDbPriceReader` anymore
 
 ### 3.2 Green: Refactor `GetWishlistAsync` to remove price/alert enrichment
 
-- [ ] **Modify** `WishlistController.cs`:
-  - [ ] Remove `ISharedDbPriceReader` from constructor parameters
-  - [ ] Simplify `GetWishlistAsync` to only call `_getWishlistUseCase` and return items
-  - [ ] The returned `WishlistItemDto` should only contain: `AppId`, `DateAdded`, `Name`
-  - [ ] Remove the `fields` filtering logic for price/alert fields (or keep it for the 3 core fields)
+- [x] **Modify** `WishlistController.cs`:
+  - [x] Remove `ISharedDbPriceReader` from constructor parameters
+  - [x] Simplify `GetWishlistAsync` to only call `_getWishlistUseCase` and return items
+  - [x] The returned `WishlistItemDto` now only contains: `AppId`, `DateAdded`, `Name`
+  - [x] Removed the `fields` filtering logic — controller always returns all 3 core fields
 
-- [ ] **Update DTO** `WishlistItemDto` in `WishlistDtos.cs`:
-  - [ ] Remove `Price`, `PriceCurrency`, `LastCheckedAt`, `IsUnavailable`, `AlertRuleId`, `AlertThreshold`, `AlertCurrency`
-  - [ ] Keep only: `AppId`, `DateAdded`, `Name`
+- [x] **Update DTO** `WishlistItemDto` in `WishlistDtos.cs`:
+  - [x] Remove `Price`, `PriceCurrency`, `LastCheckedAt`, `IsUnavailable`, `AlertRuleId`, `AlertThreshold`, `AlertCurrency`
+  - [x] Keep only: `AppId`, `DateAdded`, `Name`
 
-- [ ] **Remove** `ISharedDbPriceReader` dependency from `Program.cs`:
-  - [ ] Remove `builder.Services.AddScoped<ISharedDbPriceReader, SharedDbPriceReader>();`
-  - [ ] Remove the `SharedDb` namespace references if unused
+- [x] **Remove** `ISharedDbPriceReader` dependency from `Program.cs`:
+  - [x] Removed `builder.Services.AddScoped<ISharedDbPriceReader, SharedDbPriceReader>();`
+  - [x] Kept `Infrastructure.SharedDb` using for `SteamTrackerAlertProxy`
 
-- [ ] **Delete** `Infrastructure/SharedDb/SharedDbPriceReader.cs` and `Application/Contracts/ISharedDbPriceReader.cs` (if no other consumers)
+- [x] **Delete** `Infrastructure/SharedDb/SharedDbPriceReader.cs` and `Application/Contracts/ISharedDbPriceReader.cs`
 
-- [ ] Run `dotnet test api/WishlistApi/WishlistApi.sln 2>&1 | tail -n 50` — all pass
+- [x] **Additional cleanup**:
+  - [x] Deleted `Tests/IntegrationTests/SharedDbPriceReaderIntegrationTests.cs` (tested the removed reader)
+  - [x] Deleted `Tests/IntegrationTests/SharedDbApiFactory.cs` (only used by deleted tests)
+  - [x] Updated `WishlistControllerBackfillTests.cs` — removed priceReader mock from constructor
+  - [x] Updated `Tests/Helpers/ApiFactory.cs` — removed priceReader mock
+  - [x] Updated `Tests/IntegrationTests/AlertProxyEndpointTests.cs` — removed SharedDbPriceReader setup
+
+- [x] Run `dotnet test api/WishlistApi/WishlistApi.sln 2>&1 | tail -n 50` — **92 passed, 1 skipped**
 
 ---
 

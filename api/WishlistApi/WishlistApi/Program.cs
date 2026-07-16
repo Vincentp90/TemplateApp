@@ -119,8 +119,7 @@ builder.Services.AddScoped<IEventPublisher>(sp =>
         sp.GetRequiredService<IRabbitMqConnectionFactory>(),
         "wishlist.events"));
 
-// Shared DB readers and SteamTracker proxy
-builder.Services.AddScoped<ISharedDbPriceReader, SharedDbPriceReader>();
+// SteamTracker proxy for alert management
 builder.Services.AddHttpClient<ISteamTrackerAlertProxy, SteamTrackerAlertProxy>();
 
 // Named HttpClient for the prices passthrough endpoint

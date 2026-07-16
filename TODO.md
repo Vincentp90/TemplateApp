@@ -1,6 +1,6 @@
 Agent: ignore this
 
-Continue with IMPLEMENTATION_PLAN.md, do phase 2
+Continue with IMPLEMENTATION_PLAN.md, do phase 4
 
 Make a step-by-step plan with checkboxes, following TDD red phase-green phase principles: 
 - currently: WishlistController.GetWishlistAsync uses dapper calls to the SteamTracker db to enrich the prices into the request.

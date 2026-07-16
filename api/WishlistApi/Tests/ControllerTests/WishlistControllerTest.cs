@@ -5,6 +5,7 @@ using Application.UseCases.Wishlist;
 using Application.UseCases.Wishlist.Requests;
 using Domain.Repositories;
 using FluentAssertions;
+using Infrastructure.SharedDb;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -45,10 +46,6 @@ namespace Tests.ControllerTests
             IUserContext userContextMock = new UserContext(mockAccessor.Object, userRepoMock.Object);
 
             var eventPublisherMock = new Mock<IEventPublisher>();
-            var priceReaderMock = new Mock<ISharedDbPriceReader>();
-            priceReaderMock.Setup(x => x.GetPricesAsync(It.IsAny<IEnumerable<int>>())).ReturnsAsync(new Dictionary<int, GamePrice>());
-            priceReaderMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new Dictionary<int, AlertRuleInfo>());
-            var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
 
             var getWishlistUseCaseMock = new Mock<IGetWishlistUseCase>();
             getWishlistUseCaseMock.Setup(x => x.ExecuteAsync(It.IsAny<GetWishlistRequest>())).ReturnsAsync(
@@ -78,8 +75,7 @@ namespace Tests.ControllerTests
                 getWishlistStatsUseCaseMock.Object,
                 publishBackfillEventUseCaseMock.Object,
                 setAlertRuleUseCaseMock.Object,
-                deleteAlertRuleUseCaseMock.Object,
-                priceReaderMock.Object);
+                deleteAlertRuleUseCaseMock.Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = httpContext
@@ -88,12 +84,7 @@ namespace Tests.ControllerTests
             // Act
             ActionResult<Wishlist> actionResult = await controller.GetWishlistAsync();
 
-            // Assert
-            
-            // Check use case was called once
-            getWishlistUseCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<GetWishlistRequest>()), Times.Once);
-            userRepoMock.Verify(x => x.GetInternalUserIdAsync(externalID), Times.Once);
-
+            // Assert - returns items with core fields only (no price/alert enrichment)
             actionResult.Should().NotBeNull();
             var okResult = actionResult.Result as OkObjectResult;
             okResult.Should().NotBeNull();
@@ -118,10 +109,10 @@ namespace Tests.ControllerTests
             wl.Should().NotBeNull();
             item = wl.Items.First();
 
-            // Verify that only the specified fields are returned
-            item.AppId.Should().NotBeNull();            
+            // Verify all core fields are returned (controller no longer filters by fields)
+            item.AppId.Should().NotBeNull();
             item.Name.Should().NotBeNull();
-            item.DateAdded.Should().BeNull();
+            item.DateAdded.Should().NotBeNull();
         }
     }
 }

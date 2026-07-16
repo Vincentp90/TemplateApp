@@ -8,14 +8,7 @@ public record GamePriceDto(int AppId, decimal? Amount, string Currency, DateTime
 public record WishlistItemDto(
     int? AppId = null,
     DateTimeOffset? DateAdded = null,
-    string? Name = null,
-    decimal? Price = null,
-    string? PriceCurrency = "EUR",
-    DateTimeOffset? LastCheckedAt = null,
-    bool IsUnavailable = false,
-    Guid? AlertRuleId = null,
-    decimal? AlertThreshold = null,
-    string? AlertCurrency = "EUR"
+    string? Name = null
 );
 
 public record Wishlist(IEnumerable<WishlistItemDto> Items);
