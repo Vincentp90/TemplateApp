@@ -11,7 +11,7 @@ The primary REST API with JWT authentication, SignalR real-time updates, and a r
 - User authentication (JWT cookie-based)
 - Auction system with real-time SignalR updates
 - Steam game listing search
-- Shared Postgres DB with SteamTracker (reads via Dapper)
+- Separate Postgres database (different DB from SteamTracker)
 
 ### [SteamTracker](SteamTracker/OVERVIEW.md)
 A hexagonal (ports & adapters) DDD service that tracks Steam game prices for wishlisted items. It operates as an independent service with its own Postgres schema and communicates with the existing app via RabbitMQ events.
@@ -25,11 +25,11 @@ A hexagonal (ports & adapters) DDD service that tracks Steam game prices for wis
 ## Data Flow
 
 ```
-React Frontend  ──►  WishlistApi  ──►  Shared Postgres (Dapper reads)
+React Frontend  ──►  WishlistApi  ──►  PostgreSQL (`postgres` DB)
                            │
                            └──►  SteamTracker (proxy for alerts)
                                        │
-                                       └──►  Shared Postgres (PascalCase tables)
+                                       └──►  PostgreSQL (`steamtracker` DB)
 ```
 
 ## Running Tests

@@ -30,7 +30,7 @@ using WishlistApi.Controllers;
 using WishlistApi.Helpers;
 using WishlistApi.HostedServices;
 using Infrastructure.ExternalServices;
-using Infrastructure.SharedDb;
+using Infrastructure.SteamTracker;
 
 var builder = WebApplication.CreateBuilder(args);
 

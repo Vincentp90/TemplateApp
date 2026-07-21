@@ -10,7 +10,7 @@ WishlistApi is a **layered (Clean Architecture)** ASP.NET Core 10 service that s
 |-----------|------------|
 | Framework | ASP.NET Core 10 (.NET 10) |
 | Language | C# 14 |
-| Database | PostgreSQL + EF Core (write) / Dapper (read) |
+| Database | PostgreSQL + EF Core |
 | Authentication | JWT cookie-based |
 | Real-time | SignalR (`/auctionHub`) |
 | Messaging | RabbitMQ (fanout exchange for domain events) |
@@ -51,7 +51,7 @@ WishlistApi is a **layered (Clean Architecture)** ASP.NET Core 10 service that s
 │  │  ┌──────────────────────────────────────────┐    │     │
 │  │  │ Contracts/ (shared DTOs)                │    │     │
 │  │  │   AuctionDto, WishlistDtos              │    │     │
-│  │  │   ISharedDbPriceReader                  │    │     │
+
 │  │  │   ISteamTrackerAlertProxy               │    │     │
 │  │  └──────────────────────────────────────────┘    │     │
 │  │  ┌──────────────────────────────────────────┐    │     │
@@ -148,7 +148,7 @@ Contains business logic orchestration. **Does not depend on Infrastructure** —
 |-----------|---------|
 | **UseCases/** | One class per controller action (e.g., `AddWishlistItemUseCase`, `PlaceBidUseCase`). Each is a focused, single-responsibility class. |
 | **Events/** | Domain event records (`WishlistItemAdded`, `WishlistItemRemoved`) — lightweight, no behavior |
-| **Contracts/** | Shared DTOs and cross-service interfaces (`ISharedDbPriceReader`, `ISteamTrackerAlertProxy`) |
+| **Contracts/** | Shared DTOs and cross-service interfaces (`ISteamTrackerAlertProxy`) |
 | **IEventPublisher** | Port interface for publishing domain events (implemented by `RabbitMqEventPublisher` in Infrastructure) |
 
 ### Infrastructure Layer (Adapters)
@@ -195,15 +195,15 @@ Application defines:  IWishlistItemRepository  ──►  Infrastructure impleme
 Domain defines:       ISteamApiClient  ──►  Infrastructure implements: SteamApiClient
 ```
 
-### 3. Anti-Corruption Layer (ACL) — Shared Database
+### 3. Anti-Corruption Layer (ACL) — Separate Databases
 
-WishlistApi and SteamTracker share the same PostgreSQL database but communicate through well-defined boundaries:
+WishlistApi and SteamTracker each have their own PostgreSQL database on the same server, communicating through well-defined boundaries:
 
 | Aspect | WishlistApi | SteamTracker |
 |--------|-------------|--------------|
-| **ORM** | EF Core (snake_case via `NpgsqlSnakeCaseNamingConvention`) | EF Core (snake_case via `NpgsqlSnakeCaseNamingConvention`) |
-| **Read Path** | EF Core for writes | EF Core for writes |
-| **Cross-service Read** | Dapper (raw SQL) — reads `game` and `alert_rule` tables | N/A (WishlistApi proxy calls SteamTracker REST API for alerts) |
+| **Database** | `postgres` (EF Core, PascalCase → snake_case) | `steamtracker` (EF Core, snake_case) |
+| **Writes** | EF Core | EF Core |
+| **Cross-service Read** | N/A — WishlistApi proxies alert operations via SteamTracker REST API | N/A (WishlistApi proxy calls SteamTracker REST API for alerts) |
 | **Events** | Publishes `WishlistItemAdded`/`Removed` to RabbitMQ | Consumes via `steamtracker.wishlist-sync` queue |
 
 ### 4. Event-Driven Communication
@@ -222,16 +222,16 @@ WishlistController.AddWishlistItemAsync
                            └─► WishlistSyncConsumer (SteamTracker Worker)
 ```
 
-### 5. Shared DB Price Reading
+### 5. Wishlist Enrichment
 
-The `GET /wishlist` endpoint enriches local wishlist items with price data from SteamTracker's schema:
+The `GET /wishlist` endpoint enriches local wishlist items with price data and alert rules from SteamTracker:
 
 ```
 GET /wishlist
   └─► GetWishlistUseCase.ExecuteAsync
        └─► IWishlistItemRepository.GetAllAsync  (local wishlist)
-  └─► ISharedDbPriceReader.GetPricesAsync      (Dapper → SteamTracker DB)
-  └─► ISharedDbPriceReader.GetAlertRulesAsync  (Dapper → SteamTracker DB)
+  └─► ISteamTrackerAlertProxy.GetPricesAsync       (REST → SteamTracker)
+  └─► ISteamTrackerAlertProxy.GetAlertRulesAsync   (REST → SteamTracker)
   └─► Merge local items + prices + alert rules → WishlistDto
 ```
 

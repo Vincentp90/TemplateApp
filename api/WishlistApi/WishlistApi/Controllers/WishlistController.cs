@@ -3,7 +3,7 @@ using Application.Contracts;
 using Application.UseCases.Wishlist;
 using Application.UseCases.Wishlist.Requests;
 using Domain.Exceptions;
-using Infrastructure.SharedDb;
+using Infrastructure.SteamTracker;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WishlistApi.Helpers;

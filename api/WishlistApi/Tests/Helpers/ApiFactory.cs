@@ -2,7 +2,7 @@
 using Application.Contracts;
 using Infrastructure.Messaging;
 using Infrastructure.Persistence;
-using Infrastructure.SharedDb;
+using Infrastructure.SteamTracker;
 using Moq;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;

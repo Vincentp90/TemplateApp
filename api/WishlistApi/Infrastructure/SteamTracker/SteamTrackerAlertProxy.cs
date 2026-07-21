@@ -2,7 +2,7 @@ using Application.Contracts;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 
-namespace Infrastructure.SharedDb;
+namespace Infrastructure.SteamTracker;
 
 /// <summary>
 /// HttpClient-based proxy for SteamTracker's alert management endpoints.

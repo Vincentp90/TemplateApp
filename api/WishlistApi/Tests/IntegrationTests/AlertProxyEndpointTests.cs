@@ -193,7 +193,7 @@ public class AlertProxyEndpointTests : IAsyncLifetime
                 if (httpClientDescriptor != null)
                     services.Remove(httpClientDescriptor);
 
-                services.AddHttpClient<ISteamTrackerAlertProxy, Infrastructure.SharedDb.SteamTrackerAlertProxy>(client =>
+                services.AddHttpClient<ISteamTrackerAlertProxy, Infrastructure.SteamTracker.SteamTrackerAlertProxy>(client =>
                 {
                     client.BaseAddress = new Uri("http://mock/");
                 })

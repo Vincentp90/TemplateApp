@@ -1,10 +1,5 @@
 Agent: ignore this
 
-Update docs/TESTS.md
-
-Update ## CRUD app template section
-
-
 Things I'm going to try/add/learn more about later :
 - get prices by api instead of shared db https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 - update diagrams again

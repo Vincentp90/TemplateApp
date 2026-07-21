@@ -5,7 +5,7 @@ using Application.UseCases.Wishlist;
 using Application.UseCases.Wishlist.Requests;
 using Domain.Repositories;
 using FluentAssertions;
-using Infrastructure.SharedDb;
+using Infrastructure.SteamTracker;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
