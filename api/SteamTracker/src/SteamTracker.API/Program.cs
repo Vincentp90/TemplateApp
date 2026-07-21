@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SteamTracker.API;
 using SteamTracker.API.Models;
 using SteamTracker.Application.Ports;
 using SteamTracker.Application.UseCases;
@@ -13,6 +14,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Infrastructure
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// Initialize RabbitMQ exchanges at host startup (deferred from DI registration)
+builder.Services.AddHostedService<RabbitMqInitializationHostedService>();
 
 // Application — use cases
 builder.Services.AddScoped<ISetAlertRuleUseCase, SetAlertRuleUseCase>();

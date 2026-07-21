@@ -40,11 +40,13 @@ public static class DependencyInjection
             }));
         services.AddHttpClient<ISteamStoreClient, SteamStoreClient>();
 
-        // RabbitMQ connection
+        // RabbitMQ connection — registered as a factory so connection creation is deferred
+        // until first use. This allows test factories to replace the connection before
+        // the ChannelPool is first accessed.
         var rabbitSettings = configuration.GetSection("RabbitMQ").Get<RabbitMqSettings>()
             ?? new RabbitMqSettings();
 
-        var factory = new ConnectionFactory()
+        var rmqFactory = new ConnectionFactory()
         {
             HostName = rabbitSettings.HostName ?? "localhost",
             Port = rabbitSettings.Port ?? 5672,
@@ -54,12 +56,20 @@ public static class DependencyInjection
             AutomaticRecoveryEnabled = true
         };
 
-        var rmqConnection = factory.CreateConnectionAsync().GetAwaiter().GetResult();
-        services.AddSingleton<IConnection>(rmqConnection);
-        services.AddSingleton<ChannelPool>(new ChannelPool(rmqConnection));
+        // Register a connection factory delegate — test factories can replace this.
+        // Wrapped in async lambda to convert ValueTask<IConnection> to Task<IConnection>.
+        services.AddSingleton<Func<Task<IConnection>>>(sp => async () => await rmqFactory.CreateConnectionAsync());
 
-        // Exchange initializer for one-shot setup
-        services.AddSingleton<ExchangeInitializer>();
+        // Channel pool with lazy connection creation — resolves Func<Task<IConnection>> from DI
+        services.AddSingleton<ChannelPool>(sp =>
+            new ChannelPool(sp.GetRequiredService<Func<Task<IConnection>>>()));
+
+        // Exchange initializer shares the same ChannelPool so exchanges are declared on the
+        // active connection, not a separate one.
+        services.AddSingleton<ExchangeInitializer>(sp =>
+            new ExchangeInitializer(sp.GetRequiredService<ChannelPool>()));
+
+
 
         // Publishers — use the shared channel pool
         services.AddScoped<INotificationPublisher>(sp =>
@@ -72,24 +82,6 @@ public static class DependencyInjection
                 "steamtracker.pricecheck",
                 "pricecheck.jobs",
                 "pricecheck"));
-
-        // Initialize exchanges and queues at startup
-        var exchangeInitializer = new ExchangeInitializer(
-            new ChannelPool(rmqConnection));
-        exchangeInitializer.InitializeAsync(
-            new[]
-            {
-                new ExchangeDeclaration { ExchangeName = "steamtracker.notifications", Type = "topic", Durable = true },
-                new ExchangeDeclaration { ExchangeName = "steamtracker.pricecheck", Type = "direct", Durable = true }
-            },
-            new[]
-            {
-                new QueueDeclaration { QueueName = "pricecheck.jobs", Durable = true, Exclusive = false, AutoDelete = false }
-            },
-            new[]
-            {
-                new QueueBinding { QueueName = "pricecheck.jobs", ExchangeName = "steamtracker.pricecheck", RoutingKey = "pricecheck" }
-            }).GetAwaiter().GetResult();
 
         return services;
     }

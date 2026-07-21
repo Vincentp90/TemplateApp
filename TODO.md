@@ -1,6 +1,8 @@
 Agent: ignore this
 
-Shouldn't we pool rabbitmq connections instead of re-opening everytime with await _connectionFactory.CreateConnectionAsync(); ?
+Update docs/TESTS.md
+
+Update ## CRUD app template section
 
 
 Things I'm going to try/add/learn more about later :
@@ -9,6 +11,7 @@ Things I'm going to try/add/learn more about later :
 - GetWishlistAsync()// TODO add odata filtering to make DateAdded, AlertRuleId optional. In frontend search page, we don't need those fields.
 - gRPC for api-steamtracker communication
 - finish alerts
+- Review mq connect/channel/exchange/queue lifecycle in wishlistapi and steamtracker
 - Auction: add end date to entity, remove static mutable Domain.Auction.Duration
 - Auction OCC: remove client side part since we also have the admin form which is more suitable for RowVersion round-trip, auction use case fits better with only server side OCC
 - DDD add domain event example https://gemini.google.com/app/f3480cdb192b1625

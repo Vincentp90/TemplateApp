@@ -117,32 +117,24 @@ builder.Services.AddScoped<IEnsureAppListingsPopulatedUseCase, EnsureAppListings
 builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.SectionName));
 builder.Services.AddSingleton<IRabbitMqConnectionFactory, RabbitMqConnectionFactory>();
 
-// Create a shared RabbitMQ connection and channel pool
-builder.Services.AddSingleton<IConnection>(sp =>
-{
-    var factory = sp.GetRequiredService<IRabbitMqConnectionFactory>();
-    return factory.CreateConnectionAsync().GetAwaiter().GetResult();
-});
+// Channel pool with lazy connection creation — the connection is created on first use
+// This allows test factories to replace IRabbitMqConnectionFactory before the pool is accessed.
 builder.Services.AddSingleton<ChannelPool>(sp =>
-    new ChannelPool(sp.GetRequiredService<IConnection>()));
+{
+    var rmqFactory = sp.GetRequiredService<IRabbitMqConnectionFactory>();
+    return new ChannelPool(rmqFactory.CreateConnectionAsync);
+});
 
-// Exchange initializer for one-shot setup
-builder.Services.AddSingleton<ExchangeInitializer>();
+// Exchange initializer shares the same ChannelPool so exchanges are declared on the
+// active connection, not a separate one.
+builder.Services.AddSingleton<ExchangeInitializer>(sp =>
+    new ExchangeInitializer(sp.GetRequiredService<ChannelPool>()));
 
 // Event publisher uses the shared channel pool
 builder.Services.AddScoped<IEventPublisher>(sp =>
     new RabbitMqEventPublisher(
         sp.GetRequiredService<ChannelPool>(),
         "wishlist.events"));
-
-// Initialize exchanges at startup
-using var initScope = builder.Services.BuildServiceProvider().CreateScope();
-var initPool = initScope.ServiceProvider.GetRequiredService<ChannelPool>();
-var initInitializer = new ExchangeInitializer(initPool);
-await initInitializer.InitializeAsync(
-    new[] { new ExchangeDeclaration { ExchangeName = "wishlist.events", Type = "fanout", Durable = true } },
-    Enumerable.Empty<QueueDeclaration>(),
-    Enumerable.Empty<QueueBinding>());
 
 // SteamTracker proxy for alert management
 builder.Services.AddHttpClient<ISteamTrackerAlertProxy, SteamTrackerAlertProxy>();
