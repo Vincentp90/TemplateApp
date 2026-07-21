@@ -1,27 +1,28 @@
 using System.Text;
 using System.Text.Json;
 using Application;
-using RabbitMQ.Client;
+using CrossService.Messaging;
 
 namespace Infrastructure.Messaging;
 
 /// <summary>
-/// Publishes domain events to a RabbitMQ fanout exchange.
-/// Each call creates a new async channel, declares the exchange, and publishes the serialized event.
+/// Publishes domain events to a RabbitMQ fanout exchange using a shared channel pool.
+/// Messages are published as persistent with content-type and message-id metadata.
+/// Exchange declaration is handled by ExchangeInitializer at startup — not per-publish.
 /// </summary>
 public class RabbitMqEventPublisher : IEventPublisher
 {
-    private readonly IRabbitMqConnectionFactory _connectionFactory;
+    private readonly ChannelPool _channelPool;
     private readonly string _exchangeName;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public RabbitMqEventPublisher(
-        IRabbitMqConnectionFactory connectionFactory,
+        ChannelPool channelPool,
         string exchangeName,
         JsonSerializerOptions? jsonOptions = null)
     {
-        _connectionFactory = connectionFactory;
-        _exchangeName = exchangeName;
+        _channelPool = channelPool ?? throw new ArgumentNullException(nameof(channelPool));
+        _exchangeName = exchangeName ?? throw new ArgumentNullException(nameof(exchangeName));
         _jsonOptions = jsonOptions ?? new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
@@ -31,17 +32,22 @@ public class RabbitMqEventPublisher : IEventPublisher
 
     public async Task PublishAsync(object @event)
     {
-        await using var connection = await _connectionFactory.CreateConnectionAsync();
-        await using var channel = await connection.CreateChannelAsync();
+        var channel = await _channelPool.GetChannelAsync();
 
-        await channel.ExchangeDeclareAsync(exchange: _exchangeName, type: ExchangeType.Fanout, durable: true);
+        var body = JsonSerializer.SerializeToUtf8Bytes(@event, _jsonOptions);
 
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(@event, _jsonOptions));
+        var props = new RabbitMQ.Client.BasicProperties
+        {
+            Persistent = true,
+            ContentType = "application/json",
+            MessageId = Guid.NewGuid().ToString()
+        };
 
         await channel.BasicPublishAsync(
             exchange: _exchangeName,
             routingKey: "",
             mandatory: false,
+            basicProperties: props,
             body: body);
     }
 }

@@ -14,6 +14,8 @@ using Infrastructure.Persistence.Users;
 using Infrastructure.Persistence.Wishlist;
 using Infrastructure.ReadAdapters;
 using Infrastructure.Messaging;
+using CrossService.Messaging;
+using RabbitMQ.Client;
 using Domain;
 using Domain.Helpers;
 using Domain.Repositories;
@@ -114,10 +116,33 @@ builder.Services.AddScoped<IEnsureAppListingsPopulatedUseCase, EnsureAppListings
 // RabbitMQ infrastructure
 builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.SectionName));
 builder.Services.AddSingleton<IRabbitMqConnectionFactory, RabbitMqConnectionFactory>();
+
+// Create a shared RabbitMQ connection and channel pool
+builder.Services.AddSingleton<IConnection>(sp =>
+{
+    var factory = sp.GetRequiredService<IRabbitMqConnectionFactory>();
+    return factory.CreateConnectionAsync().GetAwaiter().GetResult();
+});
+builder.Services.AddSingleton<ChannelPool>(sp =>
+    new ChannelPool(sp.GetRequiredService<IConnection>()));
+
+// Exchange initializer for one-shot setup
+builder.Services.AddSingleton<ExchangeInitializer>();
+
+// Event publisher uses the shared channel pool
 builder.Services.AddScoped<IEventPublisher>(sp =>
     new RabbitMqEventPublisher(
-        sp.GetRequiredService<IRabbitMqConnectionFactory>(),
+        sp.GetRequiredService<ChannelPool>(),
         "wishlist.events"));
+
+// Initialize exchanges at startup
+using var initScope = builder.Services.BuildServiceProvider().CreateScope();
+var initPool = initScope.ServiceProvider.GetRequiredService<ChannelPool>();
+var initInitializer = new ExchangeInitializer(initPool);
+await initInitializer.InitializeAsync(
+    new[] { new ExchangeDeclaration { ExchangeName = "wishlist.events", Type = "fanout", Durable = true } },
+    Enumerable.Empty<QueueDeclaration>(),
+    Enumerable.Empty<QueueBinding>());
 
 // SteamTracker proxy for alert management
 builder.Services.AddHttpClient<ISteamTrackerAlertProxy, SteamTrackerAlertProxy>();

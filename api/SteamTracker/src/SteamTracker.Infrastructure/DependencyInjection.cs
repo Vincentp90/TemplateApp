@@ -1,8 +1,8 @@
 using System.Threading.RateLimiting;
+using CrossService.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using SteamTracker.Application.Ports;
 using SteamTracker.Infrastructure.Data;
@@ -54,11 +54,42 @@ public static class DependencyInjection
             AutomaticRecoveryEnabled = true
         };
 
-        services.AddSingleton<IConnection>(_ => factory.CreateConnectionAsync().GetAwaiter().GetResult());
+        var rmqConnection = factory.CreateConnectionAsync().GetAwaiter().GetResult();
+        services.AddSingleton<IConnection>(rmqConnection);
+        services.AddSingleton<ChannelPool>(new ChannelPool(rmqConnection));
 
-        // Publishers
-        services.AddScoped<INotificationPublisher, NotificationPublisher>();
-        services.AddScoped<IPriceCheckJobPublisher, PriceCheckJobPublisher>();
+        // Exchange initializer for one-shot setup
+        services.AddSingleton<ExchangeInitializer>();
+
+        // Publishers — use the shared channel pool
+        services.AddScoped<INotificationPublisher>(sp =>
+            new NotificationPublisher(
+                sp.GetRequiredService<ChannelPool>(),
+                "steamtracker.notifications"));
+        services.AddScoped<IPriceCheckJobPublisher>(sp =>
+            new PriceCheckJobPublisher(
+                sp.GetRequiredService<ChannelPool>(),
+                "steamtracker.pricecheck",
+                "pricecheck.jobs",
+                "pricecheck"));
+
+        // Initialize exchanges and queues at startup
+        var exchangeInitializer = new ExchangeInitializer(
+            new ChannelPool(rmqConnection));
+        exchangeInitializer.InitializeAsync(
+            new[]
+            {
+                new ExchangeDeclaration { ExchangeName = "steamtracker.notifications", Type = "topic", Durable = true },
+                new ExchangeDeclaration { ExchangeName = "steamtracker.pricecheck", Type = "direct", Durable = true }
+            },
+            new[]
+            {
+                new QueueDeclaration { QueueName = "pricecheck.jobs", Durable = true, Exclusive = false, AutoDelete = false }
+            },
+            new[]
+            {
+                new QueueBinding { QueueName = "pricecheck.jobs", ExchangeName = "steamtracker.pricecheck", RoutingKey = "pricecheck" }
+            }).GetAwaiter().GetResult();
 
         return services;
     }

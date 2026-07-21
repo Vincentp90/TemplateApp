@@ -1,39 +1,62 @@
-using Microsoft.Extensions.Configuration;
-using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
+using CrossService.Messaging;
 using SteamTracker.Application.Ports;
 
 namespace SteamTracker.Infrastructure.Messaging;
 
+/// <summary>
+/// Publishes price-check jobs to a RabbitMQ direct exchange using a shared channel pool.
+/// Messages are published as persistent.
+/// Exchange/queue declaration is handled by ExchangeInitializer at startup.
+/// </summary>
 public class PriceCheckJobPublisher : IPriceCheckJobPublisher
 {
-    private readonly IConnection _connection;
+    private readonly ChannelPool _channelPool;
     private readonly string _exchangeName;
+    private readonly string _queueName;
+    private readonly string _routingKey;
+    private readonly JsonSerializerOptions _jsonOptions;
 
-    public PriceCheckJobPublisher(IConnection connection, IConfiguration configuration)
+    public PriceCheckJobPublisher(
+        ChannelPool channelPool,
+        string exchangeName,
+        string queueName,
+        string routingKey,
+        JsonSerializerOptions? jsonOptions = null)
     {
-        _connection = connection;
-        _exchangeName = configuration["RabbitMQ:PriceCheckExchange"] ?? "steamtracker.pricecheck";
+        _channelPool = channelPool ?? throw new ArgumentNullException(nameof(channelPool));
+        _exchangeName = exchangeName ?? throw new ArgumentNullException(nameof(exchangeName));
+        _queueName = queueName ?? throw new ArgumentNullException(nameof(queueName));
+        _routingKey = routingKey ?? throw new ArgumentNullException(nameof(routingKey));
+        _jsonOptions = jsonOptions ?? new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            WriteIndented = false
+        };
     }
 
     public async Task EnqueueAsync(int appId, CancellationToken cancellationToken = default)
     {
-        await using var channel = await _connection.CreateChannelAsync(null, cancellationToken);
-        await channel.ExchangeDeclareAsync(exchange: _exchangeName, type: ExchangeType.Direct, durable: true, cancellationToken: cancellationToken);
-        await channel.QueueDeclareAsync(queue: "pricecheck.jobs", durable: true, exclusive: false, autoDelete: false, arguments: null, cancellationToken: cancellationToken);
-        await channel.QueueBindAsync(queue: "pricecheck.jobs", exchange: _exchangeName, routingKey: "pricecheck", arguments: null, cancellationToken: cancellationToken);
+        var channel = await _channelPool.GetChannelAsync(cancellationToken);
 
-        var body = JsonSerializer.Serialize(
+        var body = JsonSerializer.SerializeToUtf8Bytes(
             new { AppId = appId, EnqueuedAt = DateTimeOffset.UtcNow },
-            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
-        var bodyBytes = Encoding.UTF8.GetBytes(body);
+            _jsonOptions);
+
+        var props = new RabbitMQ.Client.BasicProperties
+        {
+            Persistent = true,
+            ContentType = "application/json",
+            MessageId = Guid.NewGuid().ToString()
+        };
 
         await channel.BasicPublishAsync(
             exchange: _exchangeName,
-            routingKey: "pricecheck",
+            routingKey: _routingKey,
             mandatory: false,
-            body: bodyBytes,
+            basicProperties: props,
+            body: body,
             cancellationToken: cancellationToken);
     }
 }

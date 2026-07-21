@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\SteamTracker.Application\SteamTracker.Application.csproj" />
     <ProjectReference Include="..\SteamTracker.Domain\SteamTracker.Domain.csproj" />
+    <ProjectReference Include="..\..\..\CrossService\CrossService.csproj" />
   </ItemGroup>
 
   <ItemGroup>

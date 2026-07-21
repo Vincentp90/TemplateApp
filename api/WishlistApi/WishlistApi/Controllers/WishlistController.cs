@@ -48,7 +48,7 @@ namespace WishlistApi.Controllers
         }
 
         [HttpGet()]
-        public async Task<ActionResult<Wishlist>> GetWishlistAsync()
+        public async Task<ActionResult<Wishlist>> GetWishlistAsync()// TODO add odata filtering to make DateAdded, AlertRuleId optional. In frontend search page, we don't need those fields.
         {
             int internalUserId = await _userContext.GetIdAsync();
 

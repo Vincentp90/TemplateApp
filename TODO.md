@@ -6,6 +6,7 @@ Shouldn't we pool rabbitmq connections instead of re-opening everytime with awai
 Things I'm going to try/add/learn more about later :
 - get prices by api instead of shared db https://claude.ai/chat/0b8c3ba5-e549-458c-a07c-32872b326100
 - update diagrams again
+- GetWishlistAsync()// TODO add odata filtering to make DateAdded, AlertRuleId optional. In frontend search page, we don't need those fields.
 - gRPC for api-steamtracker communication
 - finish alerts
 - Auction: add end date to entity, remove static mutable Domain.Auction.Duration

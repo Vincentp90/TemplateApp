@@ -1,28 +1,40 @@
-using Microsoft.Extensions.Configuration;
-using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
+using CrossService.Messaging;
 using SteamTracker.Application.Ports;
 
 namespace SteamTracker.Infrastructure.Messaging;
 
+/// <summary>
+/// Publishes alert notifications to a RabbitMQ topic exchange using a shared channel pool.
+/// Messages are published as persistent with content-type and message-id metadata.
+/// Exchange declaration is handled by ExchangeInitializer at startup.
+/// </summary>
 public class NotificationPublisher : INotificationPublisher
 {
-    private readonly IConnection _connection;
+    private readonly ChannelPool _channelPool;
     private readonly string _exchangeName;
+    private readonly JsonSerializerOptions _jsonOptions;
 
-    public NotificationPublisher(IConnection connection, IConfiguration configuration)
+    public NotificationPublisher(
+        ChannelPool channelPool,
+        string exchangeName,
+        JsonSerializerOptions? jsonOptions = null)
     {
-        _connection = connection;
-        _exchangeName = configuration["RabbitMQ:NotificationExchange"] ?? "steamtracker.notifications";
+        _channelPool = channelPool ?? throw new ArgumentNullException(nameof(channelPool));
+        _exchangeName = exchangeName ?? throw new ArgumentNullException(nameof(exchangeName));
+        _jsonOptions = jsonOptions ?? new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            WriteIndented = false
+        };
     }
 
     public async Task PublishAsync(Guid alertRuleId, string userId, int appId, decimal price, string currency, CancellationToken cancellationToken = default)
     {
-        await using var channel = await _connection.CreateChannelAsync(null, cancellationToken);
-        await channel.ExchangeDeclareAsync(exchange: _exchangeName, type: ExchangeType.Topic, durable: true, cancellationToken: cancellationToken);
+        var channel = await _channelPool.GetChannelAsync(cancellationToken);
 
-        var body = JsonSerializer.Serialize(
+        var body = JsonSerializer.SerializeToUtf8Bytes(
             new
             {
                 AlertRuleId = alertRuleId,
@@ -32,20 +44,21 @@ public class NotificationPublisher : INotificationPublisher
                 Currency = currency,
                 TriggeredAt = DateTimeOffset.UtcNow
             },
-            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+            _jsonOptions);
 
-        var properties = new BasicProperties
+        var props = new RabbitMQ.Client.BasicProperties
         {
-            Persistent = true
+            Persistent = true,
+            ContentType = "application/json",
+            MessageId = Guid.NewGuid().ToString()
         };
 
-        var bodyBytes = Encoding.UTF8.GetBytes(body);
         await channel.BasicPublishAsync(
             exchange: _exchangeName,
             routingKey: "alert.triggered",
             mandatory: false,
-            basicProperties: properties,
-            body: bodyBytes,
+            basicProperties: props,
+            body: body,
             cancellationToken: cancellationToken);
     }
 }
