@@ -7,7 +7,6 @@ namespace WishlistApi.Controllers
 {
     /// <summary>
     /// Passthrough endpoint for fetching game prices from SteamTracker.
-    /// No authentication required — the frontend calls this directly.
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
