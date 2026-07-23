@@ -187,10 +187,17 @@ WishlistApi.sln
 ### Wishlist (`/wishlist`)
 | Method | Path | Description | Auth |
 |--------|------|-------------|------|
-| GET | `/wishlist` | Get wishlist items (field filtering) | Required |
+| GET | `/wishlist` | Get wishlist items (appId, name, dateAdded only) | Required |
 | GET | `/wishlist/stats` | Get wishlist statistics | Required |
 | POST | `/wishlist/{appId}` | Add item to wishlist | Required |
 | DELETE | `/wishlist/{appId}` | Remove item from wishlist | Required |
+| POST | `/wishlist/{appId}/alert` | Set price alert (proxies to SteamTracker) | Required |
+| DELETE | `/wishlist/{alertRuleId}/alert` | Delete price alert (proxies to SteamTracker) | Required |
+
+### Prices (BFF passthrough) (`/api/prices`)
+| Method | Path | Description | Auth |
+|--------|------|-------------|------|
+| GET | `/api/prices?appIds=1&appIds=2` | Get prices for multiple apps (passthrough to SteamTracker) | Required |
 
 ### Users (`/users`)
 | Method | Path | Description | Auth |

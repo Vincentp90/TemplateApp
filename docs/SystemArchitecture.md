@@ -18,18 +18,18 @@ This document provides a high-level overview of how the different components of 
 │   http://localhost:5186 (dev)                                   │
 │                                                                 │
 │   ┌─────────────┐  ┌─────────────┐  ┌──────────────────────┐   │
-│   │ EF Core     │  │ Dapper      │  │ RabbitMQ Publisher  │   │
-│   │ (writes)    │  │ (reads from │  │ (domain events)     │   │
-│   │ local DB    │  │  shared DB) │  └──────────┬───────────┘   │
-│   └──────┬──────┘  └──────┬──────┘             │              │
-│          │                │                    │               │
+│   │ EF Core     │  │ REST Client │  │ RabbitMQ Publisher  │   │
+│   │ (writes)    │  │ (via proxy) │  │ (domain events)     │   │
+│   │ local DB    │  └─────────────┘             │              │
+│   └──────┬──────┘                             │              │
+│          │                                    │               │
 │          ▼                ▼                    ▼              ┌┴───────────────┐
 └──────────┼────────────────┼────────────────────┼──────────────┤  RabbitMQ     │
            │                │                    │              │  4.2-mgmt     │
            ▼                ▼                    ▼              └──┬────────────┘
 ┌─────────────────┐ ┌─────────────────┐                     ┌────┴──────┐
 │   PostgreSQL    │ │    PostgreSQL   │                     │wishlist. │
-│   (shared DB)   │ │   (steamtracker │                     │events    │
+│   (`postgres`)  │ │   (`steamtracker│                     │events    │
 │                 │ │    schema)      │                     │(fanout)  │
 │   wishlistapi   │ │   steamtracker  │                     └────┬─────┘
 │   tables        │ │   tables        │                          │
@@ -73,7 +73,7 @@ This document provides a high-level overview of how the different components of 
 | **WishlistApi** | REST API, authentication, wishlist CRUD, auctions | 5186 |
 | **SteamTracker.API** | Internal REST API (alert management) | — (internal only) |
 | **SteamTracker.Worker** | Background processing (price fetching, event consumption) | — |
-| **PostgreSQL** | Shared database for both services | 5432 |
+| **PostgreSQL** | Separate databases on the same server | 5432 |
 | **RabbitMQ** | Message broker for event-driven communication | 5672 (AMQP), 15672 (management) |
 | **Adminer** | Database administration UI | 8085 |
 | **Nginx** | Reverse proxy (production) | 80 |
@@ -202,28 +202,28 @@ This flow covers how SteamTracker fetches game prices from the Steam Store API. 
 │ Component                │ Data Path                                │
 ├──────────────────────────┼──────────────────────────────────────────┤
 │ Frontend → WishlistApi   │ HTTP REST (Axios, cookie auth)           │
-│ WishlistApi → DB         │ EF Core (writes) / Dapper (reads)        │
+│ WishlistApi → DB         │ EF Core (writes)                         │
 │ WishlistApi → RabbitMQ   │ Fanout exchange → wishlist-sync queue    │
 │ RabbitMQ → SteamTracker  │ wishlist-sync queue → WishlistSyncWorker │
 │ SteamTracker → Steam API │ HTTP GET (Steam Store API, EUR pricing)  │
 │ SteamTracker → DB        │ EF Core (snake_case tables/columns)      │
-│ WishlistApi → SteamTracker│ Dapper reads from shared DB (prices,   │
-│                          │  alert rules) for wishlist enrichment    │
+│ WishlistApi → SteamTracker│ REST calls (proxy for prices, alerts)  │
+│                          │ for wishlist enrichment                  │
 └──────────────────────────┴──────────────────────────────────────────┘
 ```
 
 ---
 
-## Shared Database Design
+## Separate Database Design
 
-WishlistApi and SteamTracker share the same PostgreSQL database but use different conventions:
+WishlistApi and SteamTracker each have their own PostgreSQL database on the same server:
 
 | Aspect | WishlistApi | SteamTracker |
 |--------|-------------|--------------|
-| **ORM** | EF Core (snake_case via `NpgsqlSnakeCaseNamingConvention`) | EF Core (snake_case via `NpgsqlSnakeCaseNamingConvention`) |
+| **Database** | `postgres` | `steamtracker` |
+| **ORM** | EF Core (PascalCase → snake_case via `NpgsqlSnakeCaseNamingConvention`) | EF Core (snake_case via `NpgsqlSnakeCaseNamingConvention`) |
 | **Writes** | EF Core | EF Core |
-| **Cross-service reads** | Dapper (raw SQL) — reads `game` and `alert_rule` tables | N/A (WishlistApi proxies alert operations via REST) |
-| **Naming** | PascalCase domain → snake_case DB | snake_case tables/columns (PascalCase DB convention) |
+| **Cross-service reads** | N/A — WishlistApi proxies alert operations via REST | N/A (WishlistApi proxies alert operations via REST) |
 
 **Anti-Corruption Layer**: SteamTracker never reads the existing app's `wishlist_items` table. It consumes `WishlistItemAdded`/`Removed` events via RabbitMQ, maintaining its own projection in the `tracked_game` table.
 
@@ -252,8 +252,8 @@ Dead-letter exchange: steamtracker.dlx
 
 | Decision | Rationale |
 |----------|-----------|
-| **Shared PostgreSQL** | Simplifies deployment; services are tightly coupled by design |
-| **Dapper for cross-service reads** | Avoids EF Core naming conflicts; raw SQL gives full control |
+| **Separate PostgreSQL databases** | Simplifies deployment; each service owns its own schema |
+| **REST proxy for cross-service reads** | Clean ACL boundary; no shared DB coupling |
 | **RabbitMQ for wishlist sync** | Loose coupling between WishlistApi and SteamTracker; SteamTracker is an ACL consumer |
 | **Hexagonal architecture in SteamTracker** | Domain purity — zero framework dependencies; easy to swap adapters |
 | **Layered architecture in WishlistApi** | Familiar pattern for CRUD-heavy service; clear separation of concerns |

@@ -1,3 +1,4 @@
+using Application;
 using Application.Contracts;
 using Application.Events;
 using Application.UseCases.Wishlist;
@@ -63,10 +64,8 @@ public class WishlistControllerBackfillTests
         var getWishlistStatsUseCaseMock = new Mock<IGetWishlistStatsUseCase>();
         var setAlertRuleUseCaseMock = new Mock<ISetAlertRuleUseCase>();
         var deleteAlertRuleUseCaseMock = new Mock<IDeleteAlertRuleUseCase>();
-
-        var priceReaderMock = new Mock<ISharedDbPriceReader>();
-        priceReaderMock.Setup(x => x.GetPricesAsync(It.IsAny<IEnumerable<int>>())).ReturnsAsync(new Dictionary<int, GamePrice>());
-        priceReaderMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new Dictionary<int, AlertRuleInfo>());
+        var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
+        alertProxyMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new List<AlertRuleInfo>());
 
         var controller = new WishlistController(
             userContextMock,
@@ -77,7 +76,7 @@ public class WishlistControllerBackfillTests
             publishBackfillEventUseCaseMock.Object,
             setAlertRuleUseCaseMock.Object,
             deleteAlertRuleUseCaseMock.Object,
-            priceReaderMock.Object);
+            alertProxyMock.Object);
         controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
 
         return (repositoryMock, publishBackfillEventUseCaseMock, controller, httpContext);

@@ -2,7 +2,7 @@
 using Application.Contracts;
 using Infrastructure.Messaging;
 using Infrastructure.Persistence;
-using Infrastructure.SharedDb;
+using Infrastructure.SteamTracker;
 using Moq;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -66,13 +66,9 @@ namespace Tests.Helpers
                 services.AddSingleton<IRabbitMqConnectionFactory>(_ => new NoOpRabbitMqConnectionFactory());
                 services.AddScoped<IEventPublisher>(_ => new NoOpRabbitMqEventPublisher());
 
-                // Mock shared DB reader and SteamTracker proxy for integration tests
-                var priceReaderMock = new Mock<ISharedDbPriceReader>();
-                priceReaderMock.Setup(x => x.GetPricesAsync(It.IsAny<IEnumerable<int>>())).ReturnsAsync(new Dictionary<int, GamePrice>());
-                priceReaderMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new Dictionary<int, AlertRuleInfo>());
-                services.AddScoped(_ => priceReaderMock.Object);
-
+                // Mock SteamTracker proxy for integration tests
                 var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
+                alertProxyMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new List<AlertRuleInfo>());
                 services.AddScoped(_ => alertProxyMock.Object);
             });
         }

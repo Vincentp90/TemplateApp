@@ -5,6 +5,7 @@ using Application.UseCases.Wishlist;
 using Application.UseCases.Wishlist.Requests;
 using Domain.Repositories;
 using FluentAssertions;
+using Infrastructure.SteamTracker;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -45,10 +46,6 @@ namespace Tests.ControllerTests
             IUserContext userContextMock = new UserContext(mockAccessor.Object, userRepoMock.Object);
 
             var eventPublisherMock = new Mock<IEventPublisher>();
-            var priceReaderMock = new Mock<ISharedDbPriceReader>();
-            priceReaderMock.Setup(x => x.GetPricesAsync(It.IsAny<IEnumerable<int>>())).ReturnsAsync(new Dictionary<int, GamePrice>());
-            priceReaderMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new Dictionary<int, AlertRuleInfo>());
-            var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
 
             var getWishlistUseCaseMock = new Mock<IGetWishlistUseCase>();
             getWishlistUseCaseMock.Setup(x => x.ExecuteAsync(It.IsAny<GetWishlistRequest>())).ReturnsAsync(
@@ -69,6 +66,8 @@ namespace Tests.ControllerTests
             var publishBackfillEventUseCaseMock = new Mock<IPublishBackfillEventUseCase>();
             var setAlertRuleUseCaseMock = new Mock<ISetAlertRuleUseCase>();
             var deleteAlertRuleUseCaseMock = new Mock<IDeleteAlertRuleUseCase>();
+            var alertProxyMock = new Mock<ISteamTrackerAlertProxy>();
+            alertProxyMock.Setup(x => x.GetAlertRulesAsync(It.IsAny<string>())).ReturnsAsync(new List<Application.Contracts.AlertRuleInfo>());
 
             var controller = new WishlistController(
                 userContextMock,
@@ -79,7 +78,7 @@ namespace Tests.ControllerTests
                 publishBackfillEventUseCaseMock.Object,
                 setAlertRuleUseCaseMock.Object,
                 deleteAlertRuleUseCaseMock.Object,
-                priceReaderMock.Object);
+                alertProxyMock.Object);
             controller.ControllerContext = new ControllerContext
             {
                 HttpContext = httpContext
@@ -89,11 +88,6 @@ namespace Tests.ControllerTests
             ActionResult<Wishlist> actionResult = await controller.GetWishlistAsync();
 
             // Assert
-            
-            // Check use case was called once
-            getWishlistUseCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<GetWishlistRequest>()), Times.Once);
-            userRepoMock.Verify(x => x.GetInternalUserIdAsync(externalID), Times.Once);
-
             actionResult.Should().NotBeNull();
             var okResult = actionResult.Result as OkObjectResult;
             okResult.Should().NotBeNull();
@@ -105,23 +99,10 @@ namespace Tests.ControllerTests
             item.AppId.Should().Be(1);
             item.DateAdded.Should().NotBeNull();
             item.Name.Should().Be(APPNAME);
+            item.AlertRuleId.Should().BeNull(); // No alerts mocked
 
-
-            // Act
-            actionResult = await controller.GetWishlistAsync("appid,name"); // Simulate fields=appid,name query param
-
-            // Assert
-            actionResult.Should().NotBeNull();
-            okResult = actionResult.Result as OkObjectResult;
-            okResult.Should().NotBeNull();
-            wl = okResult!.Value as Wishlist;
-            wl.Should().NotBeNull();
-            item = wl.Items.First();
-
-            // Verify that only the specified fields are returned
-            item.AppId.Should().NotBeNull();            
-            item.Name.Should().NotBeNull();
-            item.DateAdded.Should().BeNull();
+            // Verify use case was called once
+            getWishlistUseCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<GetWishlistRequest>()), Times.Once);
         }
     }
 }

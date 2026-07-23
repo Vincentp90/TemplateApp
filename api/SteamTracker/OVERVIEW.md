@@ -197,7 +197,7 @@ Dead-letter exchange: steamtracker.dlx
 ### Key Technical Details
 - **Hexagonal Architecture**: Domain and Application have **zero references** to Infrastructure. All cross-boundary communication goes through port interfaces.
 - **Anti-Corruption Layer**: SteamTracker never reads the existing app's `wishlist_items` table. It consumes `WishlistItemAdded`/`Removed` events via RabbitMQ.
-- **Shared DB with WishlistApi**: Both services share the same Postgres. SteamTracker uses snake_case table/column names (via `NpgsqlSnakeCaseNamingConvention`). WishlistApi reads via Dapper (raw SQL) to avoid naming conflicts.
+- **Separate DB with WishlistApi**: Each service uses its own PostgreSQL database on the same server (`postgres` vs `steamtracker`). SteamTracker uses snake_case table/column names (via `NpgsqlSnakeCaseNamingConvention`). The services are fully decoupled via RabbitMQ events and REST — no cross-service DB queries.
 - **Rate Limiting**: Token bucket (.NET 7+ `TokenBucketRateLimiter`) — 180 tokens per 5-minute replenishment period (near Steam's 200/5min limit).
 - **Retry Policy**: 3 attempts, exponential backoff (2s, 4s, 8s). Circuit breaker: open after 5 consecutive failures, half-open after 30s.
 - **EUR Pricing**: Steam API called with `cc=de&l=german` for consistent EUR pricing regardless of worker IP.

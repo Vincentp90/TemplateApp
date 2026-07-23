@@ -28,19 +28,20 @@ This is a template for a typical business CRUD app. The goal is to have a templa
 - React frontend
     - Tanstack Query, Router
     - TypeScript, ESLint, Tailwind CSS, Vite, React Hook Form with Zod for validations, Zustand
-    - Vitest
+    - Vitest (unit), Playwright (E2E)
 - Backend (C# services)
-    - ASP.NET Core Web Api backend (WishlistAPI)
-        - REST 
-        - Entity Framework code first
-        - Swagger        
-        - Dapper to read prices from SteamTracker DB
-    - .NET Core Worker microservice (SteamTracker)
-        - Consumes RabbitMQ messages from WishlistAPI
-        - Fetches prices from Steam (triggered by message)
-        - Entity Framework code first
+    - WishlistApi (ASP.NET Core Web API)
+        - REST
+        - Entity Framework Core code first
+        - Swagger/OpenAPI
+        - JWT-based authorization
+        - SignalR hub (`/auctionHub`)
+    - SteamTracker microservice
+        - `SteamTracker.API` — REST API for price data
+        - `SteamTracker.Worker` — background worker consuming RabbitMQ messages
+        - Fetches prices from Steam (triggered by WishlistApi messages)
+        - Entity Framework Core code first
     - Tests: xUnit, Moq, FluentAssertions
-- JWT-based authorization
 - PostgreSQL
 - docker compose
     - For development we use a devcontainer

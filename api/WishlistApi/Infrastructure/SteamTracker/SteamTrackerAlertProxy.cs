@@ -1,7 +1,8 @@
 using Application.Contracts;
 using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 
-namespace Infrastructure.SharedDb;
+namespace Infrastructure.SteamTracker;
 
 /// <summary>
 /// HttpClient-based proxy for SteamTracker's alert management endpoints.
@@ -44,5 +45,25 @@ public class SteamTrackerAlertProxy : ISteamTrackerAlertProxy
         request.Headers.Add("X-Internal-UserId", userId);
         var response = await _httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<List<AlertRuleInfo>> GetAlertRulesAsync(string userId)
+    {
+        if (string.IsNullOrEmpty(_baseUri))
+            return new List<AlertRuleInfo>();
+
+        var uri = $"{_baseUri}/api/alerts";
+
+        var request = new HttpRequestMessage(HttpMethod.Get, uri);
+        request.Headers.Add("X-Internal-UserId", userId);
+        var response = await _httpClient.SendAsync(request);
+
+        if (!response.IsSuccessStatusCode)
+            return new List<AlertRuleInfo>();
+
+        var body = await response.Content.ReadAsStringAsync();
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var rules = JsonSerializer.Deserialize<List<AlertRuleInfo>>(body, options);
+        return rules ?? new List<AlertRuleInfo>();
     }
 }

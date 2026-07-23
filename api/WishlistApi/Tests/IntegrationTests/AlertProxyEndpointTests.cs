@@ -1,14 +1,11 @@
-using Application;
 using Application.Contracts;
 using FluentAssertions;
-using Infrastructure.Persistence;
-using Infrastructure.SharedDb;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Net;
 using System.Net.Http.Json;
 
 namespace Tests.IntegrationTests;
@@ -16,26 +13,18 @@ namespace Tests.IntegrationTests;
 /// <summary>
 /// Integration tests for the WishlistApi proxy alert endpoints.
 /// Uses a mock HTTP handler to capture requests sent to SteamTracker.
+/// No database, containers, or seeding — just verifies proxy HTTP construction.
 /// </summary>
 public class AlertProxyEndpointTests : IAsyncLifetime
 {
-    private SharedDbFixture _fixture = SharedDbFixture.Instance;
     private HttpClient _client = null!;
     private CapturingHandler _capturingHandler = null!;
 
     public async ValueTask InitializeAsync()
     {
-        _fixture = SharedDbFixture.Instance;
-        await _fixture.InitializeAsync();
-
-        // Seed SteamTracker data
-        await _fixture.SeedSteamTrackerAsync(_fixture.SteamTrackerConnectionString);
-
-        // Create a custom factory with a capturing HTTP handler for the SteamTracker proxy
         _capturingHandler = new CapturingHandler();
-        var factory = new SharedDbApiFactoryWithProxy(_capturingHandler, _fixture);
+        var factory = new ProxyTestFactory(_capturingHandler);
         await factory.InitializeAsync();
-        await factory.SeedSteamTrackerAsync();
 
         _client = await factory.CreateAuthenticatedClientAsync();
     }
@@ -43,7 +32,6 @@ public class AlertProxyEndpointTests : IAsyncLifetime
     public async ValueTask DisposeAsync()
     {
         _client?.Dispose();
-        // Don't dispose the shared singleton fixture — other test classes may still need it
     }
 
     #region POST /wishlist/{appId}/alert
@@ -154,18 +142,17 @@ public class AlertProxyEndpointTests : IAsyncLifetime
     }
 
     /// <summary>
-    /// WebApplicationFactory that injects a custom HTTP handler for the SteamTracker proxy.
+    /// WebApplicationFactory that replaces ISteamTrackerAlertProxy with a capturing HTTP handler.
+    /// No database, containers, or seeding — just verifies proxy HTTP construction.
     /// </summary>
-    private class SharedDbApiFactoryWithProxy : WebApplicationFactory<Program>, IAsyncLifetime
+    private class ProxyTestFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         private readonly CapturingHandler _handler;
-        private readonly SharedDbFixture _fixture;
         private bool _initialized;
 
-        public SharedDbApiFactoryWithProxy(CapturingHandler handler, SharedDbFixture fixture)
+        public ProxyTestFactory(CapturingHandler handler)
         {
             _handler = handler;
-            _fixture = fixture;
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -179,37 +166,20 @@ public class AlertProxyEndpointTests : IAsyncLifetime
                 foreach (var svc in hostedServices)
                     services.Remove(svc);
 
-                // Replace WishlistApi DB
-                var dbDescriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(DbContextOptions<WishlistDbContext>));
-                if (dbDescriptor != null)
-                    services.Remove(dbDescriptor);
-                services.AddDbContext<WishlistDbContext>(options =>
-                    options.UseNpgsql(_fixture.WishlistApiConnectionString)
-                           .UseSnakeCaseNamingConvention());
-
-                // Replace SharedDbPriceReader with real implementation
-                var priceReaderDescriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(ISharedDbPriceReader));
-                if (priceReaderDescriptor != null)
-                    services.Remove(priceReaderDescriptor);
-                var config = new ConfigurationBuilder()
+                // Replace IConfiguration so the proxy uses http://mock instead of the real SteamTrackerUri
+                var configDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IConfiguration));
+                if (configDescriptor != null)
+                    services.Remove(configDescriptor);
+                var mockConfig = new ConfigurationBuilder()
                     .AddInMemoryCollection(new Dictionary<string, string?>
                     {
-                        { "ConnectionStrings:SteamTrackerConnection", _fixture.SteamTrackerConnectionString },
                         { "SteamTrackerUri", "http://mock" },
                         { "Jwt:Key", "MuF2rOUXJnC8/rGtoB0sfXnjWWmlgu63AqfqoPUqNxw=" },
                         { "Jwt:Issuer", "WishlistApp" },
                         { "Jwt:Audience", "WishlistApp_audience" }
                     })
                     .Build();
-                services.AddScoped<ISharedDbPriceReader>(_ => new SharedDbPriceReader(config));
-
-                // Remove existing IConfiguration so our config with JWT values is used
-                var configDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IConfiguration));
-                if (configDescriptor != null)
-                    services.Remove(configDescriptor);
-                services.AddSingleton<IConfiguration>(config);
+                services.AddSingleton<IConfiguration>(mockConfig);
 
                 // Replace SteamTracker proxy with our capturing handler
                 var proxyDescriptor = services.SingleOrDefault(
@@ -217,17 +187,17 @@ public class AlertProxyEndpointTests : IAsyncLifetime
                 if (proxyDescriptor != null)
                     services.Remove(proxyDescriptor);
 
-                // Remove the default HttpClient
+                // Remove the default HttpClient used by the proxy
                 var httpClientDescriptor = services.SingleOrDefault(
                     d => d.ServiceType == typeof(HttpClient));
                 if (httpClientDescriptor != null)
                     services.Remove(httpClientDescriptor);
 
-                services.AddHttpClient<ISteamTrackerAlertProxy, SteamTrackerAlertProxy>(client =>
-                    {
-                        client.BaseAddress = new Uri("http://mock/");
-                    })
-                    .ConfigurePrimaryHttpMessageHandler(() => _handler);
+                services.AddHttpClient<ISteamTrackerAlertProxy, Infrastructure.SteamTracker.SteamTrackerAlertProxy>(client =>
+                {
+                    client.BaseAddress = new Uri("http://mock/");
+                })
+                .ConfigurePrimaryHttpMessageHandler(() => _handler);
             });
         }
 
@@ -235,19 +205,8 @@ public class AlertProxyEndpointTests : IAsyncLifetime
         {
             if (!_initialized)
             {
-                await _fixture.InitializeAsync();
                 _initialized = true;
             }
-        }
-
-        public new async ValueTask DisposeAsync()
-        {
-            // Don't dispose the shared singleton fixture — other test classes may still need it
-        }
-
-        public async Task SeedSteamTrackerAsync()
-        {
-            await _fixture.SeedSteamTrackerAsync(_fixture.SteamTrackerConnectionString);
         }
 
         public async Task<HttpClient> CreateAuthenticatedClientAsync()

@@ -1,6 +1,6 @@
 'use client';
 
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useSuspenseQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from "../api";
 import WishlistPriceBadge from './WishlistPriceBadge';
 import AlertRuleModal from './AlertRuleModal';
@@ -15,29 +15,69 @@ export interface MergedWishlistItem {
   lastCheckedAt: string | null;
   isUnavailable: boolean;
   alertRuleId: string | null;
-  alertThreshold: number | null;
-  alertCurrency: string;
+}
+
+interface WishlistItemResponse {
+  appId: number | null;
+  name: string | null;
+  dateAdded: string | null;
+  alertRuleId: string | null;
+}
+
+interface GamePriceResponse {
+  appId: number;
+  amount: number | null;
+  currency: string;
+  lastCheckedAt: string | null;
+  isUnavailable: boolean;
 }
 
 export default function WLItemsList() {
-  const { data: wishlistItems = [] } = useSuspenseQuery<MergedWishlistItem[]>({
+  const queryClient = useQueryClient();
+
+  // Query 1: Get wishlist items (core fields + alert info)
+  const { data: wishlistItems = [] } = useSuspenseQuery<WishlistItemResponse[]>({
     queryKey: ['wishlistOverview'],
     queryFn: async () => {
-      const res = await api.get("/wishlist?fields=appid,name,dateadded,price,pricecurrency,lastcheckedat,alertruleid,alertthreshold,alertcurrency");
-      const data = res.data.items;
-      return data.map((item: MergedWishlistItem) => ({
-        appId: item.appId,
-        name: item.name,
-        dateAdded: item.dateAdded,
-        price: item.price,
-        priceCurrency: item.priceCurrency ?? 'EUR',
-        lastCheckedAt: item.lastCheckedAt,
-        isUnavailable: item.isUnavailable ?? false,
-        alertRuleId: item.alertRuleId,
-        alertThreshold: item.alertThreshold,
-        alertCurrency: item.alertCurrency ?? 'EUR',
-      }));
+      const res = await api.get("/wishlist");
+      return res.data.items as WishlistItemResponse[];
     },
+  });
+
+  // Query 2: Get prices for all wishlist items
+  const appIds = wishlistItems
+    .map(item => item.appId)
+    .filter((id): id is number => id != null);
+
+  const { data: prices = [] } = useQuery<GamePriceResponse[]>({
+    queryKey: ['prices', appIds],
+    queryFn: async () => {
+      if (appIds.length === 0) return [];
+      const query = appIds.map(id => `appIds=${id}`).join('&');
+      const res = await api.get(`/api/prices?${query}`);
+      return res.data as GamePriceResponse[];
+    },
+    enabled: appIds.length > 0,
+  });
+
+  // Merge: build maps of appId -> price data and appId -> alert info
+  const priceMap = new Map<number, GamePriceResponse>();
+  for (const price of prices) {
+    priceMap.set(price.appId, price);
+  }
+
+  const mergedItems: MergedWishlistItem[] = wishlistItems.map((item) => {
+    const priceData = item.appId != null ? priceMap.get(item.appId) : undefined;
+    return {
+      appId: item.appId,
+      name: item.name,
+      dateAdded: item.dateAdded,
+      price: priceData?.amount ?? null,
+      priceCurrency: priceData?.currency ?? 'EUR',
+      lastCheckedAt: priceData?.lastCheckedAt ?? null,
+      isUnavailable: priceData?.isUnavailable ?? false,
+      alertRuleId: item.alertRuleId,
+    };
   });
 
   const toLocalTime = (date: string | null) => {
@@ -57,11 +97,10 @@ export default function WLItemsList() {
 
   const handleAlertSuccess = () => {
     setAlertModalAppId(null);
-    // Invalidate and refetch the merged wishlist
-    window.location.reload();
+    // Invalidate and refetch both queries
+    queryClient.invalidateQueries({ queryKey: ['wishlistOverview'] });
+    queryClient.invalidateQueries({ queryKey: ['prices'] });
   };
-
-  const hasUserId = true; // Auth is required for this route
 
   return (
     <>
@@ -80,11 +119,10 @@ export default function WLItemsList() {
             </thead>
             {/* Rows */}
             <tbody>
-              {wishlistItems.map((item, i) => {
+              {mergedItems.map((item, i) => {
                 const currentPrice = item.price ?? null;
                 const currency = item.priceCurrency ?? 'EUR';
                 const hasSnapshots = item.lastCheckedAt != null;
-                const alertRuleId = item.alertRuleId;
 
                 const renderPrice = () => {
                   if (item.isUnavailable) return 'N/A';
@@ -105,14 +143,12 @@ export default function WLItemsList() {
                     <td className="px-6 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <WishlistPriceBadge currentPrice={currentPrice} hasSnapshots={hasSnapshots} isUnavailable={item.isUnavailable} />
-                        {hasUserId && (
-                          <button
-                            onClick={() => setAlertModalAppId(item.appId ?? 0)}
-                            className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
-                          >
-                            {alertRuleId ? 'Edit alert' : 'Set alert'}
-                          </button>
-                        )}
+                        <button
+                          onClick={() => setAlertModalAppId(item.appId ?? 0)}
+                          className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                        >
+                          {item.alertRuleId ? 'Edit alert' : 'Set alert'}
+                        </button>
                       </div>
                     </td>
                     <td className="px-6 py-3 text-right whitespace-nowrap">{toLocalTime(item.dateAdded)}</td>

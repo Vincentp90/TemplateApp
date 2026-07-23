@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RabbitMQ.Client;
 using SteamTracker.Application.Ports;
 using SteamTracker.Application.UseCases;
 using SteamTracker.Domain.Services;
@@ -8,8 +9,12 @@ using SteamTracker.Worker;
 
 var hostBuilder = Host.CreateApplicationBuilder(args);
 
-// Infrastructure
+// Infrastructure (registers Func<Task<IConnection>> using RabbitMQ:HostName etc.)
 hostBuilder.Services.AddInfrastructure(hostBuilder.Configuration);
+
+// Resolve IConnection from the infrastructure's properly-configured factory
+hostBuilder.Services.AddSingleton<IConnection>(sp =>
+    sp.GetRequiredService<Func<Task<IConnection>>>().Invoke().GetAwaiter().GetResult());
 
 // Application — use cases
 hostBuilder.Services.AddScoped<ISetAlertRuleUseCase, SetAlertRuleUseCase>();

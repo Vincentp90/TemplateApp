@@ -48,15 +48,15 @@ public class TestApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.AddDbContext<SteamTrackerDbContext>(options =>
                 options.UseNpgsql(_db.GetConnectionString()).UseSnakeCaseNamingConvention());
 
-            // Replace RabbitMQ connection
-            services.AddSingleton<IConnection>(_ =>
+            // Replace RabbitMQ connection factory — the ChannelPool and ExchangeInitializer
+            // resolve Func<Task<IConnection>> from DI, so replacing it here ensures the
+            // test container connection is used instead of localhost.
+            var testConnectionFactory = new ConnectionFactory
             {
-                var factory = new ConnectionFactory
-                {
-                    Uri = new Uri(_rabbitMq.GetConnectionString()),
-                };
-                return factory.CreateConnectionAsync().GetAwaiter().GetResult();
-            });
+                Uri = new Uri(_rabbitMq.GetConnectionString()),
+            };
+            services.AddSingleton<Func<Task<IConnection>>>(_ =>
+                async () => await testConnectionFactory.CreateConnectionAsync());
         });
     }
 

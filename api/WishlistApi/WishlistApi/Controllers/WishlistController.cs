@@ -3,10 +3,10 @@ using Application.Contracts;
 using Application.UseCases.Wishlist;
 using Application.UseCases.Wishlist.Requests;
 using Domain.Exceptions;
+using Infrastructure.SteamTracker;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WishlistApi.Helpers;
-using System.Globalization;
 
 namespace WishlistApi.Controllers
 {
@@ -23,7 +23,7 @@ namespace WishlistApi.Controllers
         private readonly IPublishBackfillEventUseCase _publishBackfillEventUseCase;
         private readonly ISetAlertRuleUseCase _setAlertRuleUseCase;
         private readonly IDeleteAlertRuleUseCase _deleteAlertRuleUseCase;
-        private readonly ISharedDbPriceReader _priceReader;
+        private readonly ISteamTrackerAlertProxy _alertProxy;
 
         public WishlistController(
             IUserContext userContext,
@@ -34,7 +34,7 @@ namespace WishlistApi.Controllers
             IPublishBackfillEventUseCase publishBackfillEventUseCase,
             ISetAlertRuleUseCase setAlertRuleUseCase,
             IDeleteAlertRuleUseCase deleteAlertRuleUseCase,
-            ISharedDbPriceReader priceReader)
+            ISteamTrackerAlertProxy alertProxy)
         {
             _userContext = userContext;
             _getWishlistUseCase = getWishlistUseCase;
@@ -44,47 +44,28 @@ namespace WishlistApi.Controllers
             _publishBackfillEventUseCase = publishBackfillEventUseCase;
             _setAlertRuleUseCase = setAlertRuleUseCase;
             _deleteAlertRuleUseCase = deleteAlertRuleUseCase;
-            _priceReader = priceReader;
+            _alertProxy = alertProxy;
         }
 
         [HttpGet()]
-        public async Task<ActionResult<Wishlist>> GetWishlistAsync([FromQuery] string? fields = null)// TODO replace fields filtering with OData
+        public async Task<ActionResult<Wishlist>> GetWishlistAsync()// TODO add odata filtering to make DateAdded, AlertRuleId optional. In frontend search page, we don't need those fields.
         {
             int internalUserId = await _userContext.GetIdAsync();
 
-            var fieldList = (fields ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                                .Select(f => f.ToLower())
-                                .ToHashSet();
-            bool includeAll = fieldList.Count == 0;
-
-            bool Has(string field) => includeAll || fieldList.Contains(field);
-
-            // 1. Get local wishlist items
+            // Get local wishlist items
             var localItems = await _getWishlistUseCase.ExecuteAsync(new GetWishlistRequest(internalUserId));
-            var appIds = localItems.Select(x => x.AppId).ToList();
 
-            // 2. Read prices from shared DB (SteamTracker)
-            var prices = await _priceReader.GetPricesAsync(appIds);
+            // Get alert rules from SteamTracker
+            var alertRules = await _alertProxy.GetAlertRulesAsync(internalUserId.ToString());
+            var alertMap = alertRules.ToDictionary(r => r.AppId, r => r.AlertRuleId);
 
-            // 3. Read alert rules from shared DB (SteamTracker)
-            var alertRules = await _priceReader.GetAlertRulesAsync(internalUserId.ToString());
-
-            // 4. Merge everything
-            var result = localItems.Select(x => {
-                var hasPrice = prices.TryGetValue(x.AppId, out var price);
-                return new WishlistItemDto(
-                    AppId: Has("appid") ? x.AppId : null,
-                    DateAdded: Has("dateadded") ? x.DateAdded : null,
-                    Name: Has("name") ? x.AppName : null,
-                    Price: hasPrice && Has("price") ? price!.Amount : null,
-                    PriceCurrency: hasPrice && Has("pricecurrency") ? price!.Currency : (string?)"EUR",
-                    LastCheckedAt: hasPrice && Has("lastcheckedat") ? price!.LastCheckedAt : null,
-                    IsUnavailable: hasPrice && price!.IsUnavailable,
-                    AlertRuleId: alertRules.TryGetValue(x.AppId, out var alert) && Has("alertruleid") ? alert!.Id : null,
-                    AlertThreshold: alertRules.TryGetValue(x.AppId, out alert) && Has("alertthreshold") ? alert!.ThresholdAmount : null,
-                    AlertCurrency: alertRules.TryGetValue(x.AppId, out alert) && Has("alertcurrency") ? alert!.Currency : (string?)"EUR"
-                );
-            });
+            // Return core fields + alert info (price data is available via /api/prices)
+            var result = localItems.Select(x => new WishlistItemDto(
+                AppId: x.AppId,
+                DateAdded: x.DateAdded,
+                Name: x.AppName,
+                AlertRuleId: alertMap.TryGetValue(x.AppId, out var alertId) ? alertId : null
+            ));
 
             return Ok(new Wishlist(result));
         }

@@ -14,6 +14,8 @@ using Infrastructure.Persistence.Users;
 using Infrastructure.Persistence.Wishlist;
 using Infrastructure.ReadAdapters;
 using Infrastructure.Messaging;
+using CrossService.Messaging;
+using RabbitMQ.Client;
 using Domain;
 using Domain.Helpers;
 using Domain.Repositories;
@@ -28,7 +30,7 @@ using WishlistApi.Controllers;
 using WishlistApi.Helpers;
 using WishlistApi.HostedServices;
 using Infrastructure.ExternalServices;
-using Infrastructure.SharedDb;
+using Infrastructure.SteamTracker;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -114,14 +116,34 @@ builder.Services.AddScoped<IEnsureAppListingsPopulatedUseCase, EnsureAppListings
 // RabbitMQ infrastructure
 builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(RabbitMqOptions.SectionName));
 builder.Services.AddSingleton<IRabbitMqConnectionFactory, RabbitMqConnectionFactory>();
+
+// Channel pool with lazy connection creation — the connection is created on first use
+// This allows test factories to replace IRabbitMqConnectionFactory before the pool is accessed.
+builder.Services.AddSingleton<ChannelPool>(sp =>
+{
+    var rmqFactory = sp.GetRequiredService<IRabbitMqConnectionFactory>();
+    return new ChannelPool(rmqFactory.CreateConnectionAsync);
+});
+
+// Exchange initializer shares the same ChannelPool so exchanges are declared on the
+// active connection, not a separate one.
+builder.Services.AddSingleton<ExchangeInitializer>(sp =>
+    new ExchangeInitializer(sp.GetRequiredService<ChannelPool>()));
+
+// Event publisher uses the shared channel pool
 builder.Services.AddScoped<IEventPublisher>(sp =>
     new RabbitMqEventPublisher(
-        sp.GetRequiredService<IRabbitMqConnectionFactory>(),
+        sp.GetRequiredService<ChannelPool>(),
         "wishlist.events"));
 
-// Shared DB readers and SteamTracker proxy
-builder.Services.AddScoped<ISharedDbPriceReader, SharedDbPriceReader>();
+// SteamTracker proxy for alert management
 builder.Services.AddHttpClient<ISteamTrackerAlertProxy, SteamTrackerAlertProxy>();
+
+// Named HttpClient for the prices passthrough endpoint
+builder.Services.AddHttpClient("SteamTracker", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration.GetValue<string>("SteamTrackerUri")!);
+});
 
 
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
