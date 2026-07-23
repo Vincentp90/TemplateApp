@@ -31,15 +31,15 @@ public class ChannelPool : IDisposable
         if (_disposed)
             throw new ObjectDisposedException(nameof(ChannelPool));
 
-        // Lazily create the connection on first use
-        if (_connection is null)
-        {
-            _connection = await _connectionFactory().ConfigureAwait(false);
-        }
-
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            // Lazily create the connection on first access (protected by lock)
+            if (_connection is null)
+            {
+                _connection = await _connectionFactory().ConfigureAwait(false);
+            }
+
             if (_channel is null || _channel.IsClosed)
             {
                 _channel = await _connection.CreateChannelAsync(null, cancellationToken).ConfigureAwait(false);
@@ -61,13 +61,21 @@ public class ChannelPool : IDisposable
         if (_disposed)
             throw new ObjectDisposedException(nameof(ChannelPool));
 
-        // Lazily create the connection on first use
-        if (_connection is null)
+        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            _connection = await _connectionFactory().ConfigureAwait(false);
-        }
+            // Lazily create the connection on first access (protected by lock)
+            if (_connection is null)
+            {
+                _connection = await _connectionFactory().ConfigureAwait(false);
+            }
 
-        return await _connection.CreateChannelAsync(null, cancellationToken).ConfigureAwait(false);
+            return await _connection.CreateChannelAsync(null, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     /// <summary>
@@ -93,6 +101,7 @@ public class ChannelPool : IDisposable
     public void Dispose()
     {
         _disposed = true;
+        _connection?.Dispose();
         _lock.Dispose();
     }
 }

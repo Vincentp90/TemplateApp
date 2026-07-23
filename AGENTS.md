@@ -12,8 +12,8 @@ Current year: 2026
     - Then do the implementation and then run tests, they should pass now (green phase)
 
 ## Project Overviews
-- **Frontend (React/TypeScript)**: [frontend/OVERVIEW.md](frontend/OVERVIEW.md)
-- **Backend (.NET 10 APIs)**: [api/OVERVIEW.md](api/OVERVIEW.md)
+- **Frontend (React/TypeScript)**: [./frontend/OVERVIEW.md](./frontend/OVERVIEW.md)
+- **Backend (.NET 10 APIs)**: [./api/OVERVIEW.md](./api/OVERVIEW.md)
 
 ## Running Tests
 Always run `dotnet test` with a tail to limit output:
