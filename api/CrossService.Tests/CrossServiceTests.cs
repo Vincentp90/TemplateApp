@@ -44,10 +44,10 @@ public class CrossServiceTests : IAsyncLifetime
         wishlistResponse.EnsureSuccessStatusCode();
 
         // ===== ASSERT: Wishlist contains the item =====
-        var wishlist = await wishlistResponse.Content.ReadFromJsonAsync<Wishlist>();
-        wishlist.Should().NotBeNull();
-        wishlist!.Items.Should().ContainSingle();
-        var wishlistItem = wishlist.Items.First();
+        var wishlistItems = await wishlistResponse.Content.ReadFromJsonAsync<IEnumerable<WishlistItemDto>>();
+        wishlistItems.Should().NotBeNull();
+        wishlistItems!.Should().ContainSingle();
+        var wishlistItem = wishlistItems.First();
         wishlistItem.AppId.Should().Be(appId);
         wishlistItem.Name.Should().Be(gameName);
         wishlistItem.DateAdded.Should().NotBeNull();

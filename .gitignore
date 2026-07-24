@@ -1,3 +1,4 @@
 steamapplist.json
 /obj/DataAccess.EntityFrameworkCore.targets
 BenchmarkDotNet.Artifacts/
+.pi/agent/auth.json

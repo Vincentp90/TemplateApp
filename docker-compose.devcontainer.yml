@@ -66,8 +66,8 @@ services:
 
   steamtracker-api:
     build:
-      context: ./api/SteamTracker/src
-      dockerfile: SteamTracker.API/Dockerfile
+      context: ./api
+      dockerfile: SteamTracker/src/SteamTracker.API/Dockerfile
     depends_on:
       - db
       - rabbitmq
@@ -80,8 +80,8 @@ services:
 
   steamtracker-worker:
     build: 
-      context: ./api/SteamTracker/src
-      dockerfile: SteamTracker.Worker/Dockerfile.dev
+      context: ./api
+      dockerfile: SteamTracker/src/SteamTracker.Worker/Dockerfile.dev
     depends_on:
       - db
       - rabbitmq

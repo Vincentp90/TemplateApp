@@ -6,6 +6,7 @@ using Domain.Exceptions;
 using Infrastructure.SteamTracker;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using WishlistApi.Helpers;
 
 namespace WishlistApi.Controllers
@@ -47,19 +48,16 @@ namespace WishlistApi.Controllers
             _alertProxy = alertProxy;
         }
 
-        [HttpGet()]
-        public async Task<ActionResult<Wishlist>> GetWishlistAsync()// TODO add odata filtering to make DateAdded, AlertRuleId optional. In frontend search page, we don't need those fields.
+        [EnableQuery(AllowedQueryOptions = AllowedQueryOptions.Select)]
+        public async Task<ActionResult<IQueryable<WishlistItemDto>>> GetWishlistAsync()
         {
             int internalUserId = await _userContext.GetIdAsync();
 
-            // Get local wishlist items
             var localItems = await _getWishlistUseCase.ExecuteAsync(new GetWishlistRequest(internalUserId));
 
-            // Get alert rules from SteamTracker
             var alertRules = await _alertProxy.GetAlertRulesAsync(internalUserId.ToString());
             var alertMap = alertRules.ToDictionary(r => r.AppId, r => r.AlertRuleId);
 
-            // Return core fields + alert info (price data is available via /api/prices)
             var result = localItems.Select(x => new WishlistItemDto(
                 AppId: x.AppId,
                 DateAdded: x.DateAdded,
@@ -67,7 +65,7 @@ namespace WishlistApi.Controllers
                 AlertRuleId: alertMap.TryGetValue(x.AppId, out var alertId) ? alertId : null
             ));
 
-            return Ok(new Wishlist(result));
+            return Ok(result.AsQueryable());
         }
 
         [HttpGet("stats")]

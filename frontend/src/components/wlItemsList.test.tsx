@@ -1,19 +1,19 @@
 // wlItemsList.test.tsx
 import { render, screen, waitFor } from '@testing-library/react';
-import { describe, it, vi, expect, beforeEach } from 'vitest';
+import { describe, it, vi, expect } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import WLItemsList from './wlItemsList';
 import { api } from '../api';
 import { Suspense } from 'react';
 
-const mockedApiGet = vi.fn();
-
-beforeEach(() => {
-  vi.resetAllMocks();
-  mockedApiGet.mockReset();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (api as any).get = mockedApiGet;
-});
+vi.mock('../api', () => ({
+  api: {
+    get: vi.fn(),
+    post: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
+const mockedApiGet = vi.mocked(api.get);
 
 const renderWithClient = (ui: React.ReactNode) => {
   const client = new QueryClient({
@@ -29,12 +29,16 @@ const renderWithClient = (ui: React.ReactNode) => {
 };
 
 describe('WLItemsList component', () => {
+  beforeEach(() => {
+    mockedApiGet.mockReset();
+  });
+
   it('makes two separate API calls: wishlist and prices', async () => {
     mockedApiGet.mockImplementation((url: string) => {
       if (url === '/wishlist') {
         return Promise.resolve({
           data: {
-            items: [
+            value: [
               { appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null },
               { appId: 42, name: 'Portal', dateAdded: '2024-02-01T00:00:00Z', alertRuleId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' },
             ],
@@ -70,7 +74,7 @@ describe('WLItemsList component', () => {
       if (url === '/wishlist') {
         return Promise.resolve({
           data: {
-            items: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null }],
+            value: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null }],
           },
         });
       }
@@ -96,7 +100,7 @@ describe('WLItemsList component', () => {
       if (url === '/wishlist') {
         return Promise.resolve({
           data: {
-            items: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null }],
+            value: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null }],
           },
         });
       }
@@ -122,7 +126,7 @@ describe('WLItemsList component', () => {
       if (url === '/wishlist') {
         return Promise.resolve({
           data: {
-            items: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null }],
+            value: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null }],
           },
         });
       }
@@ -150,7 +154,7 @@ describe('WLItemsList component', () => {
       if (url === '/wishlist') {
         return Promise.resolve({
           data: {
-            items: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null }],
+            value: [{ appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null }],
           },
         });
       }
@@ -174,7 +178,7 @@ describe('WLItemsList component', () => {
   it('handles empty wishlist gracefully', async () => {
     mockedApiGet.mockImplementation((url: string) => {
       if (url === '/wishlist') {
-        return Promise.resolve({ data: { items: [] } });
+        return Promise.resolve({ data: { value: [] } });
       }
       // Prices query should not be called when there are no items
       return Promise.reject(new Error('Unexpected URL: ' + url));
@@ -194,7 +198,7 @@ describe('WLItemsList component', () => {
       if (url === '/wishlist') {
         return Promise.resolve({
           data: {
-            items: [
+            value: [
               { appId: 1, name: 'Half-Life', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null },
               { appId: 999, name: 'Unknown Game', dateAdded: '2024-01-01T00:00:00Z', alertRuleId: null },
             ],

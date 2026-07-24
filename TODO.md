@@ -1,7 +1,6 @@
 Agent: ignore this
 
 Things I'm going to try/add/learn more about later :
-- GetWishlistAsync()// TODO add odata filtering to make DateAdded, AlertRuleId optional. In frontend search page, we don't need those fields.
 - gRPC for api-steamtracker communication
 - finish alerts
 - Review mq connect/channel/exchange/queue lifecycle in wishlistapi and steamtracker

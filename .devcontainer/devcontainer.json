@@ -3,6 +3,7 @@
   "dockerComposeFile": "../docker-compose.devcontainer.yml",
   "service": "devc",
   "workspaceFolder": "/workspace",
+  //"runServices": ["devc"],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -21,7 +22,7 @@
   },
   "features": { 
     "ghcr.io/devcontainers/features/node:2.0.0": {},
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1.10.0": {}
   },
-  "postCreateCommand": "mkdir -p ~/.pi/agent && ln -sf ${containerWorkspaceFolder}/.pi/agent/models.json ~/.pi/agent/models.json && npm install -g @earendil-works/pi-coding-agent"
+  "postCreateCommand": "mkdir -p ~/.pi/agent && ln -sf ${containerWorkspaceFolder}/.pi/agent/models.json ~/.pi/agent/models.json && ln -sf ${containerWorkspaceFolder}/.pi/agent/auth.json ~/.pi/agent/auth.json && npm install -g @earendil-works/pi-coding-agent"
 }

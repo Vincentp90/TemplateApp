@@ -17,6 +17,10 @@ export interface MergedWishlistItem {
   alertRuleId: string | null;
 }
 
+interface ODataResponse<T> {
+  value: T[];
+}
+
 interface WishlistItemResponse {
   appId: number | null;
   name: string | null;
@@ -36,11 +40,12 @@ export default function WLItemsList() {
   const queryClient = useQueryClient();
 
   // Query 1: Get wishlist items (core fields + alert info)
-  const { data: wishlistItems = [] } = useSuspenseQuery<WishlistItemResponse[]>({
+  const { data: wishlistItems } = useSuspenseQuery<WishlistItemResponse[]>({
     queryKey: ['wishlistOverview'],
     queryFn: async () => {
-      const res = await api.get("/wishlist");
-      return res.data.items as WishlistItemResponse[];
+      const res = await api.get<ODataResponse<WishlistItemResponse> | WishlistItemResponse[]>("/wishlist");
+      const items = Array.isArray(res.data) ? res.data : res.data.value;
+      return items;
     },
   });
 

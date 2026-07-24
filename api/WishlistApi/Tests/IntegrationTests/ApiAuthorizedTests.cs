@@ -225,19 +225,19 @@ namespace Tests.IntegrationTests
 
             // Assert
             response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadFromJsonAsync<Wishlist>(TestContext.Current.CancellationToken);
+            var content = await response.Content.ReadFromJsonAsync<List<WishlistItemDto>>(TestContext.Current.CancellationToken);
             content.Should().NotBeNull();
-            content.Items.Count().Should().Be(2);
-            content.Items.Select(x => x.AppId).Should().BeEquivalentTo(new[] { appIdRandomOffset + 1, appIdRandomOffset + 2 });
+            content.Count().Should().Be(2);
+            content.Select(x => x.AppId).Should().BeEquivalentTo(new[] { appIdRandomOffset + 1, appIdRandomOffset + 2 });
 
             // Act - test fields filtering
-            response = await client.GetAsync("/wishlist?fields=appid,name", TestContext.Current.CancellationToken);
+            response = await client.GetAsync("/wishlist?$select=appId,name", TestContext.Current.CancellationToken);
 
             // Assert
             response.EnsureSuccessStatusCode();
-            content = await response.Content.ReadFromJsonAsync<Wishlist>(TestContext.Current.CancellationToken);
+            content = await response.Content.ReadFromJsonAsync<List<WishlistItemDto>>(TestContext.Current.CancellationToken);
             content.Should().NotBeNull();
-            content.Items.Should().AllSatisfy(item =>
+            content.Should().AllSatisfy(item =>
             {
                 item.AppId.Should().NotBeNull();
                 item.Name.Should().NotBeNull();
@@ -272,10 +272,10 @@ namespace Tests.IntegrationTests
 
             // Verify the item was added
             response = await client.GetAsync("/wishlist", TestContext.Current.CancellationToken);
-            var content = await response.Content.ReadFromJsonAsync<Wishlist>(TestContext.Current.CancellationToken);
+            var content = await response.Content.ReadFromJsonAsync<List<WishlistItemDto>>(TestContext.Current.CancellationToken);
             content.Should().NotBeNull();
-            content.Items.Count().Should().Be(1);
-            content.Items.First().AppId.Should().Be(appIdRandomOffset + 1);
+            content.Count().Should().Be(1);
+            content.First().AppId.Should().Be(appIdRandomOffset + 1);
         }
 
         [Fact]
@@ -311,10 +311,10 @@ namespace Tests.IntegrationTests
 
             // Verify the item was removed and the other is still there
             response = await client.GetAsync("/wishlist", TestContext.Current.CancellationToken);
-            var content = await response.Content.ReadFromJsonAsync<Wishlist>(TestContext.Current.CancellationToken);
+            var content = await response.Content.ReadFromJsonAsync<List<WishlistItemDto>>(TestContext.Current.CancellationToken);
             content.Should().NotBeNull();
-            content.Items.Count().Should().Be(1);
-            content.Items.First().AppId.Should().Be(appIdRandomOffset + 2);
+            content.Count().Should().Be(1);
+            content.First().AppId.Should().Be(appIdRandomOffset + 2);
         }
     }
 }

@@ -1,7 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0
-WORKDIR /workspace/api/SteamTracker/src
-COPY SteamTracker.Worker/SteamTracker.Worker.csproj ./SteamTracker.Worker/
-COPY SteamTracker.Application/SteamTracker.Application.csproj ./SteamTracker.Application/
-COPY SteamTracker.Domain/SteamTracker.Domain.csproj ./SteamTracker.Domain/
-COPY SteamTracker.Infrastructure/SteamTracker.Infrastructure.csproj ./SteamTracker.Infrastructure/
-RUN dotnet restore SteamTracker.Worker/SteamTracker.Worker.csproj
+WORKDIR /workspace/api
+COPY SteamTracker/src/SteamTracker.Worker/SteamTracker.Worker.csproj ./SteamTracker/src/SteamTracker.Worker/
+COPY SteamTracker/src/SteamTracker.Application/SteamTracker.Application.csproj ./SteamTracker/src/SteamTracker.Application/
+COPY SteamTracker/src/SteamTracker.Domain/SteamTracker.Domain.csproj ./SteamTracker/src/SteamTracker.Domain/
+COPY SteamTracker/src/SteamTracker.Infrastructure/SteamTracker.Infrastructure.csproj ./SteamTracker/src/SteamTracker.Infrastructure/
+COPY CrossService/CrossService.csproj ./CrossService/
+RUN dotnet restore SteamTracker/src/SteamTracker.Worker/SteamTracker.Worker.csproj

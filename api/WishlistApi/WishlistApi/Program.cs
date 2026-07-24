@@ -31,6 +31,7 @@ using WishlistApi.Helpers;
 using WishlistApi.HostedServices;
 using Infrastructure.ExternalServices;
 using Infrastructure.SteamTracker;
+using Microsoft.AspNetCore.OData;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -176,6 +177,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 builder.Services.AddAuthorization();
+
+builder.Services.AddControllers().AddOData(options => options.Select().Filter());
 
 var app = builder.Build();
 

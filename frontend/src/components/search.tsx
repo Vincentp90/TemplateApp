@@ -5,11 +5,14 @@ import { useQuery, useMutation, useQueryClient, useSuspenseQuery } from '@tansta
 import debounce from 'lodash.debounce';
 import { api } from "../api";
 
-import { Loading02Icon } from "hugeicons-react";
 import WlButton from './tiny/wlButton';
 
 type AppListing = { appid: number; name: string };
-type AppListingDTO = { appId: number; name: string };// the downside of directly writing and reading AppListing as lowercase fields straight from steam API to the db
+
+interface ODataResponse<T> {
+  value: T[];
+}
+type AppListingDTO = { AppId: number; Name: string };// the downside of directly writing and reading AppListing as lowercase fields straight from steam API to the db
 const wlQueryKey = ['wishlist'];
 
 
@@ -44,14 +47,16 @@ export default function Search() {
     enabled: searchQuery.length > 2,
   });
 
-  const { data: wishlistItems = [], isPending: wishlistItemsPending } = useSuspenseQuery<AppListing[]>({
-    queryKey: wlQueryKey,
-    queryFn: async () => {
-      const res = await api.get(`/wishlist?fields=appid,name`);
-      const data = res.data.items;
-      return data.map((item: AppListingDTO) => ({
-        appid: item.appId,
-        name: item.name,
+  const { data: wishlistItems } = useSuspenseQuery<AppListing[]>({
+  queryKey: wlQueryKey,
+  queryFn: async () => {
+      const res = await api.get<ODataResponse<AppListingDTO> | AppListingDTO[]>(
+        `/wishlist?$select=appId,name`
+      );
+      const items = Array.isArray(res.data) ? res.data : res.data.value;
+      return items.map((item) => ({
+        appid: item.AppId,
+        name: item.Name,
       }));
     },
   });
@@ -134,16 +139,14 @@ export default function Search() {
       <div className="flex flex-col gap-2">
         <h2 className="text-xl font-semibold">Wishlist</h2>
         <ul className="border rounded p-2 shadow divide-y">
-          {wishlistItemsPending ? (<Loading02Icon size={48} />) :
-            wishlistItems.map((s, i) => (
-              <li key={i} className="flex items-center justify-between py-2 px-1">
-                <span>{s.name}</span>
-                <WlButton onClick={() => removeFromWishlist(s)} isPrimary={true}>
-                  Delete
-                </WlButton>
-              </li>
-            ))
-          }
+          {wishlistItems.map((s, i) => (
+            <li key={i} className="flex items-center justify-between py-2 px-1">
+              <span>{s.name}</span>
+              <WlButton onClick={() => removeFromWishlist(s)} isPrimary={true}>
+                Delete
+              </WlButton>
+            </li>
+          ))}
         </ul>
       </div>
     </div>

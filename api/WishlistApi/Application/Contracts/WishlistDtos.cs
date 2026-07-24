@@ -12,8 +12,6 @@ public record WishlistItemDto(
     Guid? AlertRuleId = null
 );
 
-public record Wishlist(IEnumerable<WishlistItemDto> Items);
-
 public record Stats(
     TimeSpan AvgTimeAdded,
     TimeSpan AvgTimeBetweenAdded,

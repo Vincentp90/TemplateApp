@@ -11,6 +11,11 @@
           "maxTokens": 16000
        }
       ]
+    },
+    "openrouter": {
+      "models": [
+        { "id": "inclusionai/ling-3.0-flash:free" }
+      ]
     }
   }
 }

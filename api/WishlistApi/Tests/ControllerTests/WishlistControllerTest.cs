@@ -85,21 +85,24 @@ namespace Tests.ControllerTests
             };
 
             // Act
-            ActionResult<Wishlist> actionResult = await controller.GetWishlistAsync();
+            var actionResult = await controller.GetWishlistAsync();
 
-            // Assert
+            // Assert - returns IQueryable<WishlistItemDto> via OData [EnableQuery]
             actionResult.Should().NotBeNull();
-            var okResult = actionResult.Result as OkObjectResult;
+            var okResult = actionResult.Result as OkObjectResult ?? throw new Exception("Expected OkObjectResult");
             okResult.Should().NotBeNull();
-            var wl = okResult!.Value as Wishlist;
-            wl.Should().NotBeNull();
-            wl.Items.Count().Should().Be(1);
 
-            var item = wl.Items.First();
+            var queryable = okResult.Value as IQueryable<WishlistItemDto>;
+            queryable.Should().NotBeNull("Expected IQueryable<WishlistItemDto>");
+
+            var items = queryable!.ToList();
+            items.Count.Should().Be(1);
+
+            var item = items[0];
             item.AppId.Should().Be(1);
-            item.DateAdded.Should().NotBeNull();
             item.Name.Should().Be(APPNAME);
-            item.AlertRuleId.Should().BeNull(); // No alerts mocked
+            item.DateAdded.Should().NotBeNull();
+            item.AlertRuleId.Should().BeNull();
 
             // Verify use case was called once
             getWishlistUseCaseMock.Verify(x => x.ExecuteAsync(It.IsAny<GetWishlistRequest>()), Times.Once);
